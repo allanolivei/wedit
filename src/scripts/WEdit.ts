@@ -6,6 +6,9 @@
 // import { VerticalLayout } from "./Layout/Layout";
 // import { UI } from "./ui";
 import { Widget } from "./Widget";
+import { VerticalLayout } from "./Layout";
+import { Display } from "./Display";
+import { Selection, SelectionDragger } from "./Selection";
 
 //import * as $ from 'jquery';
 // declare var CKEDITOR: any;
@@ -21,21 +24,48 @@ classes especiais
 
 export class WEdit extends Widget
 {
-    // public selectionTransform:SelectionTransform;
-    // public selectionDragger: SelectionDragger;
-    // public selection:Selection;
+    public selection:Selection;
+    public selectionDragger: SelectionDragger;
 
-    constructor(element: HTMLElement, settings: any = "empty", ...className: string[])
+    // public selectionTransform:SelectionTransform;
+
+    constructor(element: HTMLElement, settings: any = "default", ...className: string[])
     {
         if( typeof settings === "string" && settings === "empty" )
         {
             super("undefined");
+
+            //empty
             this.html = element;
-            this.addClasses("w-editor w-editing" + className.join(" ") );
+            this.addClasses("w-edit w-editing" + className.join(" ") );
+        }
+        else if (typeof settings === "string" && settings === "default")
+        {
+            super("undefined");
+
+            this.html = element;
+            this.addClasses("w-edit w-editing frame " + className.join(" "));
+
+            // header
+            let header: Display = new VerticalLayout("header", "main-row");
+            this.addChild(header);
+            this.setupContainer("header", "list", header, "list");
+
+            // main
+            let main: Display = new Display("div", "main-row", "expand");
+            let container: Display = new VerticalLayout("div", "hide-scroll-x");
+            main.addChild(container)
+            this.addChild(main);
+            this.setupContainer("main", "list", container, "list");
+            
+            // footer
+            let footer: Display = new VerticalLayout("footer", "main-row");
+            this.addChild(footer);
+            this.setupContainer("footer", "list", footer, "list");
         }
         else
         {
-            super(settings, "w-editor w-editing", ...className);
+            super(settings, "w-edit w-editing", ...className);
             element.appendChild(this.html);
         }
 
@@ -44,12 +74,9 @@ export class WEdit extends Widget
         //this.setData("drag", "false");
 
 
-        // this.selection = new Selection();
-        // this.selectionDragger = new SelectionDragger(this, this.selection);
+        this.selection = new Selection();
+        this.selectionDragger = new SelectionDragger(this, this.selection);
         // this.selectionTransform = new SelectionTransform(this, this.selection);
-
-        // //this.addChild(this.selectionDragger);
-        // //this.addChild(this.selectionTransform);
 
         // let self = this;
 

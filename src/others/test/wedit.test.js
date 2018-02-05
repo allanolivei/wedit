@@ -5,24 +5,6 @@ var expect = chai.expect;
 // https://github.com/nathanboktae/chai-dom
 
 
-describe("Rect", function()
-{
-  it('Manipular Posição', function() 
-  {
-    
-  });
-
-  it('Manipular Tamanho', function() 
-  {
-    
-  });
-
-  it('Testes de Contato', function() 
-  {
-    
-  });
-})
-
 describe('Display', function() 
 {
 
@@ -164,6 +146,14 @@ describe('Display', function()
     expect( parent.allowAddChild(child) ).to.equal(true);
   });
 
+});
+
+describe("Selectable", function ()
+{
+  it("Configurar estrutura básica dos filhos e validar modicações", function ()
+  {
+
+  });
 });
 
 describe("Layout", function()
@@ -315,21 +305,58 @@ describe("Widget", function()
 
 });
 
-
-
 describe("WEdit", function()
 {
   
   it("Criar WEdit em um element dom (EMPTY)", function()
   {
-    
+    let wedit = new W.WEdit(document.body, "empty");
+
+    expect(wedit.children).to.have.length(0);
+    expect(wedit.html).to.equal(document.body);
   });
 
   it("Criar WEdit com um template basico(HEADER,MAIN,FOOTER)", function()
   {
-    
+    var wedit = new W.WEdit(document.body);
+
+    expect(wedit.children).to.have.length(3);
+    expect(wedit.html).to.have.descendant('header');
+    expect(wedit.html).to.have.descendant('.main-row.expand');
+    expect(wedit.html).to.have.descendant('.hide-scroll-x');
+    expect(wedit.html).to.have.descendant('footer');
   });
 
+});
+
+
+
+describe("Rect", function ()
+{
+  it('Manipular Posição', function () 
+  {
+
+  });
+
+  it('Manipular Tamanho', function () 
+  {
+
+  });
+
+  it('Testes de Contato', function () 
+  {
+
+  });
+});
+
+
+
+describe("SelectableGroup", function ()
+{
+  it('Manipular Posição', function () 
+  {
+
+  });
 });
 
 //console.log(display);

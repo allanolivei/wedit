@@ -1,1 +1,54 @@
 @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+
+html.ie8,
+html.ie7,
+html.ie6
+{
+    .main-row, 
+    .container
+    {
+        display: none !important;
+    }
+}
+
+/**
+ * STICKY FOOTER
+ **/
+body, html { height: 100%; }
+
+.frame {
+    display: table;
+    width: 100%;
+    position: relative;
+}
+
+html>/**/body .frame {
+    height: 100%;
+}
+
+.main-row {
+    display: table-row;
+    height: 1px;
+    overflow: hidden;
+    font-weight: 300;
+}
+
+html>body .main-row.expand {
+    height: auto;
+}
+
+@include media-breakpoint-down(md) 
+{
+    html, body, .frame { overflow-x: hidden; }
+    .row 
+    {
+        margin-right: 0;
+        margin-left: 0; 
+    }
+}
+
+.hide-scroll-x
+{
+    overflow-x: hidden;
+    min-height: 100%;
+}

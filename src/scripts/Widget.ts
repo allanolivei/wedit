@@ -2,7 +2,7 @@
 import { Display } from "./Display";
 import { Describer } from "./Utils";
 //import { VerticalLayout, AbsoluteLayout, AutoLayout, RowLayout } from "./Layout/Layout";
-import { disableIncrementalParsing } from "typescript";
+import { Selectable } from "./Selectable";
 
 
 // {{ list container params params params }}
@@ -37,7 +37,7 @@ interface WidgetData
     style?:string[];
 }
 
-export class Widget extends Display
+export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html: "<div>{{text content}}</div>" },
@@ -204,6 +204,11 @@ export class Widget extends Display
         return this.containers[key].display.content;
     }
 
+    protected setupContainer( key:string, type:string, children:Display, attribName:string ):void
+    {
+        this.containers[key] = { type: type, display: children, attribName: attribName };
+    }
+
     private setupDisplayByElement(display: Display, xmlNode: Element): void
     {
         // copy attributes
@@ -220,7 +225,8 @@ export class Widget extends Display
                 let cattrib: WidgetContainerAttrib = this.getContainerAttribByString(xmlNode.attributes[i].nodeValue);
 
                 if (cattrib)
-                    this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
+                    this.setupContainer(cattrib.name, "attrib", display, key);
+                    //this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
                 else
                     display.html.setAttribute(key, xmlNode.attributes[i].nodeValue);
             }
@@ -235,7 +241,8 @@ export class Widget extends Display
             // elemento editavel
             if (wattrib != null)
             {
-                this.containers[wattrib.name] = { type: wattrib.type, display: display, attribName: wattrib.type };
+                //this.containers[wattrib.name] = { type: wattrib.type, display: display, attribName: wattrib.type };
+                this.setupContainer(wattrib.name, wattrib.type, display, wattrib.type);
                 if (wattrib.type === 'text')
                     display.setData("drag", "false");
 

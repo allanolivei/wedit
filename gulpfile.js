@@ -161,7 +161,6 @@ gulp.task("watch", ["default"], function ()
         notify: false,
         port: 9000,
         scrollProportionally: false,
-        browser: 'google chrome',
         ui: { port: 9001 }
     });
 

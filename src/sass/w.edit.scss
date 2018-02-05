@@ -1,9 +1,41 @@
+@import 'mixins';
 
 .w-edit
 {
-    div:empty 
+    // div:empty 
+    // {
+    //     min-height: 100px;
+    //     background: red;
+    // }
+
+    header.main-row
     {
-        min-height: 100px;
-        background: red;
+        height: 30px;
     }
+
+    footer.main-row
+    {
+        height: 30px;
+    }
+}
+
+.w-editing
+{
+    .select-hover
+    {
+        border: 1px solid rgb(42, 132, 235);
+        &:before
+        {
+            content: "";
+            @include box(50%, 50%, 4px, 4px);
+            background: rgb(42, 132, 235);
+            transform: rotate(45deg);
+        }
+    }
+
+    .select-view
+    {
+        border: 1px dotted rgb(161, 161, 161);
+    }
+
 }

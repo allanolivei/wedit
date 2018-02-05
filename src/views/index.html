@@ -9,13 +9,14 @@
     <link rel="stylesheet" href="css/w.edit.css">
 </head>
 <body>
-    
-    <h1>teste</h1>
-    <h2>teste 2</h2>
 
     <script src="js/main.js"></script>
     <script>
-        
+        //var stage = new W.WEdit(document.body);
+        //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
+
+        var stage = new W.WEdit(document.body, "empty");
+        stage.addChild(new W.Display("header", "test"));
     </script>
 </body>
 </html>

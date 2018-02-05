@@ -1,0 +1,17 @@
+@mixin box($left:0, $top:$left, $width:$left, $height:$top)
+{
+    position: absolute;
+    left: $left;
+    top: $top;
+    width: $width;
+    height: $height;
+}
+
+@mixin box-absolute($top:0, $right:$top, $bottom:$top, $left:$right)
+{
+    position: absolute;
+    left: $left;
+    top: $top;
+    bottom: $bottom;
+    right: $right;
+}

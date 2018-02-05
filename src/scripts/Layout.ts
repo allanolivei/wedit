@@ -1,7 +1,8 @@
 import { Display } from "./Display";
 import { Rect } from "./Utils";
+import { Selectable } from "./Selectable";
 
-export abstract class Layout extends Display
+export abstract class Layout extends Selectable
 {
     protected childTag:string = "";
     protected childClassName:string = "";
