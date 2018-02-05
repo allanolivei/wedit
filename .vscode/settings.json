@@ -1,0 +1,15 @@
+{
+    "files.exclude": {
+        "tmp":true,
+        "coverage":true,
+        "old_test":true,
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true
+    },
+    "typescript.format.placeOpenBraceOnNewLineForControlBlocks": true,
+    "typescript.format.placeOpenBraceOnNewLineForFunctions": true
+    
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WEdit Test</title>
+    <link rel="stylesheet" media="all" href="test/mocha.css">
+    <link rel="stylesheet" href="css/w.main.css">
+    <link rel="stylesheet" href="css/w.edit.css">
+</head>
+<body>
+
+    <div id="mocha"></div>
+    <script src="mocha/mocha.js"></script>
+    <script src="chai/chai.js"></script>
+    <script src="chai-dom/chai-dom.js"></script>
+    <script>mocha.setup('bdd')</script>
+
+    <!-- load code you want to test here -->
+    <script src="js/main.js"></script>
+
+    <!-- load your test files here -->
+    <script src="test/wedit.test.js"></script>
+
+    <script>mocha.run();</script>
+</body>
+</html>

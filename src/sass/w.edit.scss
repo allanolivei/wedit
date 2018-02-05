@@ -1,0 +1,9 @@
+
+.w-edit
+{
+    div:empty 
+    {
+        min-height: 100px;
+        background: red;
+    }
+}
