@@ -75,26 +75,32 @@ export class SheetRules
         if (typeof rules === "string")
         {
             let parts: string[] = rules.trim().replace(/[\{\}]/g, "").split(";");
-            rules = {};
             for (let i: number = 0; i < parts.length; i++)
             {
-                let rule: string[] = parts[0].split(':');
-                rules[rule[0]] = rule[1];
+                if( parts[i].length === 0 ) continue;
+                let keyvalue: string[] = parts[i].split(':');
+                this.rules[keyvalue[0]] = keyvalue[1];
             }
         }
-
-        for (let key in rules)
-            this.rules[key] = rules[key];
+        else
+        {
+            for (let key in rules)
+                this.rules[key] = rules[key];
+        }
 
         this.render();
     }
 
     public toString():string
     {
-        let result: string = this.selector + "{";
+        return this.selector+"{"+this.toLine()+"}";
+    }
+
+    public toLine():string
+    {
+        let result: string = "";
         for (let key in this.rules)
             result += key + ":" + this.rules[key] + ";";
-        result += "}";
         return result;
     }
 

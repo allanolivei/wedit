@@ -128,15 +128,33 @@ export class Display
             newHtml.setAttribute(this.html.attributes[i].nodeName, this.html.attributes[i].nodeValue);
 
         // children
-        for( let i:number = this.html.childElementCount-1; i >= 0; i-- )
-            newHtml.appendChild(this.html.children[0]);
+        for( let i:number = this.html.childNodes.length-1; i >= 0; i-- )
+           newHtml.appendChild(this.html.childNodes[0]);
 
         this.html = newHtml;
     }
 
+    public serializeStyle():string
+    {
+        let result:any = {};
+        for( let key in this.sheetRules )
+            result[key] = this.sheetRules[key].toLine();
+        return result.toString();
+    }
+
+    public setStyles(values:string, media:string = "default"):void
+    {
+        console.log("SET STYLE: ", values);
+        this.getSheetRules(media).setRules(values);
+    }
+
+    public getStyles(media:string = "default"):string
+    {
+        return this.getSheetRules(media).toLine();
+    }
+
     public setStyle(key: string, value: string, media:string = "default"): void
     {
-        console.log("SET STYLE: ", key, value);
         this.getSheetRules(media).setRule(key, value);
         //this.style[key] = value;
         //(this.html.style as any)[key] = value;

@@ -48,19 +48,19 @@ export class WEdit extends Widget
             // header
             let header: Display = new VerticalLayout("header", "main-row");
             this.addChild(header);
-            this.setupContainer("header", "list", header, "list");
+            this.createContainer("header", "list", header, "list");
 
             // main
             let main: Display = new VerticalLayout("div", "main-row", "expand");
             //let container: Display = new VerticalLayout("div", "hide-scroll-x");
             //main.addChild(container);
             this.addChild(main);
-            this.setupContainer("main", "list", main, "list");
+            this.createContainer("main", "list", main, "list");
 
             // footer
             let footer: Display = new VerticalLayout("footer", "main-row");
             this.addChild(footer);
-            this.setupContainer("footer", "list", footer, "list");
+            this.createContainer("footer", "list", footer, "list");
         }
         else
         {
@@ -74,14 +74,6 @@ export class WEdit extends Widget
 
 
         this.selection = new Selection();
-
-        let gizmosWrapper:Display = new Display();
-        gizmosWrapper.setStyle("position", "absolute");
-        gizmosWrapper.setStyle("display", "block");
-        gizmosWrapper.setStyle("height", "0");
-        gizmosWrapper.setStyle("top", "0");
-        gizmosWrapper.setStyle("left", "0");
-        this.html.appendChild(gizmosWrapper.html);
 
         this.selectionDragger = new SelectionDragger(this, this.selection);
         this.selectionTransform = new SelectionTransform(this, this.selection);
@@ -125,17 +117,17 @@ export class WEdit extends Widget
 
     public enable():void
     {
-        // this.selectionDragger.enable();
+        this.selectionDragger.enable();
 
         this.addClass("w-editing");
     }
 
     public disable():void
     {
-        // this.selection.select.clear();
-        // this.selection.hover.clear();
-        // this.selectionDragger.disable();
-        // this.selectionTransform.hide();
+        this.selection.select.clear();
+        this.selection.hover.clear();
+        this.selectionDragger.disable();
+        this.selectionTransform.hide();
 
         this.removeClass("w-editing");
     }

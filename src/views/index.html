@@ -10,15 +10,46 @@
 </head>
 <body>
 
+    
+
     <script src="js/main.js"></script>
     <script>
         //var stage = new W.WEdit(document.body);
         //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
 
-        var stage = new W.WEdit(document.body);
-        var widget = new W.Widget({ "template": "text", "className": "w10", "data": { "content": "Diferente" } });
+        var stage = new W.WEdit(document.body, "vertical-layout");
+        stage.disable();
+        // var widget = new W.Widget({ "template": "text", "data": { "content": "Diferente" } });
+        // stage.addWidget("main", widget);
         
-        stage.addWidget("main", widget);
+
+
+        W.WEdit.addTemplate("lista", 
+        "<div class='lista-wrapper'>"+ 
+        "   <ul style='{{meuestilo}}' data-qualquer='{{meudata}}' data-type='VerticalLayout'>{{container}}</ul>" +
+        "</div>"
+        );
+
+        widget = stage.addWidget("container", {
+            "template": "lista"
+        });
+
+        stage.addWidget("container", 
+        { 
+            "template": "text",
+            "data": { 
+                "content": "Corpo de texto",
+                "style": {
+                    "default":"background:red;border:1px solid blue;margin-top:20px;"
+                } 
+            }
+        });
+
+        
+
+
+
+
         // for( let i = 0 ; i < 20 ; i++ )
         //     stage.addWidget("main", {"template": "text", "data":{"content": "linha "+(i+1)}});
         //stage.addChild(new W.Display("header", "test"));

@@ -38,14 +38,14 @@ function errorHandler(err)
 
 gulp.task('clean', function () {
     return gulp.src('tmp', {read: false})
-        .pipe(clean());
+        .pipe(clean({ force: true }));
 });
 
 gulp.task("html", function()
 {
     return gulp.src("./src/views/**/*.html")
         .pipe(gulp.dest("./tmp/"))
-        .pipe(browserSync.stream());
+        .pipe(browserSync.stream({ match: '**/*.html' }));
 });
 
 gulp.task("ts", function() 
@@ -69,7 +69,7 @@ gulp.task("ts", function()
     .pipe(sourcemaps.write('./'))
 
     .pipe(gulp.dest("tmp/js"))
-    .pipe(browserSync.stream());
+    .pipe(browserSync.stream({ match: '**/*.js' }));
 
 });
 
@@ -128,8 +128,8 @@ gulp.task('sass', function()
 		.pipe(sourcemaps.init())
 		.pipe(sass({outputStyle: 'expanded'}).on('error', errorHandler))
 		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest("tmp/css/"))
-        .pipe(browserSync.reload({stream: true}));
+        .pipe(gulp.dest("tmp/css/"))
+        .pipe(browserSync.stream({ match: '**/*.css' }));
 });
 
 gulp.task('img', function ()
@@ -146,19 +146,10 @@ gulp.task('others', function ()
         .pipe(browserSync.stream());
 });
 
-gulp.task("default", ["clean", "html", "ts", "sass", "img", "others"]);
+gulp.task("default", ["html", "ts", "sass", "img", "others"]);
 
 gulp.task("watch", ["default"], function ()
 {
-
-    gulp.watch(["src/scripts/**/*.ts"], ["ts"]);
-    gulp.watch(["src/views/**/*.html"], ["html"]);
-    gulp.watch(["src/img/**/*"], ["img"]);
-    gulp.watch(["src/sass/**/*.scss"], ["sass"]);
-    gulp.watch(["src/others/**/*"], ["others"]);
-    //gulp.watch("tmp/**/**").on('change', browserSync.reload); 
-
-
     browserSync.init({
         server: {
             baseDir: ["./tmp", "./node_modules"],
@@ -172,4 +163,13 @@ gulp.task("watch", ["default"], function ()
         scrollProportionally: false,
         ui: { port: 9001 }
     });
+
+    gulp.watch(["src/scripts/**/*.ts"], ["ts"]);
+    gulp.watch(["src/views/**/*.html"], ["html"]);
+    gulp.watch(["src/img/**/*"], ["img"]);
+    gulp.watch(["src/sass/**/*.scss"], ["sass"]);
+    gulp.watch(["src/others/**/*"], ["others"]);
+
+    //gulp.watch("tmp/**/**").on('change', browserSync.reload);
+
 });

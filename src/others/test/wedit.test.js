@@ -32,7 +32,6 @@ describe('Display', function()
     display.addChild(new W.Display("i", "i2"));
     display.addChild(new W.Display("i", "i3"));
     display.setData("test", "teste");
-    display.setStyle("marginTop", "20px");
 
     display.setTagName("p");
 
@@ -42,7 +41,6 @@ describe('Display', function()
     expect(display.getData("test")).to.equal("teste");
     expect(display.hasClass("test")).to.equal(true);
     expect(display.html.className.indexOf("test") != -1).to.equal(true);
-    expect(display.html.style.marginTop).to.equal("20px");
   });
 
   it('Manipulação de className', function() 
@@ -189,7 +187,7 @@ describe("Layout", function()
     expect( layout1.children ).to.have.length(0);
     expect( display.getTagName() ).to.equal("DIV");
     expect( display.hasClass("l1") ).to.equal(false);
-
+    
     // setup layout 2
     layout2.setChildStruct("ul", "l2");
     layout2.addChild(display);

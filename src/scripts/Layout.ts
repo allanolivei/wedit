@@ -8,12 +8,12 @@ export abstract class Layout extends Selectable
     protected childClassName:string = "";
     protected requiredStyles:{ [id: string]: string; } = {};
 
-    constructor(tag: string = "div", ...params: string[])
+    constructor(tagName: string = "div", ...params: string[])
     {
-        super(tag, "layout", ...params);
+        super(tagName, "layout", ...params);
 
-        if( tag === "ul" ) this.setChildStruct("li");
-        else if( tag === "select" ) this.setChildStruct("option");
+        if( tagName === "ul" ) this.setChildStruct("li");
+        else if( tagName === "select" ) this.setChildStruct("option");
     }
 
     public hasChildStruct():boolean
