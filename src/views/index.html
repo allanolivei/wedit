@@ -15,8 +15,10 @@
         //var stage = new W.WEdit(document.body);
         //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
 
-        var stage = new W.WEdit(document.body, "empty");
-        stage.addChild(new W.Display("header", "test"));
+        var stage = new W.WEdit(document.body);
+        for( let i = 0 ; i < 20 ; i++ )
+            stage.addWidget("main", {"template": "text", "data":{"content": "linha "+(i+1)}});
+        //stage.addChild(new W.Display("header", "test"));
     </script>
 </body>
 </html>

@@ -314,6 +314,8 @@ describe("WEdit", function()
 
     expect(wedit.children).to.have.length(0);
     expect(wedit.html).to.equal(document.body);
+
+    wedit.dispose();
   });
 
   it("Criar WEdit com um template basico(HEADER,MAIN,FOOTER)", function()
@@ -323,8 +325,9 @@ describe("WEdit", function()
     expect(wedit.children).to.have.length(3);
     expect(wedit.html).to.have.descendant('header');
     expect(wedit.html).to.have.descendant('.main-row.expand');
-    expect(wedit.html).to.have.descendant('.hide-scroll-x');
     expect(wedit.html).to.have.descendant('footer');
+
+    wedit.dispose();
   });
 
 });

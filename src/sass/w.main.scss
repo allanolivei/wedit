@@ -11,44 +11,104 @@ html.ie6
     }
 }
 
+
+
 /**
  * STICKY FOOTER
  **/
-body, html { height: 100%; }
+// body, html { height: 100%; }
 
-.frame {
-    display: table;
-    width: 100%;
-    position: relative;
-}
+// .frame {
+//     display: table;
+//     width: 100%;
+//     position: relative;
+// }
 
-html>/**/body .frame {
-    height: 100%;
-}
+// html>/**/body .frame {
+//     height: 100%;
+// }
 
-.main-row {
-    display: table-row;
-    height: 1px;
-    overflow: hidden;
-    font-weight: 300;
-}
+// .main-row {
+//     display: table-row;
+//     height: 1px;
+//     overflow: hidden;
+//     font-weight: 300;
+// }
 
-html>body .main-row.expand {
-    height: auto;
-}
+// html>body .main-row.expand {
+//     height: auto;
+// }
 
-@include media-breakpoint-down(md) 
-{
-    html, body, .frame { overflow-x: hidden; }
-    .row 
-    {
-        margin-right: 0;
-        margin-left: 0; 
-    }
-}
+// @include media-breakpoint-down(md) 
+// {
+//     html, body, .frame { overflow-x: hidden; }
+//     .row 
+//     {
+//         margin-right: 0;
+//         margin-left: 0; 
+//     }
+// }
 
 .hide-scroll-x
 {
     overflow-x: hidden;
     min-height: 100%;
 }
+
+
+
+
+
+
+
+// html {
+//     height: 100%;
+//   }
+  
+//   body {
+//     min-height: 100%;
+//     display: flex;
+//     flex-direction: column;
+//   }
+  
+//   section {
+//     /* flex: 1; would be enough but it looks bad in IE */
+//     flex: 1 0 auto;
+//   }
+  
+//   /* Unimportant part */
+//   body {
+//     font: 16px/1.5 sans-serif;
+//   }
+//   p {
+//     margin-bottom: 1em;
+//   }
+//   header, .expand, footer {
+//     padding: 2em;
+//     color: white;
+//   }
+
+
+
+// .frame {
+//     display: flex;
+//     min-height: 100vh;
+//     flex-direction: column;
+//   }
+  
+//   .expand {
+//     flex: 1;
+//   }
+
+@import "sticky";
+
+
+  header {
+    background-color: #85144B;
+  }
+  .expand {
+    background-color: #3D9970;
+  }
+  footer {
+    background-color: #001F3F;
+  }

@@ -15,7 +15,7 @@ export class SelectableGroup
     private filter: (e: Selectable) => boolean;
     private allowDispathChangeEvent:boolean = true;
 
-    constructor( onAddHandler: (e: Selectable) => void, onRemoveHandler: (e: Selectable) => void ) 
+    constructor( onAddHandler: (e: Selectable) => void, onRemoveHandler: (e: Selectable) => void )
     {
         this.onAddHandler = onAddHandler;
         this.onRemoveHandler = onRemoveHandler;
@@ -29,9 +29,9 @@ export class SelectableGroup
 
     public getRectArea():Rect
     {
-        if( this.count() == 0 ) return new Rect();
+        if( this.count() === 0 ) return new Rect();
 
-        var l = 99999, t = 99999, r = -99999, b=-99999;
+        let l = 99999, t = 99999, r = -99999, b=-99999;
 
         for( let i = 0 ; i < this.count() ; i++ )
         {
@@ -47,7 +47,7 @@ export class SelectableGroup
 
     public contains( element:Selectable ):boolean
     {
-        return this.selectables.indexOf(element) != -1;
+        return this.selectables.indexOf(element) !== -1;
     }
 
     public count():number
@@ -66,21 +66,22 @@ export class SelectableGroup
     }
 
     // . nokey: simplesmente ignora o que estava selecionado e adiciona todos os elementos atuais.
-    // . shift: deixa os elementos que estao de fora, e os que estao dentro inverte, os selecionados sao removidos e os que nao estao sao adicionados.
+    // . shift: deixa os elementos que estao de fora, e os que estao dentro inverte,
+    // os selecionados sao removidos e os que nao estao sao adicionados.
     // . ctrl: deixa os elementos que estao de fora e adiciona todos os elementos que estao na area de selecao.
 
     public combine(toggleMode: boolean, ...others:Selectable[] ):void
     {
         this.allowDispathChangeEvent = false;
 
-        if ( toggleMode ) 
+        if ( toggleMode )
         {
             // toggle todos os others
-            for (var i = 0; i < others.length; i++)
+            for (let i = 0; i < others.length; i++)
                 if (others[i] != null)
                     this.toggle(others[i]);
         }
-        else 
+        else
         {
             // remove others
             // if( removeOthers )
@@ -92,7 +93,7 @@ export class SelectableGroup
             // }
 
             // add news
-            for (var i = 0; i < others.length; i++)
+            for (let i = 0; i < others.length; i++)
                 if( others[i] != null )
                     this.add(others[i]);
         }
@@ -101,18 +102,18 @@ export class SelectableGroup
         this.allowDispathChangeEvent = true;
     }
 
-    public set(...others: Selectable[]): void 
+    public set(...others: Selectable[]): void
     {
         this.allowDispathChangeEvent = false;
 
         // remove others
-        for (var i = this.selectables.length; i >=0 ; i--) {
-            var index = others.indexOf(this.selectables[i]);
-            if (index == -1) this.remove(this.selectables[i]);
+        for (let i = this.selectables.length; i >=0 ; i--) {
+            let index = others.indexOf(this.selectables[i]);
+            if (index === -1) this.remove(this.selectables[i]);
         }
 
         // add news
-        for (var i = 0; i < others.length; i++)
+        for (let i = 0; i < others.length; i++)
             if (others[i] != null)
                 this.add(others[i]);
 
@@ -120,17 +121,17 @@ export class SelectableGroup
         this.allowDispathChangeEvent = true;
     }
 
-    public toggle(obj: Selectable, clearSelection: boolean = false): void 
+    public toggle(obj: Selectable, clearSelection: boolean = false): void
     {
         let index: number = this.selectables.indexOf(obj);
-        if (index == -1)
+        if (index === -1)
         {
             if (clearSelection)
                 this.set(obj);
             else
                 this.add(obj);
         }
-        else 
+        else
         {
             if (clearSelection)
                 this.clear();
@@ -139,10 +140,10 @@ export class SelectableGroup
         }
     }
 
-    public add(obj: Selectable): void 
+    public add(obj: Selectable): void
     {
         let index: number = this.selectables.indexOf(obj);
-        if (index == -1 && this.filter(obj) ) 
+        if (index === -1 && this.filter(obj) )
         {
             this.onAddHandler(obj);
             this.selectables.push(obj);
@@ -151,10 +152,10 @@ export class SelectableGroup
 
     }
 
-    public remove(obj: Selectable): void 
+    public remove(obj: Selectable): void
     {
         let index: number = this.selectables.indexOf(obj);
-        if (index != -1)
+        if (index !== -1)
         {
             this.onRemoveHandler(obj);
             this.selectables.splice(index, 1);
@@ -162,11 +163,11 @@ export class SelectableGroup
         }
     }
 
-    // public set(obj: Selectable): void 
+    // public set(obj: Selectable): void
     // {
     //     let index: number = this.selectables.indexOf(obj);
 
-    //     if (index != -1) 
+    //     if (index != -1)
     //     {
     //         // FIXX** remove para nao disparar o metodo onRemoveHandler invocado dentro do metodo clear
     //         this.selectables.splice(index, 1);
@@ -174,14 +175,14 @@ export class SelectableGroup
     //         this.clear();
     //         this.selectables.push(obj);
     //     }
-    //     else 
+    //     else
     //     {
     //         this.clear();
     //         this.add(obj);
     //     }
     // }
 
-    public clear(): void 
+    public clear(): void
     {
         for (let i: number = 0; i < this.selectables.length; i++)
             this.onRemoveHandler( this.selectables[i] );
@@ -196,9 +197,7 @@ export class SelectableGroup
     }
 }
 
-
-
-export class Selection// extends Display 
+export class Selection// extends Display
 {
     public select: SelectableGroup;
     public hover: SelectableGroup;
@@ -210,7 +209,7 @@ export class Selection// extends Display
     }
 }
 
-// export class SelectEvent 
+// export class SelectEvent
 // {
 //     public selection: Selection;
 //     public deltaX: number;
@@ -290,7 +289,7 @@ export class RectView extends Display
         this.rect.h = h;
         this.draw();
     }
-    
+
     public setH(x: number, w: number)
     {
         this.rect.x = x;
@@ -305,7 +304,7 @@ export class RectView extends Display
         this.draw();
     }
 
-    public move(x: number, y: number) 
+    public move(x: number, y: number)
     {
         this.rect.move(x, y);
         this.draw();
@@ -317,7 +316,7 @@ export class RectView extends Display
         this.draw();
     }
 
-    public add(x: number, y: number, w:number, h:number) 
+    public add(x: number, y: number, w:number, h:number)
     {
         this.rect.x += x;
         this.rect.y += y;
@@ -340,7 +339,7 @@ enum DRAGGER_MODE
 {
     NONE, // set
     CTRL, // add
-    SHIFT // toggle
+    SHIFT, // toggle
 }
 
 export class SelectionDragger extends RectView
@@ -358,7 +357,7 @@ export class SelectionDragger extends RectView
     private isEnabled:boolean = true;
     private hoverMark:RectView;
 
-    constructor(root:Display, selection:Selection) 
+    constructor(root:Display, selection:Selection)
     {
         super("select-view");
 
@@ -370,7 +369,7 @@ export class SelectionDragger extends RectView
         this.hoverMark.hide();
 
 
-        var self = this;
+        let self = this;
         window.addEventListener("mousedown", (event: MouseEvent) => self.mousedown(event));
         window.addEventListener("mousemove", (event: MouseEvent) => self.mousemove(event));
         window.addEventListener("mouseup", (event: MouseEvent) => self.onmouseup(event));
@@ -379,7 +378,7 @@ export class SelectionDragger extends RectView
             if( !self.isEnabled ) return;
 
             //var target = self.getSelectionByPoint(event.pageX, event.pageY);
-            var target:Selectable = self.root.findByPoint(event.pageX, event.pageY, self.selectableFilter) as Selectable;
+            let target:Selectable = self.root.findByPoint(event.pageX, event.pageY, self.selectableFilter) as Selectable;
             if( target ) self.onEditSelect.trigger(target);
         });
 
@@ -399,15 +398,22 @@ export class SelectionDragger extends RectView
         this.hide();
     }
 
+    public remove()
+    {
+        this.hoverMark.html.remove();
+        this.html.remove();
+    }
+
     private selectableFilter( element:Display ):boolean
-    { 
-        return element instanceof Selectable && element.getData("ignoreselect") != "true";
+    {
+        return element instanceof Selectable && element.getData("ignoreselect") !== "true";
     }
 
     // . nokey: simplesmente ignora o que estava selecionado e adiciona todos os elementos atuais.
-    // . shift: deixa os elementos que estao de fora, e os que estao dentro inverte, os selecionados sao removidos e os que nao estao sao adicionados.
+    // . shift: deixa os elementos que estao de fora, e os que estao dentro inverte,
+    // os selecionados sao removidos e os que nao estao sao adicionados.
     // . ctrl: deixa os elementos que estao de fora e adiciona todos os elementos que estao na area de selecao.
-    protected mousedown(event: MouseEvent): void 
+    protected mousedown(event: MouseEvent): void
     {
         if( !this.isEnabled ) return;
         if ( this.IsEditor(event.target as HTMLElement) ) return;
@@ -431,26 +437,26 @@ export class SelectionDragger extends RectView
         //this.updateSelection(this.getSelectionByPoint(event.pageX, event.pageY));
     }
 
-    protected mousemove(event: MouseEvent): void 
+    protected mousemove(event: MouseEvent): void
     {
         if ( !this.isEnabled ) return;
 
 
 
-        if ( !this.isDown ) 
+        if ( !this.isDown )
         {
             //var hoverTarget: Selectable = this.getSelectionByPoint(event.pageX, event.pageY);
-            var hoverTarget:Selectable = this.root.findByPoint(event.pageX, event.pageY, this.selectableFilter) as Selectable;
-            var elem: HTMLElement = event.target as HTMLElement;
+            let hoverTarget:Selectable = this.root.findByPoint(event.pageX, event.pageY, this.selectableFilter) as Selectable;
+            let elem: HTMLElement = event.target as HTMLElement;
 
             if (this.IsEditor(elem)) return;
 
             // elementos de edicao contem a tag editor-gizmo, evitando selecionar os objetos que estao atras deles
-            if (hoverTarget && elem.className.indexOf("editor-gizmo") == -1 )
+            if (hoverTarget && elem.className.indexOf("editor-gizmo") === -1 )
             {
                 this.selection.hover.set(hoverTarget);
 
-                var rect: Rect = this.selection.hover.getRectArea();
+                let rect: Rect = this.selection.hover.getRectArea();
                 this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
                 this.hoverMark.show();
 
@@ -460,14 +466,14 @@ export class SelectionDragger extends RectView
                 // else
                 //     this.hoverMark.addClass("drag-false");
             }
-            else 
+            else
             {
                 this.selection.hover.clear();
                 this.hoverMark.hide();
             }
 
             // if button is pressed
-            if( event.buttons == 1 && event.which == 1 )
+            if( event.buttons === 1 && event.which === 1 )
                 this.hoverMark.hide();
 
             return;
@@ -482,12 +488,12 @@ export class SelectionDragger extends RectView
         this.end(event.pageX, event.pageY);
         //this.updateSelection(...this.getSelectionByArea(this.rect));
         this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
-        
+
 
         if (event.which !== 1) this.onmouseup(event);
     }
 
-    protected onmouseup(event: MouseEvent): void 
+    protected onmouseup(event: MouseEvent): void
     {
         if ( !this.isEnabled ) return;
         if ( !this.isDown ) return;
@@ -495,7 +501,6 @@ export class SelectionDragger extends RectView
 
         this.end(event.pageX, event.pageY);
         //this.updateSelection(...this.getSelectionByArea(this.rect));
-        var teste:Display[];
         this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
 
         this.hide();
@@ -520,10 +525,10 @@ export class SelectionDragger extends RectView
     private IsEditor( elem:HTMLElement ):boolean
     {
         //if (elem.parentElement != null) return this.IsEditor(elem.parentElement);
-        var root:HTMLElement = elem;
+        let root:HTMLElement = elem;
         while( root != null )
         {
-            if (root.className.indexOf("ui-editor") != -1) return true;
+            if (root.className.indexOf("ui-editor") !== -1) return true;
             root = root.parentElement;
         }
         return false;
@@ -568,7 +573,7 @@ export class SelectionDragger extends RectView
 //     private layoutMark:RectView;
 //     private root:Display;
 
-//     constructor(root:Display, selection:Selection) 
+//     constructor(root:Display, selection:Selection)
 //     {
 //         super("selection-view", "editor-gizmo");
 
@@ -685,12 +690,12 @@ export class SelectionDragger extends RectView
 //         return element instanceof Layout;
 //     }
 
-//     // public getLayoutByPoint(x: number, y: number): Layout 
+//     // public getLayoutByPoint(x: number, y: number): Layout
 //     // {
 //     //     return this.getLayoutByPointInChildren(x, y, this.root);
 //     // }
 
-//     // public getLayoutByPointInChildren(x: number, y: number, element: Display): Layout 
+//     // public getLayoutByPointInChildren(x: number, y: number, element: Display): Layout
 //     // {
 //     //     for (var i = 0; i < element.children.length; i++)
 //     //     {
@@ -755,14 +760,16 @@ export class SelectionDragger extends RectView
 //             this.nextRect.end(endX, endY);
 //             this.rect.copy(this.nextRect);
 //         }
-//         else 
+//         else
 //         {
 //             this.nextRect.copy(this.rect);
 //         }
 
 //         // layout manager
 //         //this._layout = this._event.elements.length == 0 ? null : this.getLayoutByPoint(event.pageX, event.pageY);
-//         this._layout = this._event.elements.length == 0 ? null : this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+//         this._layout = this._event.elements.length == 0 ?
+//null :
+//this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
 //         if (this._layout) this._layout.enterDrag(this._event);
 
 //         // disable mouse in this
@@ -786,20 +793,20 @@ export class SelectionDragger extends RectView
 //         {
 //             //var newLayout:Layout = this.getLayoutByPoint(event.pageX, event.pageY);
 //             var newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-//             if( newLayout != this._layout ) 
+//             if( newLayout != this._layout )
 //             {
 //                 if (this._layout) this._layout.exitDrag(this._event);
 //                 if (newLayout) newLayout.enterDrag(this._event);
 //             }
 //             this._layout = newLayout;
-//             if (this._layout) 
+//             if (this._layout)
 //             {
 //                 this._layout.updateDrag(this._event);
 //                 var rect:Rect = this._layout.getBounds();
 //                 this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
 //                 this.layoutMark.show();
 //             }
-//             else 
+//             else
 //             {
 //                 this.layoutMark.hide();
 //             }
@@ -847,7 +854,7 @@ export class SelectionDragger extends RectView
 //         else
 //         {
 //             this.nextRect.move(
-//                 this.nextRect.x + event.movementX, 
+//                 this.nextRect.x + event.movementX,
 //                 this.nextRect.y + event.movementY);
 //         }
 
@@ -872,7 +879,7 @@ export class SelectionDragger extends RectView
 //         {
 //             ghost = new Ghost();
 //             document.body.appendChild(ghost.html);
-//         } 
+//         }
 //         else
 //         {
 //             ghost = Ghost.pool.pop();
@@ -901,7 +908,7 @@ export class SelectionDragger extends RectView
 //         super.show();
 //     }
 
-//     public hide() 
+//     public hide()
 //     {
 //         this.html.style.display = "none";
 //         this.rect.size(0, 0);
@@ -943,7 +950,7 @@ export class SelectionDragger extends RectView
 
 //         this.html.style.display = "none";
 
-//         this.html.innerHTML = 
+//         this.html.innerHTML =
 //         "<div class='ui-toolbar'>"+
 //         "    <button class='ui-edit'></button>"+
 //         "    <button class='ui-close'></button>"+
@@ -961,7 +968,7 @@ export class SelectionDragger extends RectView
 //         this.html.style.zIndex = "999";
 //     }
 
-//     public hide() 
+//     public hide()
 //     {
 //         this.html.style.display = "none";
 //     }

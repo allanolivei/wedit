@@ -52,12 +52,12 @@ export class WEdit extends Widget
             this.setupContainer("header", "list", header, "list");
 
             // main
-            let main: Display = new Display("div", "main-row", "expand");
-            let container: Display = new VerticalLayout("div", "hide-scroll-x");
-            main.addChild(container)
+            let main: Display = new VerticalLayout("div", "main-row", "expand");
+            //let container: Display = new VerticalLayout("div", "hide-scroll-x");
+            //main.addChild(container);
             this.addChild(main);
-            this.setupContainer("main", "list", container, "list");
-            
+            this.setupContainer("main", "list", main, "list");
+
             // footer
             let footer: Display = new VerticalLayout("footer", "main-row");
             this.addChild(footer);
@@ -75,7 +75,16 @@ export class WEdit extends Widget
 
 
         this.selection = new Selection();
-        this.selectionDragger = new SelectionDragger(this, this.selection);
+
+        let gizmosWrapper:Display = new Display();
+        gizmosWrapper.setStyle("position", "absolute");
+        gizmosWrapper.setStyle("display", "block");
+        gizmosWrapper.setStyle("height", "0");
+        gizmosWrapper.setStyle("top", "0");
+        gizmosWrapper.setStyle("left", "0");
+        this.html.appendChild(gizmosWrapper.html);
+
+         this.selectionDragger = new SelectionDragger(this, this.selection);
         // this.selectionTransform = new SelectionTransform(this, this.selection);
 
         // let self = this;
@@ -129,6 +138,14 @@ export class WEdit extends Widget
         // this.selectionTransform.hide();
 
         this.removeClass("w-editing");
+    }
+
+    public dispose():void
+    {
+        for( let i = this.children.length-1 ; i >= 0 ; i-- )
+            this.children[i].remove();
+        this.selectionDragger.remove();
+        this.removeClasses("w-edit w-editing");
     }
 
     // private onKeydownHandler(event:KeyboardEvent):void
