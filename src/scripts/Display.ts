@@ -1,4 +1,5 @@
 import { Rect, Describer } from "./Utils";
+import { SheetRules } from "./Sheet";
 
 
 export class Display
@@ -41,11 +42,16 @@ export class Display
         return amount;
     }
 
+    // utilizado para gerar um id unico
+    public static lastIDCount:number = 0;
 
+
+    public id:string = "";
     public html: HTMLElement;
     public parent: Display;
     public children: Display[] = [];
-    public style: { [id: string]: string; } = {};
+    public sheetRules:{[media:string]:SheetRules} = {};
+    //public style: { [id: string]: string; } = {};
 
     protected classesName: string[];
     protected rect: Rect;
@@ -128,23 +134,27 @@ export class Display
         this.html = newHtml;
     }
 
-    public setStyle(key: string, value: string): void
+    public setStyle(key: string, value: string, media:string = "default"): void
     {
-        this.style[key] = value;
-        (this.html.style as any)[key] = value;
+        console.log("SET STYLE: ", key, value);
+        this.getSheetRules(media).setRule(key, value);
+        //this.style[key] = value;
+        //(this.html.style as any)[key] = value;
     }
 
-    public getStyle(key:string): string
+    public getStyle(key: string, media: string = "default"): string
     {
-        if( typeof this.style[key] !== "undefined" )
-            return this.style[key];
-        return (this.html.style as any)[key];
+        return this.getSheetRules(media).getRule(key);
+        // if( typeof this.style[key] !== "undefined" )
+        //     return this.style[key];
+        // return (this.html.style as any)[key];
     }
 
-    public removeStyle(key:string):void
+    public removeStyle(key: string, media: string = "default"):void
     {
-        this.html.style[key] = "";
-        delete this.style[key];
+        this.getSheetRules(media).removeRule(key);
+        // this.html.style[key] = "";
+        // delete this.style[key];
     }
 
     public setData(key: string, value: string): void
@@ -323,6 +333,18 @@ export class Display
             else parent = parent.parent;
 
         return true;
+    }
+
+    private getSheetRules(media:string="default"):SheetRules
+    {
+        if( this.id === "" )
+        {
+            this.id = "w" + (Display.lastIDCount++);
+            this.setAttrib("id", this.id);
+        }
+
+        if ( !(media in this.sheetRules) ) this.sheetRules[media] = new SheetRules("#" + this.id);
+        return this.sheetRules[media];
     }
 
 }

@@ -150,6 +150,15 @@ gulp.task("default", ["clean", "html", "ts", "sass", "img", "others"]);
 
 gulp.task("watch", ["default"], function ()
 {
+
+    gulp.watch(["src/scripts/**/*.ts"], ["ts"]);
+    gulp.watch(["src/views/**/*.html"], ["html"]);
+    gulp.watch(["src/img/**/*"], ["img"]);
+    gulp.watch(["src/sass/**/*.scss"], ["sass"]);
+    gulp.watch(["src/others/**/*"], ["others"]);
+    //gulp.watch("tmp/**/**").on('change', browserSync.reload); 
+
+
     browserSync.init({
         server: {
             baseDir: ["./tmp", "./node_modules"],
@@ -163,11 +172,4 @@ gulp.task("watch", ["default"], function ()
         scrollProportionally: false,
         ui: { port: 9001 }
     });
-
-    gulp.watch(["src/scripts/**/*.ts"], ["ts"]);
-    gulp.watch(["src/views/**/*.html"], ["html"]);
-    gulp.watch(["src/img/**/*"], ["img"]);
-    gulp.watch(["src/sass/**/*.scss"], ["sass"]);
-    gulp.watch(["src/others/**/*"], ["others"]);
-    //gulp.watch("tmp/**/**").on('change', browserSync.reload); 
 });

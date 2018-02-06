@@ -146,6 +146,14 @@ describe('Display', function()
     expect( parent.allowAddChild(child) ).to.equal(true);
   });
 
+  it("Modificação de estilos (SheetRules)", function ()
+  {
+  });
+
+  it("Modificação de estilos em medias diferentes (SheetRules)", function ()
+  {
+  });
+
 });
 
 describe("Selectable", function ()
@@ -350,6 +358,26 @@ describe("Rect", function ()
   {
 
   });
+});
+
+describe("SheetRules", function ()
+{
+
+  it('Adição de regras', function () 
+  {
+
+  });
+
+  it('Remoção de regras', function () 
+  {
+
+  });
+
+  it('Estilos em diferentes medias', function () 
+  {
+
+  });
+
 });
 
 describe("SelectableGroup", function ()

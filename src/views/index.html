@@ -16,8 +16,11 @@
         //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
 
         var stage = new W.WEdit(document.body);
-        for( let i = 0 ; i < 20 ; i++ )
-            stage.addWidget("main", {"template": "text", "data":{"content": "linha "+(i+1)}});
+        var widget = new W.Widget({ "template": "text", "className": "w10", "data": { "content": "Diferente" } });
+        
+        stage.addWidget("main", widget);
+        // for( let i = 0 ; i < 20 ; i++ )
+        //     stage.addWidget("main", {"template": "text", "data":{"content": "linha "+(i+1)}});
         //stage.addChild(new W.Display("header", "test"));
     </script>
 </body>

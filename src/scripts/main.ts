@@ -5,6 +5,7 @@ import { VerticalLayout } from "./Layout";
 import { Widget } from "./Widget";
 import { WEdit } from "./WEdit";
 import { SelectableGroup } from "./Selection";
+import { SheetRules } from "./Sheet";
 
 
 
@@ -30,6 +31,7 @@ if( window )
     // utils
     W.Rect = Rect;
     W.SelectableGroup = SelectableGroup;
+    W.SheetRules = SheetRules;
 
     // main hierarchy
     W.Display = Display;

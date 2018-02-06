@@ -110,6 +110,7 @@ export class WEdit extends Widget
 
         // //this.addChild(w);
 
+
     }
 
     public static addTemplate(templateName:string, templateValue:string):void
