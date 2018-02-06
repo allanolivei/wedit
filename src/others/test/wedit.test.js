@@ -129,7 +129,7 @@ describe('Display', function()
     expect( root.findByArea( new W.Rect(0,0,200,400) ) ).to.have.length(2);
 
     // clear document
-    root.html.remove();
+    root.html.parentNode.removeChild(root.html);
   });
 
   it("Verificar se elemento pode ser adicionado como filho. (Pai dentro do filho)", function()
@@ -352,13 +352,182 @@ describe("Rect", function ()
   });
 });
 
-
-
 describe("SelectableGroup", function ()
 {
-  it('Manipular Posição', function () 
+  it('Adição Singular', function () 
   {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable();
+    let b = new W.Selectable();
 
+    expect(selection.count()).to.equal(0);
+    selection.add(a);
+    expect(selection.count()).to.equal(1);
+    expect(selection.get(0)).to.equal(a);
+    selection.toggle(b, false); // nao limpar anterior
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(1)).to.equal(b);
+    selection.toggle(a, true); // limpar selecao anterior
+    expect(selection.count()).to.equal(0); // a selecao anterior esta limpa e o 'a' foi toggleado
+    selection.set(a, b);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(a);
+    expect(selection.get(1)).to.equal(b);
+    selection.clear();
+    selection.insert(a, 99);
+    expect(selection.count()).to.equal(1);
+    expect(selection.get(0)).to.equal(a);
+  });
+
+  it('Remoção Singular', function () 
+  {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable();
+    let b = new W.Selectable();
+
+    selection.add(a);
+    expect(selection.count()).to.equal(1);
+    selection.remove(a);
+    expect(selection.count()).to.equal(0);
+    selection.set(b, a);
+    expect(selection.get(0)).to.equal(b);
+    selection.remove(b);
+    expect(selection.count()).to.equal(1);
+    expect(selection.get(0)).to.equal(a);
+  });
+
+  it('Adição Coletiva', function () 
+  {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable();
+    let b = new W.Selectable();
+
+    selection.set(b, a);
+    expect(selection.count()).to.equal(2);
+    selection.set(b, a, b);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(b);
+    expect(selection.get(1)).to.equal(a);
+    selection.set(a);
+    expect(selection.count()).to.equal(1);
+    expect(selection.get(0)).to.equal(a);
+  });
+
+  it('Remoção Coletiva', function () 
+  {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable();
+    let b = new W.Selectable();
+
+    selection.set(a, b, a, b, a, b);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(a);
+    selection.clear();
+    expect(selection.count()).to.equal(0);
+    selection.set(b,a,b,a,b,a,b,a);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(b);
+    selection.set();
+    expect(selection.count()).to.equal(0);
+  });
+
+  it('Filtro', function () 
+  {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable("div", "a");
+    let b = new W.Selectable("div", "b");
+
+    selection.set(a,b);
+    expect(selection.count()).to.equal(2);
+
+    selection.setFilter(function (selectable){ return selectable.hasClass("a");});
+    selection.set(a,b);
+    expect(selection.count()).to.equal(1);
+    expect(selection.get(0)).to.equal(a);
+
+    selection.setFilter(function (selectable) { return selectable.hasClass("b"); });
+    selection.set(a, b);
+    expect(selection.count()).to.equal(1);
+    expect(selection.get(0)).to.equal(b);
+
+    selection.clearFilter();
+    selection.set(a, b);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(a);
+    expect(selection.get(1)).to.equal(b);
+  });
+
+  it('Combinação', function () 
+  {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable("div", "a");
+    let b = new W.Selectable("div", "b");
+
+    selection.combine(true/*toggleMode*/, a, b); 
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(a);
+    expect(selection.get(1)).to.equal(b);
+    selection.combine(true/*toggleMode*/, a, b);
+    expect(selection.count()).to.equal(0);
+
+    selection.combine(false/*toggleMode*/, a, b);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(a);
+    expect(selection.get(1)).to.equal(b);
+    selection.combine(false/*toggleMode*/, a, b);
+    expect(selection.count()).to.equal(2);
+    expect(selection.get(0)).to.equal(a);
+    expect(selection.get(1)).to.equal(b);
+  });
+
+  it('Recuperação de area', function () 
+  {
+    let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
+    let a = new W.Selectable("div", "a");
+    let b = new W.Selectable("div", "b");
+
+    a.setStyle("position", "absolute");
+    a.setStyle("top", "0");
+    a.setStyle("width", "200px");
+    a.setStyle("height", "200px");
+    b.setStyle("position", "absolute");
+    b.setStyle("top", "100px");
+    b.setStyle("width", "200px");
+    b.setStyle("height", "200px");
+
+    document.body.appendChild(a.html);
+    document.body.appendChild(b.html);
+
+    // empty
+    let area = selection.getRectArea();
+    expect(area.x).to.equal(0);
+    expect(area.y).to.equal(0);
+    expect(area.width).to.equal(0);
+    expect(area.height).to.equal(0);
+
+    // only A
+    selection.add(a);
+    area = selection.getRectArea();
+    expect(area.x).to.equal(0);
+    expect(area.y).to.equal(0);
+    expect(area.width).to.equal(200);
+    expect(area.height).to.equal(200);
+
+    // A + B
+    selection.add(b);
+    area = selection.getRectArea();
+    expect(area.x).to.equal(0);
+    expect(area.y).to.equal(0);
+    expect(area.width).to.equal(200);
+    expect(area.height).to.equal(300);
+
+    // only B
+    selection.set(b);
+    area = selection.getRectArea();
+    expect(area.x).to.equal(0);
+    expect(area.y).to.equal(100);
+    expect(area.width).to.equal(200);
+    expect(area.height).to.equal(200);
   });
 });
 

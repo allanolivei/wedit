@@ -15,3 +15,12 @@
     bottom: $bottom;
     right: $right;
 }
+
+@mixin disable-user-select()
+{
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

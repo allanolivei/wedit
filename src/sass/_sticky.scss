@@ -6,6 +6,8 @@
  * 3. Use `%` instead of `vh` since `vh` is buggy in older mobile Safari.
  */
 
+ html { height: 100%; }
+
 .frame {
   display: flex;
   flex-direction: column;

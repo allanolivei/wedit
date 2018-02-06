@@ -56,11 +56,11 @@ export class Selectable extends Display
     //     this.addClass("dragging");
     // }
 
-    // public allowDrag(): boolean
-    // {
-    //     var dragData: any = this.getData("drag");
-    //     return typeof (dragData) == "object" || dragData == "true";
-    // }
+    public allowDrag(): boolean
+    {
+        let dragData: any = this.getData("drag");
+        return typeof (dragData) === "object" || dragData === "true";
+    }
 
     // public allowDrop(layout: Layout): boolean
     // {

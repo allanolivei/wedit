@@ -165,7 +165,8 @@ export class Display
     public getBounds(): Rect
     {
         this.rect.copyClientRect(this.html.getBoundingClientRect());
-        this.rect.y += window.scrollY;
+        //this.rect.y += window.scrollY;
+        this.rect.y += document.documentElement.scrollTop;
         return this.rect;
     }
 

@@ -91,9 +91,10 @@ export class Widget extends Selectable
         this.templateName = settings.template;
 
         let xml: Document = Widget.parser.parseFromString(Widget.GetTemplate(settings.template).html, "text/xml");
-        this.html = document.createElement(xml.children[0].nodeName);
+        //this.html = document.createElement(xml.children[0].nodeName);
+        this.html = document.createElement(xml.firstChild.nodeName);
         this.html.className = this.classesName.join(" ");
-        this.setupDisplayByElement(this, xml.children[0]);
+        this.setupDisplayByElement(this, xml.firstChild as Element);
         this.setupWidgetsByDataSettings(settings);
     }
 
@@ -233,7 +234,8 @@ export class Widget extends Selectable
         }
 
         // element of content
-        if (xmlNode.children.length === 0)
+        //if (xmlNode.children.length === 0)
+        if ( this.xmlNodeElementLength(xmlNode) === 0 )
         {
             let wattrib: WidgetContainerAttrib = this.getContainerAttrib(xmlNode);
             let content: string = xmlNode.textContent;
@@ -258,18 +260,31 @@ export class Widget extends Selectable
         else
         {
             // create html children
-            for (let i:number = 0; i < xmlNode.children.length; i++)
+            for (let i: number = 0; i < xmlNode.childNodes.length; i++)
             {
-                let d: Display = this.getDisplayByElement(xmlNode.children[i]);
-                this.setupDisplayByElement(d, xmlNode.children[i]);
+                if (xmlNode.childNodes[i].nodeType !== 1) continue;
+
+                let d: Display = this.getDisplayByElement(xmlNode.childNodes[i] as Element);
+                this.setupDisplayByElement(d, xmlNode.childNodes[i] as Element);
                 display.addChild(d);
             }
         }
     }
 
+    private xmlNodeElementLength(xmlNode:Node):number
+    {
+        // FIX** xmlNode.children dont exist in IE
+
+        let count:number = 0;
+        for (let i:number = 0; i < xmlNode.childNodes.length; i++)
+            if (xmlNode.childNodes[i].nodeType === 1 ) count++;
+        return count;
+    }
+
     private getContainerAttrib(xmlNode: Element): WidgetContainerAttrib
     {
-        if (xmlNode.children.length !== 0) return null;
+        //if (xmlNode.children.length !== 0) return null;
+        if ( this.xmlNodeElementLength(xmlNode) !== 0) return null;
         return this.getContainerAttribByString(xmlNode.textContent);
     }
 

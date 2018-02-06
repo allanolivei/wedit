@@ -1,7 +1,9 @@
 import { Selectable } from "./Selectable";
 import { LiteEvent } from "./LiteEvent";
-import { Rect } from "./Utils";
+import { Rect, RectChange } from "./Utils";
 import { Display } from "./Display";
+import { Layout } from "./Layout";
+import { DragEvent } from "./Event";
 
 
 export class SelectableGroup
@@ -58,17 +60,15 @@ export class SelectableGroup
     public setFilter( filter: (e: Selectable) => boolean )
     {
         this.filter = filter;
+
+        for (let i: number = this.selectables.length-1 ; i >= 0 ; i-- )
+            if( !this.filter(this.selectables[i]) ) this.remove(this.selectables[i]);
     }
 
     public clearFilter():void
     {
         this.setFilter(this.defaultFilter);
     }
-
-    // . nokey: simplesmente ignora o que estava selecionado e adiciona todos os elementos atuais.
-    // . shift: deixa os elementos que estao de fora, e os que estao dentro inverte,
-    // os selecionados sao removidos e os que nao estao sao adicionados.
-    // . ctrl: deixa os elementos que estao de fora e adiciona todos os elementos que estao na area de selecao.
 
     public combine(toggleMode: boolean, ...others:Selectable[] ):void
     {
@@ -109,13 +109,13 @@ export class SelectableGroup
         // remove others
         for (let i = this.selectables.length; i >=0 ; i--) {
             let index = others.indexOf(this.selectables[i]);
-            if (index === -1) this.remove(this.selectables[i]);
+            if ( index === -1 ) this.remove(this.selectables[i]);
         }
 
         // add news
         for (let i = 0; i < others.length; i++)
             if (others[i] != null)
-                this.add(others[i]);
+                this.insert(others[i], i);
 
         this.onChange.trigger(this.selectables);
         this.allowDispathChangeEvent = true;
@@ -137,6 +137,17 @@ export class SelectableGroup
                 this.clear();
             else
                 this.remove(obj);
+        }
+    }
+
+    public insert(obj: Selectable, i:number): void
+    {
+        let index: number = this.selectables.indexOf(obj);
+        if (index === -1 && this.filter(obj))
+        {
+            this.onAddHandler(obj);
+            this.selectables.splice(Math.min(i, this.selectables.length), 0, obj);
+            if (this.allowDispathChangeEvent) this.onChange.trigger(this.selectables);
         }
     }
 
@@ -400,8 +411,8 @@ export class SelectionDragger extends RectView
 
     public remove()
     {
-        this.hoverMark.html.remove();
-        this.html.remove();
+        this.hoverMark.html.parentElement.removeChild(this.hoverMark.html);
+        this.html.parentElement.removeChild(this.html);
     }
 
     private selectableFilter( element:Display ):boolean
@@ -536,386 +547,349 @@ export class SelectionDragger extends RectView
 
 }
 
-// export class DragEvent
-// {
-//     public elements: Selectable[] = [];    // elementos selecionados
-//     public startRect:Rect[] = [];          // area inicial em que foram selecionados
-//     public ghost: Ghost[] = [];            // representacao visual dos elementos selecionados
-//     public pointer: Vec2 = new Vec2;       // posicao atual do mouse
-//     public startPointer: Vec2 = new Vec2;  // posicao inicial registrada quando o usuario pressiona o mouse
-//     public offset: Vec2 = new Vec2;        // offset relative bounds of all elements
 
-//     public clear():void
-//     {
-//         this.elements = [];
-//         for (var i = this.ghost.length-1 ; i >= 0 ; i-- )
-//             Ghost.Recycle( this.ghost.pop() );
-//     }
-// }
 
 // // show selected area with anchors
-// export class SelectionTransform extends RectView
-// {
-
-//     public hasMovementHorizontal: boolean;
-//     public hasMovementVertical: boolean;
-//     public isAnchor: boolean;
-//     public isDown: boolean;
-//     public isMinusHorizontal: boolean;
-//     public isMinusVertical: boolean;
-
-//     private nextRect:Rect;
-//     private startDragRect:Rect;
-//     private _event:DragEvent;
-//     private _layout:Layout;
-//     private _selection:Selection;
-//     private _enableAnchors:boolean;
-//     private layoutMark:RectView;
-//     private root:Display;
-
-//     constructor(root:Display, selection:Selection)
-//     {
-//         super("selection-view", "editor-gizmo");
-
-//         this.root = root;
-//         this._selection = selection;
-
-//         // anchors
-//         this.addChild(new Display("div", "anchor", "a-u"));
-//         this.addChild(new Display("div", "anchor", "a-r"));
-//         this.addChild(new Display("div", "anchor", "a-d"));
-//         this.addChild(new Display("div", "anchor", "a-l"));
-//         this.addChild(new Display("div", "anchor", "a-ul"));
-//         this.addChild(new Display("div", "anchor", "a-ur"));
-//         this.addChild(new Display("div", "anchor", "a-dl"));
-//         this.addChild(new Display("div", "anchor", "a-dr"));
-
-//         // rect
-//         //this.set(200, 200, 200, 250);
-//         this.hide();
-//         this.nextRect = new Rect();
-//         this.nextRect.copy(this.rect);
-
-//         // cache data
-//         this._event = new DragEvent();
-//         this.startDragRect = new Rect();
-
-//         // layout mark
-//         this.layoutMark = new RectView("layout-hover");
-//         this.layoutMark.hide();
-
-//         // start in disable
-//         this.disableAnchors();
-
-//         // events
-//         var self = this;
-//         this.html.addEventListener( "mousedown", (event: MouseEvent) => self.mousedown(event) );
-//         window.addEventListener( "mousemove", (event: MouseEvent) => self.mousemove(event) );
-//         window.addEventListener( "mouseup", (event: MouseEvent) => self.onmouseup(event) );
-
-//         this._selection.select.onChange.on((e: Selectable[]) => self.selectionChangeHandler(e));
-
-//         document.body.appendChild(this.layoutMark.html);
-//         document.body.appendChild(this.html);
-
-//         this.html.style.pointerEvents = "auto";
-//     }
-
-//     private selectionChangeHandler(e: Selectable[]): void
-//     {
-//         this._event.elements = [];
-//         for( let i:number = 0 ; i < e.length ; i++ )
-//             if( e[i].allowDrag() ) this._event.elements.push(e[i]);
-
-//         var diff: number = this._event.elements.length - this._event.ghost.length;
-
-//         // rect
-//         this._event.startRect = [];
-//         for( let i:number = 0 ; i < e.length ; i++ )
-//             this._event.startRect.push( e[i].getBounds() );
-
-//         // add ghosts
-//         for( let i:number = 0 ; i < diff ; i++ )
-//             this._event.ghost.push( Ghost.Get(e[i], false) );
-
-//         // remove ghosts
-//         for( let i:number = 0 ; i > diff ; i-- )
-//             Ghost.Recycle( this._event.ghost.pop() );
-
-//         if( e.length > 0 )
-//             this.show();
-//         else
-//             this.hide();
-
-//         this.redraw();
-//     }
-
-//     private redraw():void
-//     {
-//         var rect: Rect = this._selection.select.getRectArea();
-//         this.set(rect.x, rect.y, rect.w, rect.h);
-
-//         var isDraggable:boolean = false;
-
-//         for( let i:number = 0 ; i < this._event.ghost.length ; i++ )
-//         {
-//             this._event.ghost[i].rect.copyClientRect( this._event.elements[i].getBounds() );
-//             this._event.ghost[i].draw();
-
-//             if( this._event.elements[i].allowDrag() ) isDraggable = true;
-//         }
-
-//         this.setData('drag', isDraggable ? 'true' : 'false');
-//     }
-
-//     public get layout():Layout
-//     {
-//         return this._layout;
-//     }
-
-//     public enableAnchors():void
-//     {
-//         this._enableAnchors = true;
-//         this.removeClass("anchor-disable");
-//     }
-
-//     public disableAnchors():void
-//     {
-//         this._enableAnchors = false;
-//         this.addClass("anchor-disable");
-//     }
-
-//     private layoutFilter( element:Display ):boolean
-//     {
-//         return element instanceof Layout;
-//     }
-
-//     // public getLayoutByPoint(x: number, y: number): Layout
-//     // {
-//     //     return this.getLayoutByPointInChildren(x, y, this.root);
-//     // }
-
-//     // public getLayoutByPointInChildren(x: number, y: number, element: Display): Layout
-//     // {
-//     //     for (var i = 0; i < element.children.length; i++)
-//     //     {
-//     //         var result: Layout = this.getLayoutByPointInChildren(x, y, element.children[i]);
-//     //         if (result != null) return result;
-//     //     }
-
-//     //     var domRect = element.getBounds();
-//     //     if (element instanceof Layout &&
-//     //         x >= domRect.left && y >= domRect.top &&
-//     //         x <= domRect.right && y <= domRect.bottom)
-//     //     {
-//     //         return element;
-//     //     }
-
-//     //     return null;
-//     // }
-
-//     public mousedown(event: MouseEvent) : void
-//     {
-//         if( !this.isShow() ) return;
-
-//         event.preventDefault();
-//         event.stopPropagation();
-//         this.isDown = true;
-
-//         var target: HTMLElement = event.target as HTMLElement;
-//         var className: string = target.className;
-
-//         this.isAnchor = this._enableAnchors && target && className.indexOf("anchor") != -1;
-
-//         // cache start drag information
-//         this.startDragRect.copy(this.rect);
-//         this._event.pointer.x = this._event.startPointer.x = event.pageX;
-//         this._event.pointer.y = this._event.startPointer.y = event.pageY;
-//         this._event.offset.x = event.pageX - this.startDragRect.x;
-//         this._event.offset.x = event.pageY - this.startDragRect.y;
-
-//         if( this.isAnchor )
-//         {
-//             this.hasMovementVertical = className.indexOf("-l ") == -1 && className.indexOf("-r ") == -1;
-//             this.hasMovementHorizontal = className.indexOf("-u ") == -1 && className.indexOf("-d ") == -1;
-//             this.isMinusHorizontal = this.hasMovementHorizontal && (className.indexOf("-l ") != -1 || className.indexOf("l ") != -1);
-//             this.isMinusVertical = this.hasMovementVertical && (className.indexOf("-u") != -1);
-
-//             var startX: number = this.rect.x;
-//             var endX: number = startX;
-//             var startY: number = this.rect.y;
-//             var endY: number = startY;
-
-//             if( this.isMinusHorizontal )
-//                 startX += this.rect.w;
-//             else
-//                 endX += this.rect.w;
-
-//             if( this.isMinusVertical )
-//                 startY += this.rect.h;
-//             else
-//                 endY += this.rect.h;
-
-//             this.nextRect.start(startX, startY);
-//             this.nextRect.end(endX, endY);
-//             this.rect.copy(this.nextRect);
-//         }
-//         else
-//         {
-//             this.nextRect.copy(this.rect);
-//         }
-
-//         // layout manager
-//         //this._layout = this._event.elements.length == 0 ? null : this.getLayoutByPoint(event.pageX, event.pageY);
-//         this._layout = this._event.elements.length == 0 ?
-//null :
-//this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-//         if (this._layout) this._layout.enterDrag(this._event);
-
-//         // disable mouse in this
-//         this.html.style.pointerEvents = "none";
-//         this.html.style.opacity = "0";
-//     }
-
-//     public mousemove(event: MouseEvent): void
-//     {
-//         if ( !this.isDown ) return;
-
-//         event.preventDefault();
-
-//         this._event.pointer.x = event.pageX;
-//         this._event.pointer.y = event.pageY;
-
-//         this.update(event);
-
-//         // layout manager
-//         if( this._event.elements.length > 0 )
-//         {
-//             //var newLayout:Layout = this.getLayoutByPoint(event.pageX, event.pageY);
-//             var newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-//             if( newLayout != this._layout )
-//             {
-//                 if (this._layout) this._layout.exitDrag(this._event);
-//                 if (newLayout) newLayout.enterDrag(this._event);
-//             }
-//             this._layout = newLayout;
-//             if (this._layout)
-//             {
-//                 this._layout.updateDrag(this._event);
-//                 var rect:Rect = this._layout.getBounds();
-//                 this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
-//                 this.layoutMark.show();
-//             }
-//             else
-//             {
-//                 this.layoutMark.hide();
-//             }
-//         }
-
-//         // disable drag
-//         if (event.which !== 1) this.onmouseup(event);
-//     }
-
-//     public onmouseup(event: MouseEvent): void
-//     {
-//         if ( !this.isDown ) return;
-
-//         event.preventDefault();
-//         this.isDown = false;
-
-//         this._event.pointer.x = event.pageX;
-//         this._event.pointer.y = event.pageY;
-
-//         this.update(event);
-
-//         // layout manager
-//         if (this._layout != null) this._layout.dropDrag(this._event);
-//         this.layoutMark.hide();
-//         // this._layout = null;
-//         // this._event.clear();
-
-//         // enable mouse in this
-//         this.html.style.pointerEvents = "auto";
-//         this.html.style.opacity = "1";
-
-
-
-//         this.redraw();
-//     }
-
-//     private update(event:MouseEvent): RectChange
-//     {
-//         if (this.isAnchor)
-//         {
-//             this.nextRect.end(
-//                 this.hasMovementHorizontal ? event.pageX : this.rect.x + this.rect.w,
-//                 this.hasMovementVertical ? event.pageY : this.rect.y + this.rect.h);
-//         }
-//         else
-//         {
-//             this.nextRect.move(
-//                 this.nextRect.x + event.movementX,
-//                 this.nextRect.y + event.movementY);
-//         }
-
-//         var change: RectChange = this.rect.getChangeByRect(this.nextRect);
-//         this.rect.copy(this.nextRect);
-//         this.draw();
-
-//         return change;
-//     }
-// }
-
-
-
-// export class Ghost extends RectView
-// {
-//     private static pool:Ghost[] = [];
-
-//     public static Get(target:Display, show:boolean = true): Ghost
-//     {
-//         let ghost: Ghost;
-//         if( Ghost.pool.length <= 0 )
-//         {
-//             ghost = new Ghost();
-//             document.body.appendChild(ghost.html);
-//         }
-//         else
-//         {
-//             ghost = Ghost.pool.pop();
-//         }
-//         ghost.rect.copyClientRect(target.getBounds());
-//         if( show ) ghost.show();
-//         return ghost;
-//     }
-
-//     public static Recycle(ghost:Ghost):void
-//     {
-//         ghost.hide();
-//         Ghost.pool.push(ghost);
-//     }
-
-//     constructor(...classesName:string[])
-//     {
-//         super(...classesName, "ghost");
-
-//         this.html.style.display = "none";
-//     }
-
-//     public show()
-//     {
-//         this.html.style.display = "block";
-//         super.show();
-//     }
-
-//     public hide()
-//     {
-//         this.html.style.display = "none";
-//         this.rect.size(0, 0);
-//         super.hide();
-//     }
-
-// }
+export class SelectionTransform extends RectView
+{
+
+    public hasMovementHorizontal: boolean;
+    public hasMovementVertical: boolean;
+    public isAnchor: boolean;
+    public isDown: boolean;
+    public isMinusHorizontal: boolean;
+    public isMinusVertical: boolean;
+
+    private nextRect:Rect;
+    private startDragRect:Rect;
+    private _event:DragEvent;
+    private _layout:Layout;
+    private _selection:Selection;
+    private _enableAnchors:boolean;
+    private layoutMark:RectView;
+    private root:Display;
+
+    constructor(root:Display, selection:Selection)
+    {
+        super("select-transform", "editor-gizmo");
+
+        this.root = root;
+        this._selection = selection;
+
+        // anchors
+        this.addChild(new Display("div", "anchor", "a-u"));
+        this.addChild(new Display("div", "anchor", "a-r"));
+        this.addChild(new Display("div", "anchor", "a-d"));
+        this.addChild(new Display("div", "anchor", "a-l"));
+        this.addChild(new Display("div", "anchor", "a-ul"));
+        this.addChild(new Display("div", "anchor", "a-ur"));
+        this.addChild(new Display("div", "anchor", "a-dl"));
+        this.addChild(new Display("div", "anchor", "a-dr"));
+
+        // rect
+        //this.set(200, 200, 200, 250);
+        this.hide();
+        this.nextRect = new Rect();
+        this.nextRect.copy(this.rect);
+
+        // cache data
+        this._event = new DragEvent();
+        this.startDragRect = new Rect();
+
+        // layout mark
+        this.layoutMark = new RectView("layout-hover");
+        this.layoutMark.hide();
+
+        // start in disable
+        this.disableAnchors();
+
+        // events
+        let self = this;
+        this.html.addEventListener( "mousedown", (event: MouseEvent) => self.mousedown(event) );
+        window.addEventListener( "mousemove", (event: MouseEvent) => self.mousemove(event) );
+        window.addEventListener( "mouseup", (event: MouseEvent) => self.onmouseup(event) );
+
+        this._selection.select.onChange.on((e: Selectable[]) => self.selectionChangeHandler(e));
+
+        document.body.appendChild(this.layoutMark.html);
+        document.body.appendChild(this.html);
+
+        this.html.style.pointerEvents = "auto";
+    }
+
+    private selectionChangeHandler(e: Selectable[]): void
+    {
+        this._event.elements = [];
+        for( let i:number = 0 ; i < e.length ; i++ )
+            if( e[i].allowDrag() ) this._event.elements.push(e[i]);
+
+        let diff: number = this._event.elements.length - this._event.ghost.length;
+
+        // rect
+        this._event.startRect = [];
+        for( let i:number = 0 ; i < e.length ; i++ )
+            this._event.startRect.push( e[i].getBounds() );
+
+        // add ghosts
+        for( let i:number = 0 ; i < diff ; i++ )
+            this._event.ghost.push( Ghost.Get(e[i], false) );
+
+        // remove ghosts
+        for( let i:number = 0 ; i > diff ; i-- )
+            Ghost.Recycle( this._event.ghost.pop() );
+
+        if( e.length > 0 )
+            this.show();
+        else
+            this.hide();
+
+        this.redraw();
+    }
+
+    private redraw():void
+    {
+        let rect: Rect = this._selection.select.getRectArea();
+        this.set(rect.x, rect.y, rect.w, rect.h);
+
+        let isDraggable:boolean = false;
+
+        for( let i:number = 0 ; i < this._event.ghost.length ; i++ )
+        {
+            this._event.ghost[i].rect.copyClientRect( this._event.elements[i].getBounds() );
+            this._event.ghost[i].draw();
+
+            if( this._event.elements[i].allowDrag() ) isDraggable = true;
+        }
+
+        this.setData('drag', isDraggable ? 'true' : 'false');
+    }
+
+    public get layout():Layout
+    {
+        return this._layout;
+    }
+
+    public remove()
+    {
+        this.html.parentElement.removeChild(this.html);
+        for (let i: number = this._event.ghost.length-1; i >= 0; i--)
+            Ghost.Recycle(this._event.ghost.pop());
+    }
+
+    public enableAnchors():void
+    {
+        this._enableAnchors = true;
+        this.removeClass("anchor-disable");
+    }
+
+    public disableAnchors():void
+    {
+        this._enableAnchors = false;
+        this.addClass("anchor-disable");
+    }
+
+    private layoutFilter( element:Display ):boolean
+    {
+        return element instanceof Layout;
+    }
+
+    public mousedown(event: MouseEvent): void
+    {
+        if( !this.isShow() ) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDown = true;
+
+        let target: HTMLElement = event.target as HTMLElement;
+        let className: string = target.className;
+
+        this.isAnchor = this._enableAnchors && target && className.indexOf("anchor") !== -1;
+
+        // cache start drag information
+        this.startDragRect.copy(this.rect);
+        this._event.pointer.x = this._event.startPointer.x = event.pageX;
+        this._event.pointer.y = this._event.startPointer.y = event.pageY;
+        this._event.offset.x = event.pageX - this.startDragRect.x;
+        this._event.offset.x = event.pageY - this.startDragRect.y;
+
+        if( this.isAnchor )
+        {
+            this.hasMovementVertical = className.indexOf("-l ") === -1 && className.indexOf("-r ") === -1;
+            this.hasMovementHorizontal = className.indexOf("-u ") === -1 && className.indexOf("-d ") === -1;
+            this.isMinusHorizontal = this.hasMovementHorizontal && (className.indexOf("-l ") !== -1 || className.indexOf("l ") !== -1);
+            this.isMinusVertical = this.hasMovementVertical && (className.indexOf("-u") !== -1);
+
+            let startX: number = this.rect.x;
+            let endX: number = startX;
+            let startY: number = this.rect.y;
+            let endY: number = startY;
+
+            if( this.isMinusHorizontal )
+                startX += this.rect.w;
+            else
+                endX += this.rect.w;
+
+            if( this.isMinusVertical )
+                startY += this.rect.h;
+            else
+                endY += this.rect.h;
+
+            this.nextRect.start(startX, startY);
+            this.nextRect.end(endX, endY);
+            this.rect.copy(this.nextRect);
+        }
+        else
+        {
+            this.nextRect.copy(this.rect);
+        }
+
+        // layout manager
+        this._layout = this._event.elements.length === 0 ?
+            null :
+            this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+        // if (this._layout) this._layout.enterDrag(this._event);
+
+        // disable mouse in this
+        this.html.style.pointerEvents = "none";
+        this.html.style.opacity = "0";
+    }
+
+    public mousemove(event: MouseEvent): void
+    {
+        if ( !this.isDown ) return;
+
+        event.preventDefault();
+
+        this._event.pointer.x = event.pageX;
+        this._event.pointer.y = event.pageY;
+
+        this.update(event);
+
+        // layout manager
+        if( this._event.elements.length > 0 )
+        {
+            let newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+            if( newLayout !== this._layout )
+            {
+                // if (this._layout) this._layout.exitDrag(this._event);
+                // if (newLayout) newLayout.enterDrag(this._event);
+            }
+            this._layout = newLayout;
+            if (this._layout)
+            {
+                // this._layout.updateDrag(this._event);
+                let rect:Rect = this._layout.getBounds();
+                this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
+                this.layoutMark.show();
+            }
+            else
+            {
+                this.layoutMark.hide();
+            }
+        }
+
+        // disable drag
+        if (event.which !== 1) this.onmouseup(event);
+    }
+
+    public onmouseup(event: MouseEvent): void
+    {
+        if ( !this.isDown ) return;
+
+        event.preventDefault();
+        this.isDown = false;
+
+        this._event.pointer.x = event.pageX;
+        this._event.pointer.y = event.pageY;
+
+        this.update(event);
+
+        // layout manager
+        // if (this._layout != null) this._layout.dropDrag(this._event);
+        this.layoutMark.hide();
+
+        // enable mouse in this
+        this.html.style.pointerEvents = "auto";
+        this.html.style.opacity = "1";
+
+
+
+        this.redraw();
+    }
+
+    private update(event:MouseEvent): RectChange
+    {
+        if (this.isAnchor)
+        {
+            this.nextRect.end(
+                this.hasMovementHorizontal ? event.pageX : this.rect.x + this.rect.w,
+                this.hasMovementVertical ? event.pageY : this.rect.y + this.rect.h);
+        }
+        else
+        {
+            this.nextRect.move(
+                this.nextRect.x + event.movementX,
+                this.nextRect.y + event.movementY);
+        }
+
+        let change: RectChange = this.rect.getChangeByRect(this.nextRect);
+        this.rect.copy(this.nextRect);
+        this.draw();
+
+        return change;
+    }
+}
+
+
+
+export class Ghost extends RectView
+{
+    private static pool:Ghost[] = [];
+
+    public static Get(target:Display, show:boolean = true): Ghost
+    {
+        let ghost: Ghost;
+        if( Ghost.pool.length <= 0 )
+        {
+            ghost = new Ghost();
+            document.body.appendChild(ghost.html);
+        }
+        else
+        {
+            ghost = Ghost.pool.pop();
+        }
+        ghost.rect.copyClientRect(target.getBounds());
+        if( show ) ghost.show();
+        return ghost;
+    }
+
+    public static Recycle(ghost:Ghost):void
+    {
+        ghost.hide();
+        Ghost.pool.push(ghost);
+    }
+
+    constructor(...classesName:string[])
+    {
+        super(...classesName, "ghost");
+
+        this.html.style.display = "none";
+    }
+
+    public show()
+    {
+        this.html.style.display = "block";
+        super.show();
+    }
+
+    public hide()
+    {
+        this.html.style.display = "none";
+        this.rect.size(0, 0);
+        super.hide();
+    }
+}
 
 // export class ToolbarEditor extends Display
 // {

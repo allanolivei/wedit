@@ -8,7 +8,7 @@
 import { Widget } from "./Widget";
 import { VerticalLayout } from "./Layout";
 import { Display } from "./Display";
-import { Selection, SelectionDragger } from "./Selection";
+import { Selection, SelectionDragger, SelectionTransform } from "./Selection";
 
 //import * as $ from 'jquery';
 // declare var CKEDITOR: any;
@@ -26,8 +26,7 @@ export class WEdit extends Widget
 {
     public selection:Selection;
     public selectionDragger: SelectionDragger;
-
-    // public selectionTransform:SelectionTransform;
+    public selectionTransform:SelectionTransform;
 
     constructor(element: HTMLElement, settings: any = "default", ...className: string[])
     {
@@ -84,8 +83,8 @@ export class WEdit extends Widget
         gizmosWrapper.setStyle("left", "0");
         this.html.appendChild(gizmosWrapper.html);
 
-         this.selectionDragger = new SelectionDragger(this, this.selection);
-        // this.selectionTransform = new SelectionTransform(this, this.selection);
+        this.selectionDragger = new SelectionDragger(this, this.selection);
+        this.selectionTransform = new SelectionTransform(this, this.selection);
 
         // let self = this;
 
@@ -145,6 +144,7 @@ export class WEdit extends Widget
         for( let i = this.children.length-1 ; i >= 0 ; i-- )
             this.children[i].remove();
         this.selectionDragger.remove();
+        this.selectionTransform.remove();
         this.removeClasses("w-edit w-editing");
     }
 

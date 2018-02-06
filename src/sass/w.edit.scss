@@ -38,6 +38,152 @@
         border: 1px dotted rgb(161, 161, 161);
     }
 
+    .selectable
+    {
+        @include disable-user-select;
+    }
+
+
+
+    .select-transform
+    {
+        position: absolute;
+        border: 1px solid #ff6bf4;
+        cursor: move;
+        z-index: 25;
+
+        
+        $border-offset: 16px;
+        $corner-offset: 16px;
+        $anchor-size: 6px;
+
+        &:before
+        {
+            content: "";
+            @include box(50%, 50%, 4px, 4px);
+            background: #ff6bf4;
+            transform: rotate(45deg);
+        }
+
+        [class^="a-"], [class*=" a-"] 
+        {
+            //background: #05a8ff;
+        }
+
+        &[data-drag='false'] 
+        {
+            cursor: auto;
+            border-color: rgba(218, 218, 5, 0.842);
+
+            &:before { background: rgba(218, 218, 5, 0.842); }
+        }
+
+        &.anchor-disable
+        {
+            .anchor { cursor: move; display:none; }
+        }
+
+        .a-l, .a-r 
+        { 
+            margin-left: -$border-offset*0.5;
+            margin-top: -$border-offset/5;
+
+            &:before
+            {
+                content: "";
+                background: #f123e2;
+                @include box($border-offset*0.5-$anchor-size*0.5, 50%, $anchor-size, $anchor-size);
+            }
+        }
+        .a-u, .a-d 
+        {
+            margin-top: -$border-offset*0.5; 
+            margin-left: -$border-offset/5;
+            
+            &:before
+            {
+                content: "";
+                background: #f123e2;
+                @include box(50%, $border-offset*0.5-$anchor-size*0.5, $anchor-size, $anchor-size);
+            }
+        }
+        
+        .a-dr, .a-dl, .a-ul, .a-ur
+        {
+            z-index: 25;
+            margin-top: -$anchor-size*0.5;
+            margin-left: -$anchor-size*0.5;
+            background: #f123e2;
+
+            &:before
+            {
+                content: "";
+                @include box(-$corner-offset, -$corner-offset, $corner-offset * 2, $corner-offset * 2);
+            }
+
+        }
+
+        .a-u
+        {
+            @include box(0, 0, 100%, $border-offset);
+            cursor: n-resize;
+            
+        }
+
+        .a-d
+        {
+            @include box(0, 100%, 100%, $border-offset );
+            cursor: n-resize;
+        }
+
+        .a-l
+        {
+            @include box(0, 0, $border-offset, 100% );
+            cursor:e-resize;
+        }
+
+        .a-r
+        {
+            @include box(100%, 0, $border-offset, 100% );
+            cursor:e-resize;
+        }
+
+        .a-ul
+        {
+            @include box(0, 0, $anchor-size, $anchor-size );
+            cursor:nw-resize;
+        }
+
+        .a-ur
+        {
+            @include box(100%, 0, $anchor-size, $anchor-size );
+            cursor:ne-resize;
+        }
+
+        .a-dl
+        {
+            @include box(0, 100%, $anchor-size, $anchor-size );
+            cursor:ne-resize;
+        }
+
+        .a-dr
+        {
+            @include box(100%, 100%, $anchor-size, $anchor-size );
+            cursor:nw-resize;
+        }
+
+    }
+
+
+    .ghost
+    {
+        pointer-events: none;
+        position: absolute;
+        background: rgba(85, 83, 238, 0.11);
+        border: 1px dashed rgba(85, 83, 238, 0.4);
+        z-index: 1000;
+    }
+
 }
 
 

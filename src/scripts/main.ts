@@ -18,8 +18,8 @@ import { SelectableGroup } from "./Selection";
 ---------Widget
 ------------WEdit
 
-
-
+Attributos especiais
+data-drag: objetos selectables podem controlar se podem ser arrastaveis atraveis desse atributo
 */
 
 
