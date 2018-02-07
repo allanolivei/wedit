@@ -74,8 +74,9 @@ export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html: "<div>{{text}}</div>" },
-        "row-layout": { html: "<div><div class='row' data-type='RowLayout'>{{list}}</div></div>" },
-        "vertical-layout": { html: "<div><div class='vertical' data-type='VerticalLayout'>{{list}}</div></div>" },
+        "row-layout": { html: "<div><div class='layout-row row' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
+        "vertical-layout": { html: "<div><div class='layout-vertical' data-type='VerticalLayout'>{{list}}</div></div>" },
+        "relative-layout": { html: "<div><div class='layout-relative' data-type='RelativeLayout'>{{list}}</div></div>" },
     };
 
     public static AddTemplate( name:string, value:string|TemplateData ):void
