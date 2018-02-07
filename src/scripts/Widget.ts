@@ -3,7 +3,7 @@ import { Display } from "./Display";
 import { Describer } from "./Utils";
 //import { VerticalLayout, AbsoluteLayout, AutoLayout, RowLayout } from "./Layout/Layout";
 import { Selectable } from "./Selectable";
-import { AutoLayout } from "./Layout";
+import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout } from "./Layout";
 
 
 // {{ list container params params params }}
@@ -17,7 +17,7 @@ import { AutoLayout } from "./Layout";
 // registra possicoes em que conter widgetattrib nos elementos
 interface WidgetContainerData
 {
-    type:string;  // "list, text, attrib"
+    type:string;  // "list, text, attrib, style, class"
     display: Display;
     attribName?: string;
 }
@@ -33,17 +33,49 @@ interface WidgetData
 {
     template:string;
     data?:any;
-    dataClassName?:string[];
-    className?:string;
-    style?:string[];
+    //dataClassName?:string[];
+    //className?:string;
+    //style?:string[];
 }
 
+
+/*
+# containers disponives (text,list,attrib,class,style)
+W.WEdit.addTemplate("lista",
+"<div class='lista-wrapper' data-class='{{minhaclasse}}'>"+
+"   <p>{{meutexto}}</p>"+
+"   <ul data-style='{{meuestilo}}' data-qualquer='{{meuatributo}}' data-type='VerticalLayout'>{{minhalista}}</ul>" +
+"</div>"
+);
+
+stage.addWidget("list",{
+    "template": "lista",
+    "data":{
+        "meutexto":"allan",
+        "minhaclasse":"container align-itens-center",
+        "meuatributo":"ola atributo",
+        "meuestilo":"margin-top:20px;background:red;",
+        "minhalista":[
+            {"template":"text", "data":{"text":"Nicole 1"}},
+            {"template":"text", "data":{"text":"Nicole 2"}},
+            {"template":"text", "data":{"text":"Nicole 3"}}
+        ]
+    }
+});
+
+stage.addWidget("list",{
+    "template": "lista",
+    "data":{
+        "meuestilo":{"500px":"margin-top:20px;background:red;min-height:40px"}
+    }
+});
+*/
 export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
-        "text": { html: "<div>{{text content}}</div>" },
-        "row-layout": { html: "<div><div class='row' data-type='RowLayout'>{{list container}}</div></div>" },
-        "vertical-layout": { html: "<div><div class='vertical' data-type='VerticalLayout'>{{list container}}</div></div>" },
+        "text": { html: "<div>{{text}}</div>" },
+        "row-layout": { html: "<div><div class='row' data-type='RowLayout'>{{list}}</div></div>" },
+        "vertical-layout": { html: "<div><div class='vertical' data-type='VerticalLayout'>{{list}}</div></div>" },
     };
 
     public static AddTemplate( name:string, value:string|TemplateData ):void
@@ -64,10 +96,11 @@ export class Widget extends Selectable
 
     public static displayTypes: { [id: string]: typeof Display; } = {
         "Display": Display,
-        // "VerticalLayout": VerticalLayout,
-        // "AbsoluteLayout": AbsoluteLayout,
-        // "AutoLayout": AutoLayout,
-        // "RowLayout": RowLayout
+        "Layout": VerticalLayout,
+        "VerticalLayout": VerticalLayout,
+        "RelativeLayout": RelativeLayout,
+        "AutoLayout": AutoLayout,
+        "RowLayout": RowLayout,
     };
 
 
@@ -101,8 +134,9 @@ export class Widget extends Selectable
         this.applyTemplate(this, xml.firstChild as Element);
         // add defaults containers
         this.createContainer("style", "style", this);
+        this.createContainer("className", "class", this);
         // fill containers with data
-        this.fillContainersByData(settings);
+        this.setContainersData(settings.data);
     }
 
     // public serialize(): string
@@ -146,7 +180,31 @@ export class Widget extends Selectable
 
 
     //+++++++++++++++++++++++++++++ Manipulate all data ++++++++++++++++++++++++++++++
-    public setContainerData(containerName:string, value:any)
+    public createContainer(containerName: string, type: string, children: Display, attribName?: string): void
+    {
+        this.containers[containerName] = { type: type, display: children, attribName: attribName };
+    }
+
+    public getDisplayByContainerName(containerName:string):Display
+    {
+        return this.containers[containerName].display;
+    }
+
+    public getNumberOfContainers():number
+    {
+        let count = 0;
+        for( let key in this.containers ) count++;
+        return count;
+    }
+
+    public getContainerType(containerName:string):string
+    {
+        if( containerName in this.containers )
+            return this.containers[containerName].type;
+        return "";
+    }
+
+    public setContainerData(containerName:string, value:string|Widget):void
     {
         if ( !(containerName in this.containers) )
             throw "Tentativa de modificação de um container inexistente. Container Name: " + containerName;
@@ -158,44 +216,135 @@ export class Widget extends Selectable
             case "attrib":
                 this.setWidgetAttrib(containerName, value as string);
                 break;
+            case "class":
+                this.addWidgetClasses(containerName, value as string);
+                break;
             case "style":
-                this.setWidgetStyle(containerName, value as string);
+                this.setWidgetStyles(containerName, value as string);
                 break;
             case "list":
                 this.addWidget(containerName, value);
                 break;
         }
     }
-    //+++++++++++++++++++++++++++ Manipulate type(attrib) ++++++++++++++++++++++++++++++
-    public setWidgetStyle(key: string, styles: string): void
-    {
-        if (!(key in this.containers))
-            throw "Tentativa de modificação de um estilo em uma chave inexistente. Chave: " + key;
 
-        this.containers[key].display.setStyles(styles);
+    public setContainersData( data:{[n:string]:any} ):void
+    {
+        for (let key in data)
+        {
+            let item: any = data[key];
+
+            switch ( this.getContainerType(key) )
+            {
+                case "class":
+                    this.addWidgetClasses(key, item);
+                    break;
+                case "style":
+                    if( typeof item === "string" )
+                        this.setWidgetStyles(key, item as string);
+                    else
+                        for( let media in item )
+                            this.setWidgetStyles(key, item[media], media );
+                    break;
+                case "attrib":
+                    this.setWidgetAttrib(key, item);
+                    break;
+                case "list":
+                    for (let i: number = 0; i < item.length; i++)
+                        this.addWidget(key, item[i]);
+                    break;
+                default:
+                    this.setWidgetText(key, item);
+            }
+        }
     }
 
-    public getWidgetStyle(key: string): string
+    //+++++++++++++++++++++++++++ Manipulate type(class) ++++++++++++++++++++++++++++++
+    public addWidgetClass(key: string, className: string): void
     {
-        if (!(key in this.containers))
-            throw "Tentativa de modificação de um estilo em uma chave inexistente. Chave: " + key;
+        if ( this.getContainerType(key) !== "class" )
+            throw "Widget :: Não foi possível adicionar as (classes) no container " + key;
 
-        return this.containers[key].display.getStyles();
+        this.containers[key].display.addClass(className);
+    }
+    public addWidgetClasses(key: string, classNames: string): void
+    {
+        if ( this.getContainerType(key) !== "class" )
+            throw "Widget :: Não foi possível adicionar as (classes) no container " + key;
+
+        this.containers[key].display.addClasses(classNames);
+    }
+
+    public removeWidgetClass(key:string, className:string):void
+    {
+        if ( this.getContainerType(key) !== "class" )
+            throw "Widget :: Não foi possível removers as (classes) do container " + key;
+
+        this.containers[key].display.removeClass(className);
+    }
+
+    public removeWidgetClasses(key: string, classNames:string): void
+    {
+        if ( this.getContainerType(key) !== "class" )
+            throw "Widget :: Não foi possível removers as (classes) do container " + key;
+
+        this.containers[key].display.removeClasses(classNames);
+    }
+
+    public hasWidgetClass(key:string, className:string): boolean
+    {
+        if ( this.getContainerType(key) !== "class" )
+            throw "Widget :: Não foi possível verificar as (classes) do container " + key;
+
+        return this.containers[key].display.hasClass(className);
+    }
+
+    //+++++++++++++++++++++++++++ Manipulate type(attrib) ++++++++++++++++++++++++++++++
+    public setWidgetStyles(key: string, styles: string|{[n:string]:string}, media:string="default"): void
+    {
+        if ( this.getContainerType(key) !== "style" )
+            throw "Widget :: Não foi possível adicionar um novo (estilo) no container " + key;
+
+        this.containers[key].display.setStyles(styles, media);
+    }
+
+    public getWidgetStyles(key: string, media:string="default"): {[n:string]:string}
+    {
+        if ( this.getContainerType(key) !== "style" )
+            throw "Widget :: Não foi possível recuperar o (estilo) do container " + key;
+
+        return this.containers[key].display.getStyles(media);
+    }
+
+    public hasWidgetStyle(key: string, attribName:string, media:string = "default"): boolean
+    {
+        if ( this.getContainerType(key) !== "style" )
+            throw "Widget :: Não foi possível recuperar o (estilo) do container " + key;
+
+        return this.containers[key].display.getStyle(attribName, media) !== undefined;
+    }
+
+    public removeWidgetStyle(key:string, attribName:string, media:string = "default"):void
+    {
+        if ( this.getContainerType(key) !== "style" )
+            throw "Widget :: Não foi possível recuperar o (estilo) do container " + key;
+
+        this.containers[key].display.removeStyle(attribName, media);
     }
 
     //+++++++++++++++++++++++++++ Manipulate type(attrib) ++++++++++++++++++++++++++++++
     public setWidgetAttrib(key: string, value: string): void
     {
-        if ( !(key in this.containers) )
-            throw "Tentativa de modificação de um attributo em uma chave inexistente. Chave: " + key;
+        if ( this.getContainerType(key) !== "attrib" )
+            throw "Widget :: Não foi possível modificar o (atributo) do container " + key;
 
         this.containers[key].display.setAttrib(this.containers[key].attribName, value);
     }
 
     public getWidgetAttrib(key: string): string
     {
-        if ( !(key in this.containers) )
-            throw "Tentativa de modificação de um attributo em uma chave inexistente. Chave: " + key;
+        if ( this.getContainerType(key) !== "attrib" )
+            throw "Widget :: Não foi possível recuperar o (atributo) do container " + key;
 
         return this.containers[key].display.getAttrib(this.containers[key].attribName);
     }
@@ -203,16 +352,13 @@ export class Widget extends Selectable
     //+++++++++++++++++==++++++++ Manipulate type(list) ++++++++++++++++++++++++++++++
     public addWidget(key: string, value: any): Widget
     {
-        if ( !(key in this.containers) )
-            throw "Tentativa de adicao de um elemento em uma chave inexistente. Chave: " + key;
-
-        return this.insertWidget(key, value, this.containers[key].display.length);
+        return this.insertWidget(key, value, 9999);
     }
 
     public insertWidget(key: string, value: any, index: number): Widget
     {
-        if ( !(key in this.containers) )
-            throw "Tentativa de adicao de um elemento em uma chave inexistente. Chave: " + key;
+        if ( this.getContainerType(key) !== "list" )
+            throw "Widget :: Não foi possível adicionar um widget na (lista) do container " + key;
 
         if ( !(value instanceof Widget) )
             value = new Widget(value);
@@ -224,21 +370,16 @@ export class Widget extends Selectable
 
     public removeWidget(key:string, widget:Widget):void
     {
-        if ( !(key in this.containers) )
-            throw "Tentativa de remocao de um elemento em uma chave inexistente. Chave: " + key;
+        if ( this.getContainerType(key) !== "list" )
+            throw "Widget :: Não foi possível remover um widget da (lista) do container " + key;
 
-        let index:number = this.containers[key].display.children.indexOf(widget);
-
-        if( index === -1 )
-            throw "Tentativa de remocao de um elemento que não pertence ao container especificado. Chave: " + key;
-
-        this.containers[key].display.removeChildAt(index);
+        this.containers[key].display.removeChild(widget);
     }
 
     public removeWidgetByIndex(key:string, index:number):void
     {
-        if ( !(key in this.containers) )
-            throw "Tentativa de remocao de um elemento em uma chave inexistente. Chave: " + key;
+        if ( this.getContainerType(key) !== "list" )
+            throw "Widget :: Não foi possível remover um widget da (lista) do container " + key;
 
         this.containers[key].display.removeChildAt(index);
     }
@@ -247,71 +388,19 @@ export class Widget extends Selectable
     //++++++++++++++++++==+++++++ Manipulate type(text) ++++++++++++++++++++++++++++++
     public setWidgetText(key: string, value: string): void
     {
+        if ( this.getContainerType(key) !== "text" )
+            throw "Widget :: Não foi possível modificar o conteudo de (texto) do container " + key;
+
         this.containers[key].display.content = value;
     }
 
     public getWidgetText(key: string): string
     {
+        if ( this.getContainerType(key) !== "text" )
+            throw "Widget :: Não foi possível recuperar o conteudo de (texto) do container " + key;
+
         return this.containers[key].display.content;
     }
-
-
-
-
-
-
-
-
-    /************************************************************************************/
-    /************************************************************************************/
-    /***************************** FILL CONTAINER BY DATA *******************************/
-    /************************************************************************************/
-    /************************************************************************************/
-    private fillContainersByData(settings: WidgetData): void
-    {
-        for (let key in settings.style)
-            this.setStyle(key, settings.style[key]);
-
-        if (typeof settings.className !== "undefined")
-            this.addClasses(settings.className);
-
-        if (typeof settings.dataClassName !== "undefined")
-        {
-            for (let key in settings.dataClassName)
-                if (typeof this.containers[key] !== "undefined")
-                    this.containers[key].display.addClasses(settings.dataClassName[key]);
-        }
-
-        for (let key in settings.data)
-        {
-            let item: any = settings.data[key];
-
-            if( key in this.containers && this.containers[key].type !== "text" )
-            {
-                if( this.containers[key].type === "list" )
-                {
-                    for (let i: number = 0; i < item.length; i++)
-                        this.addWidget(key, item[i]);
-                }
-                else if( this.containers[key].type === "attrib" )
-                {
-                    this.setWidgetAttrib(key, item);
-                }
-                else if( this.containers[key].type === "style" )
-                {
-                    for( let media in item )
-                        this.containers[key].display.setStyles(item[media], media);
-                }
-            }
-            else
-            {
-                this.setWidgetText(key, item);
-            }
-        }
-    }
-
-
-
 
 
     /************************************************************************************/
@@ -321,7 +410,7 @@ export class Widget extends Selectable
     /************************************************************************************/
     private applyTemplate(display: Display, xmlNode: Element): void
     {
-        // copy attributes
+        // copy attributes and identify containers in attributes
         for (let i: number = 0; i < xmlNode.attributes.length; i++)
         {
             let key: string = xmlNode.attributes[i].nodeName;
@@ -335,7 +424,11 @@ export class Widget extends Selectable
             let containerName: string = this.getContainerName(xmlNode.attributes[i].nodeValue);
 
             if ( containerName !== "" )
-                this.createContainer(containerName, key === "style" ? "style" : "attrib", display, key);
+                this.createContainer(
+                    containerName,
+                    key === "data-style" ? "style" : key==="data-class" ? "class" : "attrib",
+                    display,
+                    key);
             //this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
             else
                 display.html.setAttribute(key, xmlNode.attributes[i].nodeValue);
@@ -345,8 +438,8 @@ export class Widget extends Selectable
         //if (xmlNode.children.length === 0)
         if ( this.xmlNodeElementLength(xmlNode) === 0 )
         {
-            let containerName: string = this.getContainerNameByElement(xmlNode);
             let content: string = xmlNode.textContent;
+            let containerName: string = this.getContainerName(content);
 
             // elemento editavel
             if (containerName !== "")
@@ -379,13 +472,6 @@ export class Widget extends Selectable
         }
     }
 
-    private getContainerNameByElement(xmlNode: Element): string
-    {
-        //if (xmlNode.children.length !== 0) return null;
-        if (this.xmlNodeElementLength(xmlNode) !== 0) return "";
-        return this.getContainerName(xmlNode.textContent);
-    }
-
     private getContainerName(content: string): string
     {
         let start: number = content.indexOf("{{");
@@ -397,12 +483,6 @@ export class Widget extends Selectable
 
         //let metadatas: string[] = content.substr(start + 2, end - start - 2).trim().split(' ');
         //return { name: metadatas[1], type: metadatas[0], params: null };
-    }
-
-    protected createContainer(containerName: string, type: string, children: Display, attribName?: string): void
-    {
-        // type: list, text, style
-        this.containers[containerName] = { type: type, display: children, attribName: attribName };
     }
 
     private xmlNodeElementLength(xmlNode: Node): number
@@ -421,7 +501,7 @@ export class Widget extends Selectable
             if (xmlNode.attributes[i].name === "data-type" && Widget.displayTypes[xmlNode.attributes[i].value])
                 return new Widget.displayTypes[xmlNode.attributes[i].value](xmlNode.tagName);
 
-        let wattrib: string = this.getContainerNameByElement(xmlNode);
+        let wattrib: string = this.getContainerName(xmlNode.textContent);
 
         if (wattrib !== "")
             return new Selectable(xmlNode.tagName);

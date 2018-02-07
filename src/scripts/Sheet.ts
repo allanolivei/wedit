@@ -16,7 +16,7 @@ class Sheet
         this.style.appendChild(document.createTextNode(""));// WebKit hack :(
 
         if( media !== "default" )
-            this.style.setAttribute("media", media);
+            this.style.setAttribute("media", "screen and (max-width:"+media+")");
 
         document.head.appendChild(this.style);
     }
@@ -47,8 +47,7 @@ export class SheetRules
 
     public getRule(name:string):string
     {
-        if( name in this.rules ) return this.rules[name];
-        return "";
+        return this.rules[name];
     }
 
     public removeRule(name: string): void
@@ -68,6 +67,11 @@ export class SheetRules
         for (let i: number = 0; i < names.length; i++)
             delete this.rules[names[i]];
         this.render();
+    }
+
+    public getRules():{[n:string]:string}
+    {
+        return this.rules;
     }
 
     public setRules(rules: { [n: string]: string } | string): void

@@ -195,17 +195,6 @@ describe("Layout", function()
     expect( display.hasClass("l2") ).to.equal(true);
   });
 
-  it("Verificar estilos requeridos", function()
-  {
-    let layout = new W.VerticalLayout("div");
-    let display = new W.Display();
-
-    layout.addChild(display);
-
-    for( let key in layout.requiredStyles )
-      expect( display.getStyle(key) ).to.equal( layout.requiredStyles[key] );
-  });
-
 });
 
 describe("Widget", function()
@@ -234,8 +223,8 @@ describe("Widget", function()
   
   it("Criação de Widgets. (Construtor)", function()
   {
-    W.Widget.AddTemplate("container-text", "<p class='test'>{{text content}}</p>");
-    W.Widget.AddTemplate("complex", "<div><div><p>{{text content}}</p></div><p></p></div>");
+    W.Widget.AddTemplate("container-text", "<p class='test'>{{text}}</p>");
+    W.Widget.AddTemplate("complex", "<div><div><p>{{text}}</p></div><p></p></div>");
 
     let widget1 = new W.Widget("container-text");
     expect( widget1.html ).to.have.class('test');
@@ -252,7 +241,7 @@ describe("Widget", function()
 
   it("Edição do conteudo de um container 'attrib'", function()
   {
-    W.Widget.AddTemplate("test-attrib", "<div><p></p><p><img src='{{attrib img}}'/></p></div>");
+    W.Widget.AddTemplate("test-attrib", "<div><p></p><p><img src='{{img}}'/></p></div>");
 
     let widget = new W.Widget("test-attrib");
     let address = "https://s.ytimg.com/yts/img/avatar_48-vfllY0UTT.png";
@@ -264,27 +253,55 @@ describe("Widget", function()
 
   it("Edição do conteudo de um container 'text'", function()
   {
-    W.Widget.AddTemplate("test-text", "<div><p></p><p>{{text content}}</p></div>");
+    W.Widget.AddTemplate("test-text", "<div><p></p><p>{{text}}</p></div>");
 
     let widget = new W.Widget("test-text");
     let txt = "Eu sou o corpo do texto";
 
-    widget.setText("content", txt);
-    expect(widget.getText("content")).to.equal(txt);
+    widget.setWidgetText("text", txt);
+    expect(widget.getWidgetText("text")).to.equal(txt);
     expect(widget.children[1].content).to.equal(txt);
+  });
+  
+  it("Edição do conteudo de um container 'style'", function()
+  {
+    W.Widget.AddTemplate("test-style", "<div><p></p><p data-style='{{style}}'>Experimento</p></div>");
+
+    let widget = new W.Widget("test-style");
+
+    expect( widget.getWidgetStyles("style").background ).to.equal( undefined );
+    widget.setWidgetStyles("style", "background:red");
+    expect( widget.getWidgetStyles("style").background ).to.equal("red");
+    widget.setWidgetStyles("style", { "margin-top":"100px" });
+    expect( widget.getWidgetStyles("style")["margin-top"] ).to.equal("100px");
+    expect( widget.hasWidgetStyle("style", "background") ).to.equal(true);
+    widget.removeWidgetStyle("style", "background");
+    expect( widget.hasWidgetStyle("style", "background") ).to.equal(false);
+  });
+
+  it("Edição do conteudo de um container 'class'", function()
+  {
+    W.Widget.AddTemplate("test-class", "<div><p></p><p data-class='{{class}}'>Experimento</p></div>");
+
+    let widget = new W.Widget("test-class");
+
+    widget.addWidgetClass("class", "container");
+    expect(widget.hasWidgetClass("class", "container")).to.equal(true);
+    widget.removeWidgetClasses("class", "container");
+    expect(widget.hasWidgetClass("class", "container")).to.equal(false);
   });
 
   it("Edição do conteudo de um container 'list'", function()
   {
-    W.Widget.AddTemplate("test-list", "<div><p></p><div>{{list container}}</div></div>");
+    W.Widget.AddTemplate("test-list", "<div><p></p><div data-type='VerticalLayout'>{{list}}</div></div>");
 
     let widget = new W.Widget("test-list");
     let widgetChild = new W.Widget(
-      {"template": "text", "data":{"content":"Primeiro Texto"}}
+      {"template": "text", "data":{"text":"Primeiro Texto"}}
     );
 
-    widget.addWidget( "container", {"template": "text", "data":{"content":"Segundo Texto"}} );
-    widget.insertWidget( "container", widgetChild, 0);
+    widget.addWidget( "list", {"template": "text", "data":{"text":"Segundo Texto"}} );
+    widget.insertWidget( "list", widgetChild, 0);
 
     expect( widget.children ).to.have.length(2);
     expect( widget.children[1] ).to.have.length(2);
@@ -292,10 +309,10 @@ describe("Widget", function()
     expect( widget.children[1].children[0].content ).to.equal("Primeiro Texto");
     expect( widget.children[1].children[1].content ).to.equal("Segundo Texto");
 
-    widget.removeWidgetByIndex("container", 1);
+    widget.removeWidgetByIndex("list", 1);
     expect( widget.children[1] ).to.have.length(1);
     expect( widget.children[1].children[0].content ).to.equal("Primeiro Texto");
-    widget.removeWidget("container", widgetChild);
+    widget.removeWidget("list", widgetChild);
     expect( widget.children[1] ).to.have.length(0);
   });
 

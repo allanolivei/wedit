@@ -142,15 +142,14 @@ export class Display
         return result.toString();
     }
 
-    public setStyles(values:string, media:string = "default"):void
+    public setStyles(values:string|{[n:string]:string}, media:string = "default"):void
     {
-        console.log("SET STYLE: ", values);
         this.getSheetRules(media).setRules(values);
     }
 
-    public getStyles(media:string = "default"):string
+    public getStyles(media:string = "default"):{[n:string]:string}
     {
-        return this.getSheetRules(media).toLine();
+        return this.getSheetRules(media).getRules();
     }
 
     public setStyle(key: string, value: string, media:string = "default"): void
@@ -361,7 +360,9 @@ export class Display
             this.setAttrib("id", this.id);
         }
 
-        if ( !(media in this.sheetRules) ) this.sheetRules[media] = new SheetRules("#" + this.id);
+        if ( !(media in this.sheetRules) )
+            this.sheetRules[media] = new SheetRules("#" + this.id, media);
+
         return this.sheetRules[media];
     }
 

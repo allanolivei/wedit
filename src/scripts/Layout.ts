@@ -6,7 +6,7 @@ export abstract class Layout extends Selectable
 {
     protected childTag:string = "";
     protected childClassName:string = "";
-    protected requiredStyles:{ [id: string]: string; } = {};
+    //protected requiredStyles:{ [id: string]: string; } = {};
 
     constructor(tagName: string = "div", ...params: string[])
     {
@@ -35,7 +35,7 @@ export abstract class Layout extends Selectable
     public addChild(display: Display, index = 99999):void
     {
         this.applyChildStruct(display);
-        this.applyRequiredStyle(display);
+        // this.applyRequiredStyle(display);
 
         // FIX*** Depois de tudo
         super.addChild(display, index);
@@ -47,7 +47,7 @@ export abstract class Layout extends Selectable
         super.removeChild(display);
 
         this.removeChildStruct(display);
-        this.removeRequiredStyle(display);
+        // this.removeRequiredStyle(display);
     }
 
     private applyChildStruct(display:Display):void
@@ -60,19 +60,19 @@ export abstract class Layout extends Selectable
         }
     }
 
-    private applyRequiredStyle(display:Display):void
-    {
-        let previous:string = "";
-        for( let key in this.requiredStyles )
-        {
-            let value:string = this.getStyle(key);
-            if( value !== "" )
-                previous += (previous!==""?";":"")+key+":"+value;
-            display.setStyle(key, this.requiredStyles[key]);
-        }
-        if( previous !== "" )
-            display.setData("styles", previous);
-    }
+    // private applyRequiredStyle(display:Display):void
+    // {
+    //     let previous:string = "";
+    //     for( let key in this.requiredStyles )
+    //     {
+    //         let value:string = this.getStyle(key);
+    //         if( value !== "" )
+    //             previous += (previous!==""?";":"")+key+":"+value;
+    //         display.setStyle(key, this.requiredStyles[key]);
+    //     }
+    //     if( previous !== "" )
+    //         display.setData("styles", previous);
+    // }
 
     private removeChildStruct(display:Display):void
     {
@@ -83,22 +83,22 @@ export abstract class Layout extends Selectable
         display.removeClasses(this.childClassName);
     }
 
-    private removeRequiredStyle(display:Display):void
-    {
-        for( let key in this.requiredStyles )
-            display.removeStyle(key);
+    // private removeRequiredStyle(display:Display):void
+    // {
+    //     for( let key in this.requiredStyles )
+    //         display.removeStyle(key);
 
-        let previousStyle:string[] = display.getData("styles").split(";");
-        if( previousStyle.length > 0 )
-        {
-            for( let i:number = 0 ; i < previousStyle.length ; i++ )
-            {
-                let values:string[] = previousStyle[i].split(":");
-                display.setStyle(values[0], values[1]);
-            }
-        }
-        display.removeData("styles");
-    }
+    //     let previousStyle:string[] = display.getData("styles").split(";");
+    //     if( previousStyle.length > 0 )
+    //     {
+    //         for( let i:number = 0 ; i < previousStyle.length ; i++ )
+    //         {
+    //             let values:string[] = previousStyle[i].split(":");
+    //             display.setStyle(values[0], values[1]);
+    //         }
+    //     }
+    //     display.removeData("styles");
+    // }
 
     // public enterDrag(event: DragEvent): void
     // {
@@ -129,7 +129,7 @@ export class RelativeLayout extends Layout
     {
         super(tag, ...params);
 
-        this.requiredStyles["position"] = "absolute";
+        // this.requiredStyles["position"] = "absolute";
     }
 
     // public enterDrag(event: DragEvent): void
@@ -198,10 +198,10 @@ export class VerticalLayout extends Layout
     {
         super(tag, ...params);
 
-        this.requiredStyles["position"] = "static";
-        this.requiredStyles["left"] = "auto";
-        this.requiredStyles["top"] = "auto";
-        this.requiredStyles["width"] = "auto";
+        // this.requiredStyles["position"] = "static";
+        // this.requiredStyles["left"] = "auto";
+        // this.requiredStyles["top"] = "auto";
+        // this.requiredStyles["width"] = "auto";
     }
 
 

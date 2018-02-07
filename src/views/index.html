@@ -25,25 +25,48 @@
 
 
         W.WEdit.addTemplate("lista", 
-        "<div class='lista-wrapper'>"+ 
-        "   <ul style='{{meuestilo}}' data-qualquer='{{meudata}}' data-type='VerticalLayout'>{{container}}</ul>" +
+        "<div class='lista-wrapper' data-class='{{minhaclasse}}'>"+
+        "   <p>{{meutexto}}</p>"+
+        "   <ul data-style='{{meuestilo}}' data-qualquer='{{meuatributo}}' data-type='VerticalLayout'>{{minhalista}}</ul>" +
         "</div>"
         );
 
-        widget = stage.addWidget("container", {
-            "template": "lista"
-        });
-
-        stage.addWidget("container", 
-        { 
-            "template": "text",
-            "data": { 
-                "content": "Corpo de texto",
-                "style": {
-                    "default":"background:red;border:1px solid blue;margin-top:20px;"
-                } 
+        stage.addWidget("list",{
+            "template": "lista",
+            "data":{
+                "meutexto":"allan",
+                "minhaclasse":"container align-itens-center",
+                "meuatributo":"ola atributo",
+                "meuestilo":"margin-top:20px;background:red;",
+                "minhalista":[
+                    {"template":"text", "data":{"text":"Nicole 1"}},
+                    {"template":"text", "data":{"text":"Nicole 2"}},
+                    {"template":"text", "data":{"text":"Nicole 3"}}
+                ]
             }
         });
+
+        stage.addWidget("list",{
+            "template": "lista",
+            "data":{
+                "meuestilo":{"500px":"margin-top:20px;background:red;min-height:40px"}
+            }
+        });
+
+        // widget = stage.addWidget("container", {
+        //     "template": "lista"
+        // });
+
+        // stage.addWidget("container", 
+        // { 
+        //     "template": "text",
+        //     "data": { 
+        //         "content": "Corpo de texto",
+        //         "style": {
+        //             "default":"background:red;border:1px solid blue;margin-top:20px;"
+        //         } 
+        //     }
+        // });
 
         
 
