@@ -173,3 +173,4 @@ gulp.task("watch", ["default"], function ()
     //gulp.watch("tmp/**/**").on('change', browserSync.reload);
 
 });
+//chrome://serviceworker-internals/

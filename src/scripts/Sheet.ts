@@ -1,16 +1,38 @@
+
+
+
+
+/*
+
+media:
+default 0 >=
+991px Large >=
+766px Medium >=
+575px Small >=
+
+
+*/
+
+
 class Sheet
 {
     private static sheets: { [media: string]: Sheet } = {};
     public static getSheet(media: string): Sheet
     {
-        if ( !(media in Sheet.sheets) ) Sheet.sheets[media] = new Sheet(media);
+        if ( !(media in Sheet.sheets) )
+            Sheet.sheets[media] = new Sheet(media);
         return Sheet.sheets[media];
     }
 
     public style: HTMLStyleElement;
+    public priority:number = 0;
+    public media:string;
 
     constructor( media:string = "default" )
     {
+        this.media = media;
+        this.priority = media === "default" ? 9999 : parseInt(media.replace("px", ""), 10);
+
         this.style = document.createElement("style");
         this.style.type = "text/css";
         this.style.appendChild(document.createTextNode(""));// WebKit hack :(
@@ -18,12 +40,25 @@ class Sheet
         if( media !== "default" )
             this.style.setAttribute("media", "screen and (max-width:"+media+")");
 
-        document.head.appendChild(this.style);
+        this.insertStyleInPage();
     }
 
     public append(rules:SheetRules):void
     {
         this.style.appendChild(rules.node);
+    }
+
+    private insertStyleInPage():void
+    {
+        for (let key in Sheet.sheets)
+        {
+            if ( Sheet.sheets[key].priority < this.priority )
+            {
+                document.head.insertBefore(this.style, Sheet.sheets[key].style);
+                return;
+            }
+        }
+        document.head.appendChild(this.style);
     }
 }
 
