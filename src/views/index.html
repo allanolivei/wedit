@@ -12,46 +12,54 @@
 
     
 
-    <script src="js/main.js"></script>
+    <script src="js/wedit.js"></script>
     <script>
         //var stage = new W.WEdit(document.body);
         //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
 
-        var stage = new W.WEdit(document.body, "vertical-layout");
-        stage.disable();
-        // var widget = new W.Widget({ "template": "text", "data": { "content": "Diferente" } });
-        // stage.addWidget("main", widget);
-        
+        var stage = new W.WEdit(document.body, "relative-layout");
+        //stage.disable();
 
-
-        W.WEdit.addTemplate("lista", 
-        "<div class='lista-wrapper' data-class='{{minhaclasse}}'>"+
-        "   <p>{{meutexto}}</p>"+
-        "   <ul data-style='{{meuestilo}}' data-qualquer='{{meuatributo}}' data-type='VerticalLayout'>{{minhalista}}</ul>" +
-        "</div>"
+        W.WEdit.addTemplate("box", 
+            "<div id='{{id}}' style='background: grey; position:absolute; width:100px; height:100px;'></div>"
         );
 
-        stage.addWidget("list",{
-            "template": "lista",
-            "data":{
-                "meutexto":"allan",
-                "minhaclasse":"container align-itens-center",
-                "meuatributo":"ola atributo",
-                "meuestilo":"margin-top:20px;background:red;",
-                "minhalista":[
-                    {"template":"text", "data":{"text":"Nicole 1"}},
-                    {"template":"text", "data":{"text":"Nicole 2"}},
-                    {"template":"text", "data":{"text":"Nicole 3"}}
-                ]
-            }
+        stage.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:100px;top:100px;" }
         });
 
-        stage.addWidget("list",{
-            "template": "lista",
-            "data":{
-                "meuestilo":{"500px":"margin-top:20px;background:red;min-height:40px"}
-            }
+        stage.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:250px;top:70px;" }
         });
+
+        stage.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:200px;top:250px;" }
+        });
+
+        stage.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:350px;top:200px;" }
+        });
+
+        stage.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:500px;top:300px;" }
+        });
+        
+        stage.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:350px;top:500px;" }
+        });
+        
 
         // widget = stage.addWidget("container", {
         //     "template": "lista"

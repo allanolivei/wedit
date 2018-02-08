@@ -11,20 +11,25 @@ export class Selectable extends Display
         super(tagName, "selectable", ...classesName);
     }
 
-    // public isFocus(): boolean
-    // {
-    //     return this._isFocus;
-    // }
+    public isDraggable():boolean
+    {
+        return false;
+    }
 
-    // public isHover(): boolean
-    // {
-    //     return this._isOver;
-    // }
+    public isEnable():boolean
+    {
+        return false;
+    }
 
-    // public isDragging(): boolean
-    // {
-    //     return this._isDragging;
-    // }
+    public setDraggable(isDrag:boolean = true):void
+    {
+        this.setData("drag", isDrag ? "true" : "false");
+    }
+
+    public setEnable(isEnable:boolean=true):void
+    {
+        this.setData("enable", isEnable ? "true" : "false");
+    }
 
     public over(event:any/*event: DragEvent*/): void
     {
@@ -58,8 +63,9 @@ export class Selectable extends Display
 
     public allowDrag(): boolean
     {
-        let dragData: any = this.getData("drag");
-        return typeof (dragData) === "object" || dragData === "true";
+        return true;
+        // let dragData: any = this.getData("drag");
+        // return typeof (dragData) === "object" || dragData === "true";
     }
 
     // public allowDrop(layout: Layout): boolean

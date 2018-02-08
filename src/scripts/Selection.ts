@@ -15,13 +15,17 @@ export class SelectableGroup
     private onAddHandler: (e: Selectable) => void;
     private onRemoveHandler: (e: Selectable) => void;
     private filter: (e: Selectable) => boolean;
-    private allowDispathChangeEvent:boolean = true;
+    private cacheSelectables: Selectable[];
+    private changeAmount:number = 0;
+    private dispatchChange:() => void;
 
     constructor( onAddHandler: (e: Selectable) => void, onRemoveHandler: (e: Selectable) => void )
     {
         this.onAddHandler = onAddHandler;
         this.onRemoveHandler = onRemoveHandler;
         this.filter = this.defaultFilter;
+
+        this.unlockChangeEvent();
     }
 
     public get(index:number):Selectable
@@ -70,9 +74,42 @@ export class SelectableGroup
         this.setFilter(this.defaultFilter);
     }
 
+    public cache():void
+    {
+        this.cacheSelectables = this.selectables.slice(0);
+    }
+
+    public toggleCache(...others:Selectable[]):void
+    {
+        this.lockChangeEvent();
+
+        // selecao atual
+        for( let i:number = 0 ; i < others.length ; i++ )
+        {
+            // dentro
+            if( this.cacheSelectables.indexOf(others[i]) !== -1 )
+                this.remove(others[i]);
+            // fora
+            else
+                this.add(others[i]);
+        }
+
+        // out freeze - objetos fora do freeze, mas que estao selecionado, e que nao estao na selecao, devem ser removidos
+        for( let i:number = 0 ; i < this.selectables.length ; i++ )
+            if( this.cacheSelectables.indexOf(this.selectables[i]) === -1 && others.indexOf(this.selectables[i]) === -1 )
+                this.remove(this.selectables[i]);
+
+        // inner freeze - objetos dentro do freeze que nao estao na area de selecao devem ser adicionados
+        for( let i:number = 0 ; i < this.cacheSelectables.length ; i++ )
+            if( others.indexOf(this.cacheSelectables[i]) === -1 )
+                this.add(this.cacheSelectables[i]);
+
+        this.unlockChangeEvent();
+    }
+
     public combine(toggleMode: boolean, ...others:Selectable[] ):void
     {
-        this.allowDispathChangeEvent = false;
+        this.lockChangeEvent();
 
         if ( toggleMode )
         {
@@ -98,13 +135,12 @@ export class SelectableGroup
                     this.add(others[i]);
         }
 
-        this.onChange.trigger(this.selectables);
-        this.allowDispathChangeEvent = true;
+        this.unlockChangeEvent();
     }
 
     public set(...others: Selectable[]): void
     {
-        this.allowDispathChangeEvent = false;
+        this.lockChangeEvent();
 
         // remove others
         for (let i = this.selectables.length; i >=0 ; i--) {
@@ -117,8 +153,7 @@ export class SelectableGroup
             if (others[i] != null)
                 this.insert(others[i], i);
 
-        this.onChange.trigger(this.selectables);
-        this.allowDispathChangeEvent = true;
+        this.unlockChangeEvent();
     }
 
     public toggle(obj: Selectable, clearSelection: boolean = false): void
@@ -147,7 +182,8 @@ export class SelectableGroup
         {
             this.onAddHandler(obj);
             this.selectables.splice(Math.min(i, this.selectables.length), 0, obj);
-            if (this.allowDispathChangeEvent) this.onChange.trigger(this.selectables);
+
+            this.dispatchChange();
         }
     }
 
@@ -158,7 +194,8 @@ export class SelectableGroup
         {
             this.onAddHandler(obj);
             this.selectables.push(obj);
-            if (this.allowDispathChangeEvent) this.onChange.trigger(this.selectables);
+
+            this.dispatchChange();
         }
 
     }
@@ -170,7 +207,8 @@ export class SelectableGroup
         {
             this.onRemoveHandler(obj);
             this.selectables.splice(index, 1);
-            if (this.allowDispathChangeEvent) this.onChange.trigger(this.selectables);
+
+            this.dispatchChange();
         }
     }
 
@@ -199,8 +237,32 @@ export class SelectableGroup
             this.onRemoveHandler( this.selectables[i] );
         this.selectables = [];
 
-        if (this.allowDispathChangeEvent) this.onChange.trigger(this.selectables);
+        this.dispatchChange();
     }
+
+    private lockChangeEvent():void
+    {
+        this.dispatchChange = this._dispatchAmount;
+        this.changeAmount = 0;
+    }
+
+    private unlockChangeEvent():void
+    {
+        this.dispatchChange = this._dispatchImmediate;
+        if( this.changeAmount > 0 ) this._dispatchImmediate();
+        this.changeAmount = 0;
+    }
+
+    private _dispatchAmount()
+    {
+        this.changeAmount++;
+    }
+
+    private _dispatchImmediate()
+    {
+        this.onChange.trigger(this.selectables);
+    }
+
 
     private defaultFilter(e:Selectable):boolean
     {
@@ -221,34 +283,34 @@ export class Selection// extends Display
 }
 
 // export class SelectEvent
-// {
-//     public selection: Selection;
-//     public deltaX: number;
-//     public deltaY: number;
-//     public x: number;
-//     public y: number;
-//     public startX: number;
-//     public startY: number;
+    // {
+    //     public selection: Selection;
+    //     public deltaX: number;
+    //     public deltaY: number;
+    //     public x: number;
+    //     public y: number;
+    //     public startX: number;
+    //     public startY: number;
 
-//     public constructor( selection:Selection )
-//     {
-//         this.selection = selection;
-//     }
+    //     public constructor( selection:Selection )
+    //     {
+    //         this.selection = selection;
+    //     }
 
-//     public start( x:number, y:number )
-//     {
-//         this.startX = x;
-//         this.startY = y;
-//     }
+    //     public start( x:number, y:number )
+    //     {
+    //         this.startX = x;
+    //         this.startY = y;
+    //     }
 
-//     public read(event:MouseEvent)
-//     {
-//         this.x = event.pageX;
-//         this.y = event.pageY;
-//         this.deltaX = event.movementX;
-//         this.deltaY = event.movementY;
-//     }
-// }
+    //     public read(event:MouseEvent)
+    //     {
+    //         this.x = event.pageX;
+    //         this.y = event.pageY;
+    //         this.deltaX = event.movementX;
+    //         this.deltaY = event.movementY;
+    //     }
+    // }
 
 // show drag and drop area selection
 export class RectView extends Display
@@ -355,170 +417,162 @@ enum DRAGGER_MODE
 
 export class SelectionDragger extends RectView
 {
-    //private static readonly OVERRIDE_EVERYTHING: boolean = false;
 
-
-    public readonly onEditSelect = new LiteEvent<Selectable>();
-
-    //public readonly onChange = new LiteEvent<string>();
     private selection:Selection;
     private mode:DRAGGER_MODE;
-    private isDown: boolean;
     private root: Display;
-    private isEnabled:boolean = true;
     private hoverMark:RectView;
+    private isDragging:boolean;
+
+    // events bind
+    private mouseDownBind:any;
+    private mouseMoveBind:any;
+    private mouseUpBind:any;
 
     constructor(root:Display, selection:Selection)
     {
-        super("select-view");
+        super("w-select-area");
 
-        this.root = root;
-        this.selection = selection;
+        // cache
+        this.root = root;            // busca inicializada a partir da raiz
+        this.selection = selection;  // a instancia de selecao que sera alterada
+
+        // hide this
         this.hide();
+        this.isDragging = false;
 
-        this.hoverMark = new RectView("select-hover");
+        // create hover
+        this.hoverMark = new RectView("w-select-hover");
         this.hoverMark.hide();
 
+        // cache events bind
+        this.mouseDownBind = this.mousedown.bind(this);
+        this.mouseMoveBind = this.mousemove.bind(this);
+        this.mouseUpBind = this.mouseup.bind(this);
 
-        let self = this;
-        window.addEventListener("mousedown", (event: MouseEvent) => self.mousedown(event));
-        window.addEventListener("mousemove", (event: MouseEvent) => self.mousemove(event));
-        window.addEventListener("mouseup", (event: MouseEvent) => self.onmouseup(event));
-
-        window.addEventListener("dblclick", (event: MouseEvent)=> {
-            if( !self.isEnabled ) return;
-
-            //var target = self.getSelectionByPoint(event.pageX, event.pageY);
-            let target:Selectable = self.root.findByPoint(event.pageX, event.pageY, self.selectableFilter) as Selectable;
-            if( target ) self.onEditSelect.trigger(target);
-        });
-
-        document.body.appendChild(this.hoverMark.html);
-        document.body.appendChild(this.html);
+        // auto enable
+        this.enable();
     }
 
     public enable()
     {
-        this.isEnabled = true;
+        if( this.html.parentNode !== null ) return;
+
+        this.add();
+
+        window.addEventListener("mousedown", this.mouseDownBind);
+        window.addEventListener("mousemove", this.mouseMoveBind);
     }
 
     public disable()
     {
-        this.isEnabled = false;
+        if( this.html.parentNode === null ) return;
+
         this.hoverMark.hide();
         this.hide();
+        this.remove();
+
+        window.removeEventListener("mouseup", this.mouseUpBind);
+
+        window.removeEventListener("mousedown", this.mouseDownBind);
+        window.removeEventListener("mousemove", this.mouseMoveBind);
+    }
+
+    public add()
+    {
+        document.body.appendChild(this.hoverMark.html);
+        document.body.appendChild(this.html);
     }
 
     public remove()
     {
-        this.hoverMark.html.parentElement.removeChild(this.hoverMark.html);
-        this.html.parentElement.removeChild(this.html);
+        document.body.removeChild(this.hoverMark.html);
+        document.body.removeChild(this.html);
     }
 
     private selectableFilter( element:Display ):boolean
     {
-        return element instanceof Selectable && element.getData("ignoreselect") !== "true";
+        return element instanceof Selectable && element.getData("disabled") !== "true";
     }
 
-    // . nokey: simplesmente ignora o que estava selecionado e adiciona todos os elementos atuais.
-    // . shift: deixa os elementos que estao de fora, e os que estao dentro inverte,
-    // os selecionados sao removidos e os que nao estao sao adicionados.
-    // . ctrl: deixa os elementos que estao de fora e adiciona todos os elementos que estao na area de selecao.
-    protected mousedown(event: MouseEvent): void
+    private mousedown(event: MouseEvent): void
     {
-        if( !this.isEnabled ) return;
         if ( this.IsEditor(event.target as HTMLElement) ) return;
         event.preventDefault();
-
+        this.isDragging = true;
 
         this.show();
         this.start(event.pageX, event.pageY);
 
-        this.isDown = true;
-
-        if( event.ctrlKey )
-            this.mode = DRAGGER_MODE.CTRL;
-        else if( event.shiftKey )
-            this.mode = DRAGGER_MODE.SHIFT;
-        else
-            this.mode = DRAGGER_MODE.NONE;
-
-        this.hoverMark.hide();
-
-        //this.updateSelection(this.getSelectionByPoint(event.pageX, event.pageY));
-    }
-
-    protected mousemove(event: MouseEvent): void
-    {
-        if ( !this.isEnabled ) return;
-
-
-
-        if ( !this.isDown )
+        if( event.ctrlKey || event.metaKey )
         {
-            //var hoverTarget: Selectable = this.getSelectionByPoint(event.pageX, event.pageY);
-            let hoverTarget:Selectable = this.root.findByPoint(event.pageX, event.pageY, this.selectableFilter) as Selectable;
-            let elem: HTMLElement = event.target as HTMLElement;
-
-            if (this.IsEditor(elem)) return;
-
-            // elementos de edicao contem a tag editor-gizmo, evitando selecionar os objetos que estao atras deles
-            if (hoverTarget && elem.className.indexOf("editor-gizmo") === -1 )
-            {
-                this.selection.hover.set(hoverTarget);
-
-                let rect: Rect = this.selection.hover.getRectArea();
-                this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
-                this.hoverMark.show();
-
-                //???????????????????????????????????
-                // if( hoverTarget.allowDrag() )
-                //     this.hoverMark.removeClass("drag-false");
-                // else
-                //     this.hoverMark.addClass("drag-false");
-            }
-            else
-            {
-                this.selection.hover.clear();
-                this.hoverMark.hide();
-            }
-
-            // if button is pressed
-            if( event.buttons === 1 && event.which === 1 )
-                this.hoverMark.hide();
-
-            return;
+            this.mode = DRAGGER_MODE.CTRL;
+        }
+        else if( event.shiftKey )
+        {
+            this.mode = DRAGGER_MODE.SHIFT;
+            this.selection.select.cache();
+        }
+        else
+        {
+            this.mode = DRAGGER_MODE.NONE;
         }
 
         this.hoverMark.hide();
 
-        this.selection.hover.clear();
-
-        event.preventDefault();
-
-        this.end(event.pageX, event.pageY);
-        //this.updateSelection(...this.getSelectionByArea(this.rect));
-        this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
-
-
-        if (event.which !== 1) this.onmouseup(event);
+        window.addEventListener("mouseup", this.mouseUpBind);
     }
 
-    protected onmouseup(event: MouseEvent): void
+    private mousemove(event: MouseEvent): void
     {
-        if ( !this.isEnabled ) return;
-        if ( !this.isDown ) return;
-        event.preventDefault();
+        if( event.buttons === 1 && this.isDragging )
+        {
+            event.preventDefault();
 
-        this.end(event.pageX, event.pageY);
-        //this.updateSelection(...this.getSelectionByArea(this.rect));
+            this.end(event.pageX, event.pageY);
+            this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
+        }
+        else
+        {
+            let elem: HTMLElement = event.target as HTMLElement;
+            if ( !this.IsEditor(elem) ) this.updateHover(event.pageX, event.pageY);
+        }
+    }
+
+    private mouseup(event: MouseEvent): void
+    {
+        event.preventDefault();
+        this.isDragging = false;
+
         this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
 
         this.hide();
-        this.isDown = false;
+        window.removeEventListener("mouseup", this.mouseUpBind);
     }
 
-    protected updateSelection( ...elements:Selectable[] )
+    private updateHover(pointX:number, pointY:number):void
+    {
+        let hoverTarget:Selectable = this.root.findByPoint(pointX, pointY, this.selectableFilter) as Selectable;
+
+        if ( hoverTarget )
+        {
+            // update select list
+            this.selection.hover.set(hoverTarget);
+            // update view
+            let rect: Rect = this.selection.hover.getRectArea();
+            this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
+            this.hoverMark.show();
+        }
+        else
+        {
+            // update select list
+            this.selection.hover.clear();
+            // update view
+            this.hoverMark.hide();
+        }
+    }
+
+    private updateSelection( ...elements:Selectable[] )
     {
         switch (this.mode) {
             case DRAGGER_MODE.NONE:
@@ -528,18 +582,17 @@ export class SelectionDragger extends RectView
                 this.selection.select.combine(false, ...elements);
                 break;
             case DRAGGER_MODE.SHIFT:
-                this.selection.select.combine(true, ...elements);
+                this.selection.select.toggleCache(...elements);
                 break;
         }
     }
 
     private IsEditor( elem:HTMLElement ):boolean
     {
-        //if (elem.parentElement != null) return this.IsEditor(elem.parentElement);
         let root:HTMLElement = elem;
         while( root != null )
         {
-            if (root.className.indexOf("ui-editor") !== -1) return true;
+            if ( root.className.indexOf("w-ui-gizmos") !== -1 || root.className.indexOf("w-ui-editor") !== -1 ) return true;
             root = root.parentElement;
         }
         return false;
@@ -552,91 +605,100 @@ export class SelectionDragger extends RectView
 // // show selected area with anchors
 export class SelectionTransform extends RectView
 {
-
-    public hasMovementHorizontal: boolean;
-    public hasMovementVertical: boolean;
-    public isAnchor: boolean;
-    public isDown: boolean;
-    public isMinusHorizontal: boolean;
-    public isMinusVertical: boolean;
-
-    private nextRect:Rect;
-    private startDragRect:Rect;
-    private _event:DragEvent;
-    private _layout:Layout;
-    private _selection:Selection;
-    private _enableAnchors:boolean;
-    private layoutMark:RectView;
     private root:Display;
+    private selection:Selection;
+
+    private event:DragEvent;
+    // event bind
+    private selectChangeHandlerBinder:any;
+    private keyHandlerBinder:any;
 
     constructor(root:Display, selection:Selection)
     {
-        super("select-transform", "editor-gizmo");
+        super("w-select-transform", "w-ui-gizmos");
 
+        // cache
         this.root = root;
-        this._selection = selection;
+        this.selection = selection;
 
-        // anchors
-        this.addChild(new Display("div", "anchor", "a-u"));
-        this.addChild(new Display("div", "anchor", "a-r"));
-        this.addChild(new Display("div", "anchor", "a-d"));
-        this.addChild(new Display("div", "anchor", "a-l"));
-        this.addChild(new Display("div", "anchor", "a-ul"));
-        this.addChild(new Display("div", "anchor", "a-ur"));
-        this.addChild(new Display("div", "anchor", "a-dl"));
-        this.addChild(new Display("div", "anchor", "a-dr"));
+        // informations about dragging
+        this.event = new DragEvent();
 
-        // rect
-        //this.set(200, 200, 200, 250);
+        // hide me
         this.hide();
-        this.nextRect = new Rect();
-        this.nextRect.copy(this.rect);
 
-        // cache data
-        this._event = new DragEvent();
-        this.startDragRect = new Rect();
+        // binders
+        this.selectChangeHandlerBinder = this.selectionChangeHandler.bind(this);
+        this.keyHandlerBinder = this.onKeydownHandler.bind(this);
 
-        // layout mark
-        this.layoutMark = new RectView("layout-hover");
-        this.layoutMark.hide();
-
-        // start in disable
-        this.disableAnchors();
-
-        // events
-        let self = this;
-        this.html.addEventListener( "mousedown", (event: MouseEvent) => self.mousedown(event) );
-        window.addEventListener( "mousemove", (event: MouseEvent) => self.mousemove(event) );
-        window.addEventListener( "mouseup", (event: MouseEvent) => self.onmouseup(event) );
-
-        this._selection.select.onChange.on((e: Selectable[]) => self.selectionChangeHandler(e));
-
-        document.body.appendChild(this.layoutMark.html);
-        document.body.appendChild(this.html);
+        // enable
+        this.enable();
 
         this.html.style.pointerEvents = "auto";
     }
 
+    public enable():void
+    {
+        if( this.html.parentNode !== null ) return;
+
+        // events
+        this.selection.select.onChange.on(this.selectChangeHandlerBinder);
+        document.addEventListener("keydown",  this.keyHandlerBinder);
+        document.addEventListener("keyup",  this.keyHandlerBinder);
+
+        this.add();
+    }
+
+    public disable():void
+    {
+        if( this.html.parentNode === null ) return;
+
+        // events
+        this.selection.select.onChange.off(this.selectChangeHandlerBinder);
+        document.removeEventListener("keydown",  this.keyHandlerBinder);
+        document.removeEventListener("keyup",  this.keyHandlerBinder);
+
+        this.remove();
+    }
+
+    public add():void
+    {
+        document.body.appendChild(this.html);
+    }
+
+    public remove():void
+    {
+        document.body.removeChild(this.html);
+    }
+
+    private onKeydownHandler(event:KeyboardEvent):void
+    {
+        if( event.type === "keydown" && (event.metaKey || event.ctrlKey || event.shiftKey) )
+            this.html.style.pointerEvents = "none";
+        else if( event.type === "keyup" && !(event.metaKey || event.ctrlKey || event.shiftKey) )
+            this.html.style.pointerEvents = "auto";
+    }
+
     private selectionChangeHandler(e: Selectable[]): void
     {
-        this._event.elements = [];
+        this.event.elements = [];
         for( let i:number = 0 ; i < e.length ; i++ )
-            if( e[i].allowDrag() ) this._event.elements.push(e[i]);
+            if( e[i].allowDrag() ) this.event.elements.push(e[i]);
 
-        let diff: number = this._event.elements.length - this._event.ghost.length;
+        let diff: number = this.event.elements.length - this.event.ghost.length;
 
         // rect
-        this._event.startRect = [];
-        for( let i:number = 0 ; i < e.length ; i++ )
-            this._event.startRect.push( e[i].getBounds() );
+        // this._event.startRect = [];
+        // for( let i:number = 0 ; i < e.length ; i++ )
+        //     this._event.startRect.push( e[i].getBounds() );
 
         // add ghosts
         for( let i:number = 0 ; i < diff ; i++ )
-            this._event.ghost.push( Ghost.Get(e[i], false) );
+            this.event.ghost.push( Ghost.Get(e[i]) );
 
         // remove ghosts
         for( let i:number = 0 ; i > diff ; i-- )
-            Ghost.Recycle( this._event.ghost.pop() );
+            Ghost.Recycle( this.event.ghost.pop() );
 
         if( e.length > 0 )
             this.show();
@@ -648,197 +710,320 @@ export class SelectionTransform extends RectView
 
     private redraw():void
     {
-        let rect: Rect = this._selection.select.getRectArea();
+        let rect: Rect = this.selection.select.getRectArea();
         this.set(rect.x, rect.y, rect.w, rect.h);
 
-        let isDraggable:boolean = false;
+        // let isDraggable:boolean = false;
 
-        for( let i:number = 0 ; i < this._event.ghost.length ; i++ )
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
         {
-            this._event.ghost[i].rect.copyClientRect( this._event.elements[i].getBounds() );
-            this._event.ghost[i].draw();
+            this.event.ghost[i].rect.copyClientRect( this.event.elements[i].getBounds() );
+            this.event.ghost[i].draw();
 
-            if( this._event.elements[i].allowDrag() ) isDraggable = true;
+            // if( this._event.elements[i].allowDrag() ) isDraggable = true;
         }
 
-        this.setData('drag', isDraggable ? 'true' : 'false');
+        // this.setData('drag', isDraggable ? 'true' : 'false');
     }
 
-    public get layout():Layout
-    {
-        return this._layout;
-    }
+    // public hasMovementHorizontal: boolean;
+    // public hasMovementVertical: boolean;
+    // public isAnchor: boolean;
+    // public isDown: boolean;
+    // public isMinusHorizontal: boolean;
+    // public isMinusVertical: boolean;
 
-    public remove()
-    {
-        this.html.parentElement.removeChild(this.html);
-        for (let i: number = this._event.ghost.length-1; i >= 0; i--)
-            Ghost.Recycle(this._event.ghost.pop());
-    }
+    // private nextRect:Rect;
+    // private startDragRect:Rect;
+    // private _event:DragEvent;
+    // private _layout:Layout;
+    // private _selection:Selection;
+    // private _enableAnchors:boolean;
+    // private layoutMark:RectView;
+    // private root:Display;
 
-    public enableAnchors():void
-    {
-        this._enableAnchors = true;
-        this.removeClass("anchor-disable");
-    }
+    // constructor(root:Display, selection:Selection)
+    // {
+    //     super("w-select-transform", "editor-gizmo");
 
-    public disableAnchors():void
-    {
-        this._enableAnchors = false;
-        this.addClass("anchor-disable");
-    }
+    //     this.root = root;
+    //     this._selection = selection;
 
-    private layoutFilter( element:Display ):boolean
-    {
-        return element instanceof Layout;
-    }
+    //     // anchors
+    //     this.addChild(new Display("div", "anchor", "a-u"));
+    //     this.addChild(new Display("div", "anchor", "a-r"));
+    //     this.addChild(new Display("div", "anchor", "a-d"));
+    //     this.addChild(new Display("div", "anchor", "a-l"));
+    //     this.addChild(new Display("div", "anchor", "a-ul"));
+    //     this.addChild(new Display("div", "anchor", "a-ur"));
+    //     this.addChild(new Display("div", "anchor", "a-dl"));
+    //     this.addChild(new Display("div", "anchor", "a-dr"));
 
-    public mousedown(event: MouseEvent): void
-    {
-        if( !this.isShow() ) return;
+    //     // rect
+    //     //this.set(200, 200, 200, 250);
+    //     this.hide();
+    //     this.nextRect = new Rect();
+    //     this.nextRect.copy(this.rect);
 
-        event.preventDefault();
-        event.stopPropagation();
-        this.isDown = true;
+    //     // cache data
+    //     this._event = new DragEvent();
+    //     this.startDragRect = new Rect();
 
-        let target: HTMLElement = event.target as HTMLElement;
-        let className: string = target.className;
+    //     // layout mark
+    //     this.layoutMark = new RectView("layout-hover");
+    //     this.layoutMark.hide();
 
-        this.isAnchor = this._enableAnchors && target && className.indexOf("anchor") !== -1;
+    //     // start in disable
+    //     this.disableAnchors();
 
-        // cache start drag information
-        this.startDragRect.copy(this.rect);
-        this._event.pointer.x = this._event.startPointer.x = event.pageX;
-        this._event.pointer.y = this._event.startPointer.y = event.pageY;
-        this._event.offset.x = event.pageX - this.startDragRect.x;
-        this._event.offset.x = event.pageY - this.startDragRect.y;
+    //     // events
+    //     let self = this;
+    //     this.html.addEventListener( "mousedown", (event: MouseEvent) => self.mousedown(event) );
+    //     window.addEventListener( "mousemove", (event: MouseEvent) => self.mousemove(event) );
+    //     window.addEventListener( "mouseup", (event: MouseEvent) => self.onmouseup(event) );
+    //     document.addEventListener("keydown",  this.onKeydownHandler.bind(this));
+    //     document.addEventListener("keyup",  this.onKeydownHandler.bind(this));
 
-        if( this.isAnchor )
-        {
-            this.hasMovementVertical = className.indexOf("-l ") === -1 && className.indexOf("-r ") === -1;
-            this.hasMovementHorizontal = className.indexOf("-u ") === -1 && className.indexOf("-d ") === -1;
-            this.isMinusHorizontal = this.hasMovementHorizontal && (className.indexOf("-l ") !== -1 || className.indexOf("l ") !== -1);
-            this.isMinusVertical = this.hasMovementVertical && (className.indexOf("-u") !== -1);
+    //     this._selection.select.onChange.on((e: Selectable[]) => self.selectionChangeHandler(e));
 
-            let startX: number = this.rect.x;
-            let endX: number = startX;
-            let startY: number = this.rect.y;
-            let endY: number = startY;
+    //     document.body.appendChild(this.layoutMark.html);
+    //     document.body.appendChild(this.html);
 
-            if( this.isMinusHorizontal )
-                startX += this.rect.w;
-            else
-                endX += this.rect.w;
+    //     this.html.style.pointerEvents = "auto";
+    // }
 
-            if( this.isMinusVertical )
-                startY += this.rect.h;
-            else
-                endY += this.rect.h;
+    // private onKeydownHandler(event:KeyboardEvent):void
+    // {
+    //     if( event.type === "keydown" && (event.metaKey || event.ctrlKey || event.shiftKey) )
+    //     {
+    //         this.html.style.pointerEvents = "none";
+    //     }
+    //     else if( event.type === "keyup" && !(event.metaKey || event.ctrlKey || event.shiftKey) )
+    //     {
+    //         this.html.style.pointerEvents = "auto";
+    //     }
+    // }
 
-            this.nextRect.start(startX, startY);
-            this.nextRect.end(endX, endY);
-            this.rect.copy(this.nextRect);
-        }
-        else
-        {
-            this.nextRect.copy(this.rect);
-        }
+    // private selectionChangeHandler(e: Selectable[]): void
+    // {
+    //     this._event.elements = [];
+    //     for( let i:number = 0 ; i < e.length ; i++ )
+    //         if( e[i].allowDrag() ) this._event.elements.push(e[i]);
 
-        // layout manager
-        this._layout = this._event.elements.length === 0 ?
-            null :
-            this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-        // if (this._layout) this._layout.enterDrag(this._event);
+    //     let diff: number = this._event.elements.length - this._event.ghost.length;
 
-        // disable mouse in this
-        this.html.style.pointerEvents = "none";
-        this.html.style.opacity = "0";
-    }
+    //     // rect
+    //     this._event.startRect = [];
+    //     for( let i:number = 0 ; i < e.length ; i++ )
+    //         this._event.startRect.push( e[i].getBounds() );
 
-    public mousemove(event: MouseEvent): void
-    {
-        if ( !this.isDown ) return;
+    //     // add ghosts
+    //     for( let i:number = 0 ; i < diff ; i++ )
+    //         this._event.ghost.push( Ghost.Get(e[i], false) );
 
-        event.preventDefault();
+    //     // remove ghosts
+    //     for( let i:number = 0 ; i > diff ; i-- )
+    //         Ghost.Recycle( this._event.ghost.pop() );
 
-        this._event.pointer.x = event.pageX;
-        this._event.pointer.y = event.pageY;
+    //     if( e.length > 0 )
+    //         this.show();
+    //     else
+    //         this.hide();
 
-        this.update(event);
+    //     this.redraw();
+    // }
 
-        // layout manager
-        if( this._event.elements.length > 0 )
-        {
-            let newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-            if( newLayout !== this._layout )
-            {
-                // if (this._layout) this._layout.exitDrag(this._event);
-                // if (newLayout) newLayout.enterDrag(this._event);
-            }
-            this._layout = newLayout;
-            if (this._layout)
-            {
-                // this._layout.updateDrag(this._event);
-                let rect:Rect = this._layout.getBounds();
-                this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
-                this.layoutMark.show();
-            }
-            else
-            {
-                this.layoutMark.hide();
-            }
-        }
+    // private redraw():void
+    // {
+    //     let rect: Rect = this._selection.select.getRectArea();
+    //     this.set(rect.x, rect.y, rect.w, rect.h);
 
-        // disable drag
-        if (event.which !== 1) this.onmouseup(event);
-    }
+    //     let isDraggable:boolean = false;
 
-    public onmouseup(event: MouseEvent): void
-    {
-        if ( !this.isDown ) return;
+    //     for( let i:number = 0 ; i < this._event.ghost.length ; i++ )
+    //     {
+    //         this._event.ghost[i].rect.copyClientRect( this._event.elements[i].getBounds() );
+    //         this._event.ghost[i].draw();
 
-        event.preventDefault();
-        this.isDown = false;
+    //         if( this._event.elements[i].allowDrag() ) isDraggable = true;
+    //     }
 
-        this._event.pointer.x = event.pageX;
-        this._event.pointer.y = event.pageY;
+    //     this.setData('drag', isDraggable ? 'true' : 'false');
+    // }
 
-        this.update(event);
+    // public get layout():Layout
+    // {
+    //     return this._layout;
+    // }
 
-        // layout manager
-        // if (this._layout != null) this._layout.dropDrag(this._event);
-        this.layoutMark.hide();
+    // public remove()
+    // {
+    //     this.html.parentElement.removeChild(this.html);
+    //     for (let i: number = this._event.ghost.length-1; i >= 0; i--)
+    //         Ghost.Recycle(this._event.ghost.pop());
+    // }
 
-        // enable mouse in this
-        this.html.style.pointerEvents = "auto";
-        this.html.style.opacity = "1";
+    // public enableAnchors():void
+    // {
+    //     this._enableAnchors = true;
+    //     this.removeClass("anchor-disable");
+    // }
 
+    // public disableAnchors():void
+    // {
+    //     this._enableAnchors = false;
+    //     this.addClass("anchor-disable");
+    // }
 
+    // private layoutFilter( element:Display ):boolean
+    // {
+    //     return element instanceof Layout;
+    // }
 
-        this.redraw();
-    }
+    // public mousedown(event: MouseEvent): void
+    // {
+    //     if( !this.isShow() || event.ctrlKey || event.shiftKey || event.metaKey ) return;
 
-    private update(event:MouseEvent): RectChange
-    {
-        if (this.isAnchor)
-        {
-            this.nextRect.end(
-                this.hasMovementHorizontal ? event.pageX : this.rect.x + this.rect.w,
-                this.hasMovementVertical ? event.pageY : this.rect.y + this.rect.h);
-        }
-        else
-        {
-            this.nextRect.move(
-                this.nextRect.x + event.movementX,
-                this.nextRect.y + event.movementY);
-        }
+    //     event.preventDefault();
+    //     event.stopPropagation();
+    //     this.isDown = true;
 
-        let change: RectChange = this.rect.getChangeByRect(this.nextRect);
-        this.rect.copy(this.nextRect);
-        this.draw();
+    //     let target: HTMLElement = event.target as HTMLElement;
+    //     let className: string = target.className;
 
-        return change;
-    }
+    //     this.isAnchor = this._enableAnchors && target && className.indexOf("anchor") !== -1;
+
+    //     // cache start drag information
+    //     this.startDragRect.copy(this.rect);
+    //     this._event.pointer.x = this._event.startPointer.x = event.pageX;
+    //     this._event.pointer.y = this._event.startPointer.y = event.pageY;
+    //     this._event.offset.x = event.pageX - this.startDragRect.x;
+    //     this._event.offset.x = event.pageY - this.startDragRect.y;
+
+    //     if( this.isAnchor )
+    //     {
+    //         this.hasMovementVertical = className.indexOf("-l ") === -1 && className.indexOf("-r ") === -1;
+    //         this.hasMovementHorizontal = className.indexOf("-u ") === -1 && className.indexOf("-d ") === -1;
+    //         this.isMinusHorizontal = this.hasMovementHorizontal && (className.indexOf("-l ") !== -1 || className.indexOf("l ") !== -1);
+    //         this.isMinusVertical = this.hasMovementVertical && (className.indexOf("-u") !== -1);
+
+    //         let startX: number = this.rect.x;
+    //         let endX: number = startX;
+    //         let startY: number = this.rect.y;
+    //         let endY: number = startY;
+
+    //         if( this.isMinusHorizontal )
+    //             startX += this.rect.w;
+    //         else
+    //             endX += this.rect.w;
+
+    //         if( this.isMinusVertical )
+    //             startY += this.rect.h;
+    //         else
+    //             endY += this.rect.h;
+
+    //         this.nextRect.start(startX, startY);
+    //         this.nextRect.end(endX, endY);
+    //         this.rect.copy(this.nextRect);
+    //     }
+    //     else
+    //     {
+    //         this.nextRect.copy(this.rect);
+    //     }
+
+    //     // layout manager
+    //     this._layout = this._event.elements.length === 0 ?
+    //         null :
+    //         this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+    //     // if (this._layout) this._layout.enterDrag(this._event);
+
+    //     // disable mouse in this
+    //     this.html.style.pointerEvents = "none";
+    //     this.html.style.opacity = "0";
+    // }
+
+    // public mousemove(event: MouseEvent): void
+    // {
+    //     if ( !this.isDown ) return;
+
+    //     event.preventDefault();
+
+    //     this._event.pointer.x = event.pageX;
+    //     this._event.pointer.y = event.pageY;
+
+    //     this.update(event);
+
+    //     // layout manager
+    //     if( this._event.elements.length > 0 )
+    //     {
+    //         let newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+    //         if( newLayout !== this._layout )
+    //         {
+    //             // if (this._layout) this._layout.exitDrag(this._event);
+    //             // if (newLayout) newLayout.enterDrag(this._event);
+    //         }
+    //         this._layout = newLayout;
+    //         if (this._layout)
+    //         {
+    //             // this._layout.updateDrag(this._event);
+    //             let rect:Rect = this._layout.getBounds();
+    //             this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
+    //             this.layoutMark.show();
+    //         }
+    //         else
+    //         {
+    //             this.layoutMark.hide();
+    //         }
+    //     }
+
+    //     // disable drag
+    //     if (event.which !== 1) this.onmouseup(event);
+    // }
+
+    // public onmouseup(event: MouseEvent): void
+    // {
+    //     if ( !this.isDown ) return;
+
+    //     event.preventDefault();
+    //     this.isDown = false;
+
+    //     this._event.pointer.x = event.pageX;
+    //     this._event.pointer.y = event.pageY;
+
+    //     this.update(event);
+
+    //     // layout manager
+    //     // if (this._layout != null) this._layout.dropDrag(this._event);
+    //     this.layoutMark.hide();
+
+    //     // enable mouse in this
+    //     this.html.style.pointerEvents = "auto";
+    //     this.html.style.opacity = "1";
+
+    //     this.redraw();
+    // }
+
+    // private update(event:MouseEvent): RectChange
+    // {
+    //     if (this.isAnchor)
+    //     {
+    //         this.nextRect.end(
+    //             this.hasMovementHorizontal ? event.pageX : this.rect.x + this.rect.w,
+    //             this.hasMovementVertical ? event.pageY : this.rect.y + this.rect.h);
+    //     }
+    //     else
+    //     {
+    //         this.nextRect.move(
+    //             this.nextRect.x + event.movementX,
+    //             this.nextRect.y + event.movementY);
+    //     }
+
+    //     let change: RectChange = this.rect.getChangeByRect(this.nextRect);
+    //     this.rect.copy(this.nextRect);
+    //     this.draw();
+
+    //     return change;
+    // }
 }
 
 
@@ -872,7 +1057,7 @@ export class Ghost extends RectView
 
     constructor(...classesName:string[])
     {
-        super(...classesName, "ghost");
+        super(...classesName, "w-ghost");
 
         this.html.style.display = "none";
     }
@@ -891,67 +1076,3 @@ export class Ghost extends RectView
     }
 }
 
-// export class ToolbarEditor extends Display
-// {
-//     private static pool: ToolbarEditor[] = [];
-
-//     public static Get(target: Display): ToolbarEditor
-//     {
-//         let toolbar: ToolbarEditor;
-//         if (ToolbarEditor.pool.length <= 0)
-//         {
-//             toolbar = new ToolbarEditor();
-//             target.getRoot().addChild(toolbar)
-//         }
-//         else
-//         {
-//             toolbar = ToolbarEditor.pool.pop();
-//         }
-//         //toolbar.rect.copyClientRect(target.getBounds());
-//         toolbar.show( target );
-//         return toolbar;
-//     }
-
-//     public static Recycle(toolbar: ToolbarEditor): void
-//     {
-//         toolbar.hide();
-//         ToolbarEditor.pool.push(toolbar);
-//     }
-
-//     constructor(...classesName: string[])
-//     {
-//         super( "div", "toolbar", "editor-ui", ...classesName );
-
-//         this.html.style.display = "none";
-
-//         this.html.innerHTML =
-//         "<div class='ui-toolbar'>"+
-//         "    <button class='ui-edit'></button>"+
-//         "    <button class='ui-close'></button>"+
-//         "</div>";
-//     }
-
-//     public show(target:Display)
-//     {
-//         var bounds:Rect = target.getBounds();
-
-//         this.html.style.display = "block";
-//         this.html.style.position = "absolute";
-//         this.html.style.left = bounds.right + "px";
-//         this.html.style.top = (bounds.top) + "px";
-//         this.html.style.zIndex = "999";
-//     }
-
-//     public hide()
-//     {
-//         this.html.style.display = "none";
-//     }
-
-//     /*
-//     <div class="btn-group mr-2 btn-group-sm toolbar" role="group" aria-label="Opções de Edição">
-//         <button type="button" class="btn btn-success"><i class="fa fa-pencil" aria-hidden="true" title="Editar Conteudo"></i></button>
-//         <button type="button" class="btn btn-danger"><i class="fa fa-times" aria-hidden="true" title="Deletar Elemento"></i></button>
-//     </div>
-//     */
-
-// }

@@ -62,7 +62,7 @@ gulp.task("ts", function()
     .bundle()
     .on('error', errorHandler)
 
-    .pipe(source("main.js"))
+    .pipe(source("wedit.js"))
     .pipe(buffer())
     .pipe(sourcemaps.init({ loadMaps: true }))
     //.pipe(uglify())

@@ -523,6 +523,11 @@ describe("SelectableGroup", function ()
     expect(selection.get(1)).to.equal(b);
   });
 
+  it('Modo Cache (SHIFT)', function () 
+  {
+    expect(1).to.equal(2);
+  });
+
   it('Recuperação de area', function () 
   {
     let selection = new W.SelectableGroup(function (selectable) { }, function (selectable) { });
@@ -572,6 +577,25 @@ describe("SelectableGroup", function ()
     expect(area.width).to.equal(200);
     expect(area.height).to.equal(200);
   });
+});
+
+
+describe("RectView", function ()
+{
+
+  it('Pooling', function () 
+  {
+  });
+
+});
+
+describe("Ghost", function ()
+{
+
+  it('Pooling', function () 
+  {
+  });
+
 });
 
 //console.log(display);
