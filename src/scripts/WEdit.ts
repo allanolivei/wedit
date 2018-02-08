@@ -69,7 +69,7 @@ export class WEdit extends Widget
         }
         else
         {
-            super(settings, "w-edit w-editing", ...className);
+            super(settings, "w-edit", "w-editing", ...className);
             element.appendChild(this.html);
         }
 
@@ -105,7 +105,7 @@ export class WEdit extends Widget
         w.addWidget("list", new UI.UISelect());
         w.addWidget("list", new UI.UIInput("margin-top", "10", 84));
 
-        document.body.appendChild(w.html);
+        //document.body.appendChild(w.html);
 
         // window.document.addEventListener("keydown",  this.onKeydownHandler.bind(this));
 
@@ -132,8 +132,10 @@ export class WEdit extends Widget
     {
         this.selection.select.clear();
         this.selection.hover.clear();
+        //this.selectionDragger.disable();
+        //this.selectionTransform.hide();
         this.selectionDragger.disable();
-        this.selectionTransform.hide();
+        this.selectionTransform.disable();
 
         this.removeClass("w-editing");
     }
