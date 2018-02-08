@@ -492,7 +492,7 @@ export class SelectionDragger extends RectView
 
     private selectableFilter( element:Display ):boolean
     {
-        return element instanceof Selectable && element.getData("disabled") !== "true";
+        return element instanceof Selectable && element.getData("enable") !== "true";
     }
 
     private mousedown(event: MouseEvent): void
@@ -525,12 +525,15 @@ export class SelectionDragger extends RectView
 
     private mousemove(event: MouseEvent): void
     {
-        if( event.buttons === 1 && this.isDragging )
+        if( event.buttons === 1 )
         {
-            event.preventDefault();
+            if( this.isDragging )
+            {
+                event.preventDefault();
 
-            this.end(event.pageX, event.pageY);
-            this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
+                this.end(event.pageX, event.pageY);
+                this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
+            }
         }
         else
         {
@@ -608,10 +611,18 @@ export class SelectionTransform extends RectView
     private root:Display;
     private selection:Selection;
 
+    // informations of drag
+    private nextRect: Rect;
+    private startDragRect:Rect;
+    private layout:Layout;
     private event:DragEvent;
+
     // event bind
     private selectChangeHandlerBinder:any;
     private keyHandlerBinder:any;
+    private mousedownBinder:any;
+    private mousemoveBinder:any;
+    private mouseupBinder:any;
 
     constructor(root:Display, selection:Selection)
     {
@@ -630,6 +641,9 @@ export class SelectionTransform extends RectView
         // binders
         this.selectChangeHandlerBinder = this.selectionChangeHandler.bind(this);
         this.keyHandlerBinder = this.onKeydownHandler.bind(this);
+        this.mousedownBinder = this.mousedown.bind(this);
+        this.mousemoveBinder = this.mousemove.bind(this);
+        this.mouseupBinder = this.mousemove.bind(this);
 
         // enable
         this.enable();
@@ -645,6 +659,7 @@ export class SelectionTransform extends RectView
         this.selection.select.onChange.on(this.selectChangeHandlerBinder);
         document.addEventListener("keydown",  this.keyHandlerBinder);
         document.addEventListener("keyup",  this.keyHandlerBinder);
+        this.html.addEventListener("mousedown", this.mousedownBinder);
 
         this.add();
     }
@@ -657,6 +672,7 @@ export class SelectionTransform extends RectView
         this.selection.select.onChange.off(this.selectChangeHandlerBinder);
         document.removeEventListener("keydown",  this.keyHandlerBinder);
         document.removeEventListener("keyup",  this.keyHandlerBinder);
+        this.html.removeEventListener("mousedown", this.mousedownBinder);
 
         this.remove();
     }
@@ -724,6 +740,94 @@ export class SelectionTransform extends RectView
         }
 
         // this.setData('drag', isDraggable ? 'true' : 'false');
+    }
+
+    private mousedown(event:MouseEvent):void
+    {
+        event.preventDefault();
+        event.stopPropagation();
+
+        let target: HTMLElement = event.target as HTMLElement;
+        let className: string = target.className;
+
+        // cache start drag information
+        this.startDragRect.copy(this.rect);
+        this.event.pointer.x = this.event.startPointer.x = event.pageX;
+        this.event.pointer.y = this.event.startPointer.y = event.pageY;
+        this.event.offset.x = event.pageX - this.startDragRect.x;
+        this.event.offset.x = event.pageY - this.startDragRect.y;
+
+        this.nextRect.copy(this.rect);
+
+        // layout manager
+        this.layout = this.event.elements.length === 0 ?
+            null :
+            this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+        // if (this._layout) this._layout.enterDrag(this._event);
+
+        // disable mouse in this
+        this.html.style.pointerEvents = "none";
+        this.html.style.opacity = "0";
+
+        window.addEventListener("mousemove", (event: MouseEvent) => self.mousemove(event));
+    }
+
+    public mousemove(event: MouseEvent): void
+    {
+        event.preventDefault();
+
+        this.event.pointer.x = event.pageX;
+        this.event.pointer.y = event.pageY;
+
+        ///this.update(event);
+
+        // layout manager
+        if( this.event.elements.length > 0 )
+        {
+            let newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
+            if( newLayout !== this.layout )
+            {
+                // if (this._layout) this._layout.exitDrag(this._event);
+                // if (newLayout) newLayout.enterDrag(this._event);
+            }
+            this.layout = newLayout;
+            if (this.layout)
+            {
+                // this._layout.updateDrag(this._event);
+                let rect:Rect = this.layout.getBounds();
+                //this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
+                //this.layoutMark.show();
+            }
+            else
+            {
+                //this.layoutMark.hide();
+            }
+        }
+
+        // disable drag
+        if (event.which !== 1) this.onmouseup(event);
+    }
+
+    public onmouseup(event: MouseEvent): void
+    {
+        event.preventDefault();
+
+        //this.update(event);
+
+        // layout manager
+        // if (this._layout != null) this._layout.dropDrag(this._event);
+        //this.layoutMark.hide();
+
+        // enable mouse in this
+        this.html.style.pointerEvents = "auto";
+        this.html.style.opacity = "1";
+
+        this.redraw();
+    }
+
+    private layoutFilter(element: Display): boolean
+    {
+        return element instanceof Layout;
     }
 
     // public hasMovementHorizontal: boolean;

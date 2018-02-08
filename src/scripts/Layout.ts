@@ -110,8 +110,10 @@ export abstract class Layout extends Selectable
     //     this.removeClass("layout-over");
     // }
 
-    // public abstract updateDrag(event: DragEvent): void;
-    // public abstract dropDrag(event: DragEvent): void;
+    public abstract enterDrag(event: DragEvent): void;
+    public abstract exitDrag(event: DragEvent): void;
+    public abstract updateDrag(event: DragEvent): void;
+    public abstract dropDrag(event: DragEvent): void;
 
 
     // public allowDropGroup(elem:DragEvent):boolean
@@ -129,8 +131,15 @@ export class RelativeLayout extends Layout
     {
         super(tag, ...params);
 
+        console.log("RELATIVE LAYOUT");
+
         // this.requiredStyles["position"] = "absolute";
     }
+
+    public enterDrag(event: DragEvent): void { console.log("enter"); }
+    public exitDrag(event: DragEvent): void{ console.log("exit");}
+    public updateDrag(event: DragEvent): void { console.log("update");}
+    public dropDrag(event: DragEvent): void { console.log("drop");}
 
     // public enterDrag(event: DragEvent): void
     // {
@@ -203,6 +212,11 @@ export class VerticalLayout extends Layout
         // this.requiredStyles["top"] = "auto";
         // this.requiredStyles["width"] = "auto";
     }
+
+    public enterDrag(event: DragEvent): void { console.log("enter"); }
+    public exitDrag(event: DragEvent): void { console.log("exit"); }
+    public updateDrag(event: DragEvent): void { console.log("update"); }
+    public dropDrag(event: DragEvent): void { console.log("drop"); }
 
 
     // public enterDrag(event: DragEvent): void
@@ -325,6 +339,11 @@ export class VerticalLayout extends Layout
 export class AutoLayout extends Layout
 {
 
+
+    public enterDrag(event: DragEvent): void { console.log("enter"); }
+    public exitDrag(event: DragEvent): void { console.log("exit"); }
+    public updateDrag(event: DragEvent): void { console.log("update"); }
+    public dropDrag(event: DragEvent): void { console.log("drop"); }
     // private startRect:Rect[];
 
     // constructor(tag: string = "div", ...params: string[])
@@ -382,6 +401,10 @@ export class AutoLayout extends Layout
 export class RowLayout extends Layout
 {
 
+    public enterDrag(event: DragEvent): void { console.log("enter"); }
+    public exitDrag(event: DragEvent): void { console.log("exit"); }
+    public updateDrag(event: DragEvent): void { console.log("update"); }
+    public dropDrag(event: DragEvent): void { console.log("drop"); }
     // private childIndex:number;
 
     // constructor(tag: string = "div", ...params: string[])

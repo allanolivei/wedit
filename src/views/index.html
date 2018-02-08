@@ -10,7 +10,12 @@
 </head>
 <body>
 
-    
+    <div class="container">
+        <div class="row">
+            <div class="col-6" style="background:red;">Ola 1</div>
+            <div class="col-6" style="background:blue;">Ola 2</div>
+        </div>
+    </div>
 
     <script src="js/wedit.js"></script>
     <script>
@@ -20,9 +25,18 @@
         var stage = new W.WEdit(document.body, "relative-layout");
         //stage.disable();
 
+
         W.WEdit.addTemplate("box", 
             "<div id='{{id}}' style='background: grey; position:absolute; width:100px; height:100px;'></div>"
         );
+
+
+        var relative = stage.addWidget("list",{
+            "template": "relative-layout",
+            "data":{
+                "style":"border: 1px solid red;position:absolute;left:500px;top:50px;width: 500px;height:400px;"
+            }
+        });
 
         stage.addWidget("list",
         {
