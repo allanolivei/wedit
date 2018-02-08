@@ -1,4 +1,5 @@
 @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+@import 'main/layouts';
 
 html.ie8,
 html.ie7,
@@ -59,25 +60,6 @@ html.ie6
 
 ////////// LAYOUTS
 
-.layout-relative
-{
-    position: relative;
-}
-
-.layout-vertical
-{
-
-}
-
-.layout-absolute
-{
-
-}
-
-.layout-row
-{
-
-}
 
 
 

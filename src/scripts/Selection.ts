@@ -490,9 +490,9 @@ export class SelectionDragger extends RectView
         document.body.removeChild(this.html);
     }
 
-    private selectableFilter( element:Display ):boolean
+    private selectableFilter( element:Selectable ):boolean
     {
-        return element instanceof Selectable && element.getData("enable") !== "true";
+        return element.isEnable();
     }
 
     private mousedown(event: MouseEvent): void
@@ -539,6 +539,7 @@ export class SelectionDragger extends RectView
         {
             let elem: HTMLElement = event.target as HTMLElement;
             if ( !this.IsEditor(elem) ) this.updateHover(event.pageX, event.pageY);
+            else this.hoverMark.hide();
         }
     }
 
@@ -615,6 +616,7 @@ export class SelectionTransform extends RectView
     private nextRect: Rect;
     private startDragRect:Rect;
     private layout:Layout;
+    private layoutMark:RectView;
     private event:DragEvent;
 
     // event bind
@@ -634,6 +636,13 @@ export class SelectionTransform extends RectView
 
         // informations about dragging
         this.event = new DragEvent();
+        this.startDragRect = new Rect();
+        this.nextRect = new Rect();
+        this.nextRect.copy(this.rect);
+
+        // layout
+        this.layoutMark = new RectView("w-layout-hover");
+        this.layoutMark.hide();
 
         // hide me
         this.hide();
@@ -680,11 +689,35 @@ export class SelectionTransform extends RectView
     public add():void
     {
         document.body.appendChild(this.html);
+        document.body.appendChild(this.layoutMark.html);
     }
 
     public remove():void
     {
         document.body.removeChild(this.html);
+        document.body.removeChild(this.layoutMark.html);
+    }
+
+    private redraw(): void
+    {
+        let rect: Rect = this.selection.select.getRectArea();
+        this.set(rect.x, rect.y, rect.w, rect.h);
+        this.redrawGhosts();
+    }
+
+    private redrawGhosts()
+    {
+        // let isDraggable:boolean = false;
+
+        for (let i: number = 0; i < this.event.ghost.length; i++)
+        {
+            this.event.ghost[i].rect.copyClientRect(this.event.elements[i].getBounds());
+            this.event.ghost[i].draw();
+
+            // if( this._event.elements[i].allowDrag() ) isDraggable = true;
+        }
+
+        // this.setData('drag', isDraggable ? 'true' : 'false');
     }
 
     private onKeydownHandler(event:KeyboardEvent):void
@@ -704,9 +737,9 @@ export class SelectionTransform extends RectView
         let diff: number = this.event.elements.length - this.event.ghost.length;
 
         // rect
-        // this._event.startRect = [];
-        // for( let i:number = 0 ; i < e.length ; i++ )
-        //     this._event.startRect.push( e[i].getBounds() );
+        this.event.startRect = [];
+        for( let i:number = 0 ; i < e.length ; i++ )
+            this.event.startRect.push( e[i].getBounds() );
 
         // add ghosts
         for( let i:number = 0 ; i < diff ; i++ )
@@ -724,24 +757,6 @@ export class SelectionTransform extends RectView
         this.redraw();
     }
 
-    private redraw():void
-    {
-        let rect: Rect = this.selection.select.getRectArea();
-        this.set(rect.x, rect.y, rect.w, rect.h);
-
-        // let isDraggable:boolean = false;
-
-        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
-        {
-            this.event.ghost[i].rect.copyClientRect( this.event.elements[i].getBounds() );
-            this.event.ghost[i].draw();
-
-            // if( this._event.elements[i].allowDrag() ) isDraggable = true;
-        }
-
-        // this.setData('drag', isDraggable ? 'true' : 'false');
-    }
-
     private mousedown(event:MouseEvent):void
     {
         event.preventDefault();
@@ -756,53 +771,30 @@ export class SelectionTransform extends RectView
         this.event.pointer.y = this.event.startPointer.y = event.pageY;
         this.event.offset.x = event.pageX - this.startDragRect.x;
         this.event.offset.x = event.pageY - this.startDragRect.y;
-
         this.nextRect.copy(this.rect);
 
         // layout manager
-        this.layout = this.event.elements.length === 0 ?
-            null :
-            this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-        // if (this._layout) this._layout.enterDrag(this._event);
+        this.updateLayout();
 
         // disable mouse in this
         this.html.style.pointerEvents = "none";
         this.html.style.opacity = "0";
 
-        window.addEventListener("mousemove", (event: MouseEvent) => self.mousemove(event));
+        // handle events
+        window.addEventListener("mousemove", this.mousemoveBinder);
+        window.addEventListener("mouseup", this.mouseupBinder);
     }
 
     public mousemove(event: MouseEvent): void
     {
         event.preventDefault();
 
+        // update events
         this.event.pointer.x = event.pageX;
         this.event.pointer.y = event.pageY;
 
-        ///this.update(event);
-
-        // layout manager
-        if( this.event.elements.length > 0 )
-        {
-            let newLayout:Layout = this.root.findByPoint(event.pageX, event.pageY, this.layoutFilter) as Layout;
-            if( newLayout !== this.layout )
-            {
-                // if (this._layout) this._layout.exitDrag(this._event);
-                // if (newLayout) newLayout.enterDrag(this._event);
-            }
-            this.layout = newLayout;
-            if (this.layout)
-            {
-                // this._layout.updateDrag(this._event);
-                let rect:Rect = this.layout.getBounds();
-                //this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
-                //this.layoutMark.show();
-            }
-            else
-            {
-                //this.layoutMark.hide();
-            }
-        }
+        // update layout
+        this.updateLayout();
 
         // disable drag
         if (event.which !== 1) this.onmouseup(event);
@@ -812,17 +804,49 @@ export class SelectionTransform extends RectView
     {
         event.preventDefault();
 
-        //this.update(event);
-
         // layout manager
-        // if (this._layout != null) this._layout.dropDrag(this._event);
-        //this.layoutMark.hide();
+         if (this.layout != null) this.layout.dropDrag(this.event);
+        this.layoutMark.hide();
+        this.layout = null;
 
         // enable mouse in this
         this.html.style.pointerEvents = "auto";
         this.html.style.opacity = "1";
 
+        // draw current rect
         this.redraw();
+
+        // remove handle events
+        window.removeEventListener("mousemove", this.mousemoveBinder);
+        window.removeEventListener("mouseup", this.mouseupBinder);
+    }
+
+    private updateLayout()
+    {
+        if (this.event.elements.length === 0) return;
+
+        // new layout
+        let newLayout: Layout = this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.layoutFilter) as Layout;
+        if (newLayout !== this.layout)
+        {
+            if (this.layout) this.layout.exitDrag(this.event);
+            if (newLayout) newLayout.enterDrag(this.event);
+            else this.redrawGhosts();
+        }
+        this.layout = newLayout;
+
+        // update layout
+        if ( this.layout )
+        {
+            this.layout.updateDrag(this.event);
+            let rect: Rect = this.layout.getBounds();
+            this.layoutMark.set(rect.x, rect.y, rect.w, rect.h);
+            this.layoutMark.show();
+        }
+        else
+        {
+            this.layoutMark.hide();
+        }
     }
 
     private layoutFilter(element: Display): boolean

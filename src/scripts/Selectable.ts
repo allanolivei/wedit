@@ -13,12 +13,12 @@ export class Selectable extends Display
 
     public isDraggable():boolean
     {
-        return false;
+        return this.getData("drag") !== "false";
     }
 
     public isEnable():boolean
     {
-        return false;
+        return this.getData("enable") !== "false";
     }
 
     public setDraggable(isDrag:boolean = true):void

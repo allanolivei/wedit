@@ -1,6 +1,7 @@
 import { Display } from "./Display";
 import { Rect } from "./Utils";
 import { Selectable } from "./Selectable";
+import { DragEvent } from "./Event";
 
 export abstract class Layout extends Selectable
 {
@@ -10,10 +11,12 @@ export abstract class Layout extends Selectable
 
     constructor(tagName: string = "div", ...params: string[])
     {
-        super(tagName, "layout", ...params);
+        super(tagName, "w-layout", ...params);
 
         if( tagName === "ul" ) this.setChildStruct("li");
         else if( tagName === "select" ) this.setChildStruct("option");
+
+        this.setEnable(false);
     }
 
     public hasChildStruct():boolean
@@ -110,10 +113,10 @@ export abstract class Layout extends Selectable
     //     this.removeClass("layout-over");
     // }
 
-    public abstract enterDrag(event: DragEvent): void;
-    public abstract exitDrag(event: DragEvent): void;
-    public abstract updateDrag(event: DragEvent): void;
-    public abstract dropDrag(event: DragEvent): void;
+    public enterDrag(event: DragEvent): void{/**/}
+    public exitDrag(event: DragEvent): void {/**/}
+    public updateDrag(event: DragEvent): void {/**/}
+    public dropDrag(event: DragEvent): void {/**/}
 
 
     // public allowDropGroup(elem:DragEvent):boolean
@@ -129,94 +132,121 @@ export class RelativeLayout extends Layout
 {
     constructor(tag: string = "div", ...params: string[])
     {
-        super(tag, ...params);
-
-        console.log("RELATIVE LAYOUT");
-
-        // this.requiredStyles["position"] = "absolute";
+        super(tag, "w-layout-relative", ...params);
     }
 
-    public enterDrag(event: DragEvent): void { console.log("enter"); }
-    public exitDrag(event: DragEvent): void{ console.log("exit");}
-    public updateDrag(event: DragEvent): void { console.log("update");}
-    public dropDrag(event: DragEvent): void { console.log("drop");}
+    public enterDrag(event: DragEvent): void
+    {
+        for( let i = 0 ; i < event.elements.length ; i++ )
+        {
+            let rect:Rect = event.elements[i].getBounds();
+            event.ghost[i].rect.copy(rect);
+        }
 
-    // public enterDrag(event: DragEvent): void
-    // {
-    //     super.enterDrag(event);
+        this.updateDrag(event);
+    }
 
-    //     for( var i = 0 ; i < event.elements.length ; i++ )
-    //     {
-    //         var rect:Rect = event.elements[i].getBounds();
-    //         event.ghost[i].rect.copy(rect);
-    //         event.ghost[i].html.style.position = "absolute";
-    //         event.ghost[i].show();
-    //     }
+    public updateDrag(event: DragEvent): void
+    {
+        let deltaX: number = event.pointer.x - event.startPointer.x;
+        let deltaY: number = event.pointer.y - event.startPointer.y;
 
-    //     this.updateDrag(event);
-    // }
+        for (let i = 0; i < event.elements.length; i++)
+            event.ghost[i].move(event.startRect[i].x + deltaX, event.startRect[i].y +deltaY);
+    }
 
-    // public updateDrag(event: DragEvent): void
-    // {
-    //     var deltaX: number = event.pointer.x - event.startPointer.x;
-    //     var deltaY: number = event.pointer.y - event.startPointer.y;
+    public dropDrag(event: DragEvent): void
+    {
+        let deltaX: number = event.pointer.x - event.startPointer.x;
+        let deltaY: number = event.pointer.y - event.startPointer.y;
+        let bounds: Rect = this.getBounds();
 
-    //     for (var i = 0; i < event.elements.length; i++)
-    //         event.ghost[i].move(event.startRect[i].x + deltaX, event.startRect[i].y +deltaY);
-    // }
+        for (let i:number = 0; i < event.elements.length; i++)
+        {
+            let target:Selectable = event.elements[i];
 
-    // public exitDrag(event: DragEvent): void
-    // {
-    //     super.exitDrag(event);
+            if( !this.allowAddChild(target) ) return;
 
-    //     this.updateDrag(event);
+            let x:number = event.startRect[i].x + deltaX - bounds.x;
+            let y:number = event.startRect[i].y + deltaY - bounds.y;
 
-    //     for (var i = 0; i < event.ghost.length; i++)
-    //         event.ghost[i].hide();
-    // }
+            target.setStyle("left", x + "px");
+            target.setStyle("top", y + "px");
+            target.setStyle("width", event.startRect[i].width + "px");
+            target.setStyle("height", event.startRect[i].height + "px");
 
-    // public dropDrag(event: DragEvent): void
-    // {
-    //     this.exitDrag(event);
-
-    //     var bounds:Rect = this.getBounds();
-    //     for (var i = 0; i < event.ghost.length; i++)
-    //     {
-    //         var target:Selectable = event.elements[i];
-    //         var ghost:Ghost = event.ghost[i];
-
-    //         if( !this.allowDrop(target) || !target.allowDrop(this) ) continue;
-
-    //         target.html.style.position = "absolute";
-    //         target.html.style.left = (ghost.rect.x - bounds.x)+"px";
-    //         target.html.style.top = (ghost.rect.y - bounds.y) + "px";
-    //         target.html.style.width = (ghost.rect.w)+"px";
-    //         target.html.style.height = (ghost.rect.h)+"px";
-
-    //         this.addChild( target );
-    //     }
-    // }
+            if( target.parent !== this ) this.addChild(target);
+        }
+    }
 }
 
 export class VerticalLayout extends Layout
 {
 
-    // private childIndex:number = 0;
+    private childIndex:number = 0;
 
     constructor(tag: string = "div", ...params: string[])
     {
-        super(tag, ...params);
-
-        // this.requiredStyles["position"] = "static";
-        // this.requiredStyles["left"] = "auto";
-        // this.requiredStyles["top"] = "auto";
-        // this.requiredStyles["width"] = "auto";
+        super(tag, "w-layout-vertical", ...params);
     }
 
-    public enterDrag(event: DragEvent): void { console.log("enter"); }
+    public enterDrag(event: DragEvent): void
+    {
+        let rowBounds: Rect = this.getBounds();
+
+        for( let i:number = 1 ; i < event.ghost.length ; i++ )
+            event.ghost[i].hide();
+
+        event.ghost[0].size( rowBounds.w, 4 );
+        event.ghost[0].show();
+
+        this.updateDrag(event);
+    }
+
     public exitDrag(event: DragEvent): void { console.log("exit"); }
-    public updateDrag(event: DragEvent): void { console.log("update"); }
-    public dropDrag(event: DragEvent): void { console.log("drop"); }
+    public updateDrag(event: DragEvent): void
+    {
+        this.childIndex = this.children.length;
+
+        // find index relative childrens
+        for( let i:number = this.children.length-1 ; i >= 0 ; i-- )
+        {
+            let child:Selectable = this.children[i] as Selectable;
+            let elemRect: Rect =  child.getBounds();
+
+            if( event.pointer.y >= elemRect.top )
+            {
+                let isChild:boolean = false;
+                if( !isChild && event.pointer.y >= elemRect.top + elemRect.height*0.5 )
+                    this.childIndex = i+1;
+                else
+                    this.childIndex = i;
+                break;
+            }
+        }
+
+        // move relative index
+        let bounds:Rect = this.getBounds();
+        if( this.childIndex === 0 )
+            event.ghost[0].move( bounds.x, bounds.y );
+        else
+            event.ghost[0].move( bounds.x, this.children[this.childIndex-1].getBounds().bottom );
+    }
+
+    public dropDrag(event: DragEvent): void
+    {
+        for (let i: number = 0; i < event.elements.length; i++)
+        {
+            let target:Selectable = event.elements[i];
+
+            if ( !this.allowAddChild(target) ) continue;
+
+            if( target.parent === this && this.children.indexOf(target) < this.childIndex )
+                this.addChild( target, this.childIndex-1 );
+            else
+                this.addChild( target, this.childIndex );
+        }
+    }
 
 
     // public enterDrag(event: DragEvent): void
@@ -400,6 +430,10 @@ export class AutoLayout extends Layout
 
 export class RowLayout extends Layout
 {
+    constructor(tag:string, ...params:string[])
+    {
+        super(tag, "w-layout-row", ...params);
+    }
 
     public enterDrag(event: DragEvent): void { console.log("enter"); }
     public exitDrag(event: DragEvent): void { console.log("exit"); }

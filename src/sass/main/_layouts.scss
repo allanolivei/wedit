@@ -1,0 +1,29 @@
+.w-layout-relative
+{
+    position: relative !important;
+    &>* { position: absolute !important; }
+}
+
+.w-layout-vertical
+{
+    position: relative !important;
+    &>* 
+    { 
+        position:initial !important; 
+        width:auto !important; 
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+    }
+}
+
+.w-layout-absolute
+{
+
+}
+
+.w-layout-row
+{
+    @extend .row;
+}

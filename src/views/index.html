@@ -27,51 +27,73 @@
 
 
         W.WEdit.addTemplate("box", 
-            "<div id='{{id}}' style='background: grey; position:absolute; width:100px; height:100px;'></div>"
+            "<div id='{{id}}' style='position:absolute; width:100px; height:100px;'></div>"
         );
 
 
         var relative = stage.addWidget("list",{
             "template": "relative-layout",
             "data":{
-                "style":"border: 1px solid red;position:absolute;left:500px;top:50px;width: 500px;height:400px;"
+                "style":"border: 1px solid red;position:absolute;left:500px;top:50px;",
+                "layout-style":"position:relative;width:500px;height:400px;"
+            }
+        });
+        var vertical1 = stage.addWidget("list", {
+            "template": "vertical-layout",
+            "data": {
+                "style": "border: 1px solid blue;position:absolute;left:1000px;top:50px;",
+                "layout-style": "position:relative;width:500px;height:400px;"
+            }
+        });
+        var vertical2 = stage.addWidget("list", {
+            "template": "vertical-layout",
+            "data": {
+                "style": "border: 1px solid blue;position:absolute;left:2px;top:300px;",
+                "layout-style": "position:relative;width:500px;height:400px;"
+            }
+        });
+        var row = stage.addWidget("list", {
+            "template": "vertical-layout",
+            "data": {
+                "style": "border: 1px solid blue;position:absolute;left:2px;top:300px;",
+                "layout-style": "position:relative;width:500px;height:400px;"
             }
         });
 
         stage.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:100px;top:100px;" }
+            "data":{ "style":"left:100px;top:100px;background: red;" }
         });
 
         stage.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:250px;top:70px;" }
+            "data":{ "style":"left:250px;top:70px;background:blue;" }
         });
 
         stage.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:200px;top:250px;" }
+            "data":{ "style":"left:200px;top:250px;background:purple;" }
         });
 
         stage.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:350px;top:200px;" }
+            "data":{ "style":"left:350px;top:200px;background:brown;" }
         });
 
         stage.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:500px;top:300px;" }
+            "data":{ "style":"left:480px;top:300px;background:yellow;" }
         });
         
         stage.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:350px;top:500px;" }
+            "data":{ "style":"left:350px;top:500px;background:green;" }
         });
         
 

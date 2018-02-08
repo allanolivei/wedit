@@ -83,6 +83,8 @@ export class WEdit extends Widget
         this.selectionDragger = new SelectionDragger(this, this.selection);
         this.selectionTransform = new SelectionTransform(this, this.selection);
 
+        this.setEnable(false);
+
         // let self = this;
 
         // // this.selectionDragger.onChange.on( (event:string)=>self.selectDraggerChangeHandler(event) );
@@ -93,17 +95,17 @@ export class WEdit extends Widget
 
         // window.document.addEventListener("keydown", (e: KeyboardEvent) => self.onKeydownHandler(e));
 
-        let w = new UI.UIWindow();
-        let group = new UI.UIHGroup();
-        group.addWidget("list", new UI.UIInput("X", "10", 28, "center"));
-        group.addWidget("list", new UI.UIInput("Y", "10", 28, "center"));
-        w.addWidget( "list", group);
-        w.addWidget("list", new UI.UIInput("W", "10", 28, "center") );
-        w.addWidget("list", new UI.UIInput("H", "10", 28, "center") );
-        w.addWidget("list", new UI.UIInput("width", "10", 50));
-        w.addWidget("list", new UI.UIInput("height", "10", 50));
-        w.addWidget("list", new UI.UISelect());
-        w.addWidget("list", new UI.UIInput("margin-top", "10", 84));
+        // let w = new UI.UIWindow();
+        // let group = new UI.UIHGroup();
+        // group.addWidget("list", new UI.UIInput("X", "10", 28, "center"));
+        // group.addWidget("list", new UI.UIInput("Y", "10", 28, "center"));
+        // w.addWidget( "list", group);
+        // w.addWidget("list", new UI.UIInput("W", "10", 28, "center") );
+        // w.addWidget("list", new UI.UIInput("H", "10", 28, "center") );
+        // w.addWidget("list", new UI.UIInput("width", "10", 50));
+        // w.addWidget("list", new UI.UIInput("height", "10", 50));
+        // w.addWidget("list", new UI.UISelect());
+        // w.addWidget("list", new UI.UIInput("margin-top", "10", 84));
 
         //document.body.appendChild(w.html);
 

@@ -69,14 +69,20 @@ stage.addWidget("list",{
         "meuestilo":{"500px":"margin-top:20px;background:red;min-height:40px"}
     }
 });
+
+https://microsoft.github.io/monaco-editor/index.html
 */
 export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
-        "text": { html: "<div>{{text}}</div>" },
-        "row-layout": { html: "<div><div class='layout-row row' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
-        "vertical-layout": { html: "<div><div class='layout-vertical' data-type='VerticalLayout'>{{list}}</div></div>" },
-        "relative-layout": { html: "<div><div class='layout-relative' data-type='RelativeLayout'>{{list}}</div></div>" },
+        "text": { html:
+            "<div>{{text}}</div>" },
+        "row-layout": { html:
+            "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
+        "vertical-layout": { html:
+            "<div><div data-style='{{layout-style}}' data-type='VerticalLayout'>{{list}}</div></div>" },
+        "relative-layout": { html:
+            "<div><div data-style='{{layout-style}}' data-type='RelativeLayout'>{{list}}</div></div>" },
     };
 
     public static AddTemplate( name:string, value:string|TemplateData ):void
@@ -445,7 +451,7 @@ export class Widget extends Selectable
             // elemento editavel
             if (containerName !== "")
             {
-                let type: string = display.hasClass("layout") ? "list" : "text";
+                let type: string = display.hasClass("w-layout") ? "list" : "text";
                 //this.containers[wattrib.name] = { type: wattrib.type, display: display, attribName: wattrib.type };
                 this.createContainer(containerName, type, display);
                 // if ( wattrib.type === 'text' )
