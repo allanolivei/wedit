@@ -340,16 +340,28 @@ export class Display
         this.addChild(display, this.children.length);
     }
 
-    public allowAddChild( display:Display ):boolean
+    public isRecursiveChild( display:Display ):boolean
+    {
+        for( let i:number = 0 ; i < this.children.length ; i++ )
+            if( this.children[i] === display || this.children[i].isRecursiveChild(display) )
+                return true;
+        return false;
+    }
+
+    public isRecursiveParent( display:Display ):boolean
     {
         let parent:Display = this;
 
-        // display is my parent ?
         while( parent != null )
-            if( parent === display ) return false;
+            if( parent === display ) return true;
             else parent = parent.parent;
 
-        return true;
+        return false;
+    }
+
+    public allowAddChild( display:Display ):boolean
+    {
+        return !this.isRecursiveParent(display);
     }
 
     private getSheetRules(media:string="default"):SheetRules

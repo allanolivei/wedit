@@ -625,6 +625,7 @@ export class SelectionTransform extends RectView
     private mousedownBinder:any;
     private mousemoveBinder:any;
     private mouseupBinder:any;
+    private filterBinder:any;
 
     constructor(root:Display, selection:Selection)
     {
@@ -652,7 +653,8 @@ export class SelectionTransform extends RectView
         this.keyHandlerBinder = this.onKeydownHandler.bind(this);
         this.mousedownBinder = this.mousedown.bind(this);
         this.mousemoveBinder = this.mousemove.bind(this);
-        this.mouseupBinder = this.mousemove.bind(this);
+        this.mouseupBinder = this.mouseup.bind(this);
+        this.filterBinder = this.layoutFilter.bind(this);
 
         // enable
         this.enable();
@@ -702,10 +704,10 @@ export class SelectionTransform extends RectView
     {
         let rect: Rect = this.selection.select.getRectArea();
         this.set(rect.x, rect.y, rect.w, rect.h);
-        this.redrawGhosts();
+        this.ghostRedraw();
     }
 
-    private redrawGhosts()
+    private ghostRedraw()
     {
         // let isDraggable:boolean = false;
 
@@ -718,6 +720,15 @@ export class SelectionTransform extends RectView
         }
 
         // this.setData('drag', isDraggable ? 'true' : 'false');
+    }
+
+    private ghostFollow():void
+    {
+        let deltaX: number = this.event.pointer.x - this.event.startPointer.x;
+        let deltaY: number = this.event.pointer.y - this.event.startPointer.y;
+
+        for (let i = 0; i < this.event.elements.length; i++)
+            this.event.ghost[i].move(this.event.startRect[i].x + deltaX, this.event.startRect[i].y +deltaY);
     }
 
     private onKeydownHandler(event:KeyboardEvent):void
@@ -735,6 +746,8 @@ export class SelectionTransform extends RectView
             if( e[i].allowDrag() ) this.event.elements.push(e[i]);
 
         let diff: number = this.event.elements.length - this.event.ghost.length;
+
+        console.log("TESTE", this.event.elements);
 
         // rect
         this.event.startRect = [];
@@ -797,15 +810,15 @@ export class SelectionTransform extends RectView
         this.updateLayout();
 
         // disable drag
-        if (event.which !== 1) this.onmouseup(event);
+        if (event.which !== 1) this.mouseup(event);
     }
 
-    public onmouseup(event: MouseEvent): void
+    public mouseup(event: MouseEvent): void
     {
         event.preventDefault();
 
         // layout manager
-         if (this.layout != null) this.layout.dropDrag(this.event);
+        if (this.layout != null) this.layout.dropDrag(this.event);
         this.layoutMark.hide();
         this.layout = null;
 
@@ -826,12 +839,12 @@ export class SelectionTransform extends RectView
         if (this.event.elements.length === 0) return;
 
         // new layout
-        let newLayout: Layout = this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.layoutFilter) as Layout;
+        let newLayout: Layout = this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.filterBinder) as Layout;
         if (newLayout !== this.layout)
         {
             if (this.layout) this.layout.exitDrag(this.event);
             if (newLayout) newLayout.enterDrag(this.event);
-            else this.redrawGhosts();
+            else this.ghostRedraw();
         }
         this.layout = newLayout;
 
@@ -845,13 +858,19 @@ export class SelectionTransform extends RectView
         }
         else
         {
+            this.ghostFollow();
             this.layoutMark.hide();
         }
     }
 
     private layoutFilter(element: Display): boolean
     {
-        return element instanceof Layout;
+        if( !(element instanceof Layout) ) return false;
+
+        for( let i:number = 0 ; i < this.event.elements.length ; i++ )
+            if( this.event.elements[i].isRecursiveChild(element) ) return false;
+
+        return true;
     }
 
     // public hasMovementHorizontal: boolean;

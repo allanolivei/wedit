@@ -141,6 +141,7 @@ export class RelativeLayout extends Layout
         {
             let rect:Rect = event.elements[i].getBounds();
             event.ghost[i].rect.copy(rect);
+            event.ghost[i].show();
         }
 
         this.updateDrag(event);
@@ -165,7 +166,7 @@ export class RelativeLayout extends Layout
         {
             let target:Selectable = event.elements[i];
 
-            if( !this.allowAddChild(target) ) return;
+            if( !this.allowAddChild(target) ) continue;
 
             let x:number = event.startRect[i].x + deltaX - bounds.x;
             let y:number = event.startRect[i].y + deltaY - bounds.y;
@@ -203,7 +204,6 @@ export class VerticalLayout extends Layout
         this.updateDrag(event);
     }
 
-    public exitDrag(event: DragEvent): void { console.log("exit"); }
     public updateDrag(event: DragEvent): void
     {
         this.childIndex = this.children.length;

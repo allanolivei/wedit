@@ -144,12 +144,19 @@ describe('Display', function()
     expect( parent.allowAddChild(child) ).to.equal(true);
   });
 
+  it('Is recursive parent/child', function() 
+  {
+    expect( false ).to.equal(true);
+  });
+
   it("Modificação de estilos (SheetRules)", function ()
   {
+    expect( false ).to.equal(true);
   });
 
   it("Modificação de estilos em medias diferentes (SheetRules)", function ()
   {
+    expect( false ).to.equal(true);
   });
 
 });
@@ -158,7 +165,7 @@ describe("Selectable", function ()
 {
   it("Configurar estrutura básica dos filhos e validar modicações", function ()
   {
-
+    expect( false ).to.equal(true);
   });
 });
 
