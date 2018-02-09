@@ -36,6 +36,27 @@
         {
         }
     }
+
+    .w-row-grid
+    {
+        @include box-absolute(0);
+        display: flex;
+        flex-wrap: wrap;
+
+        &>*
+        {
+            position: relative;
+            &:before
+            {
+                content: "";
+                display: block;
+                background:rgba(28, 28, 245, 0.02);
+                border-left: 1px dashed rgba(28, 28, 245, 0.1);
+                border-right: 1px dashed rgba(28, 28, 245, 0.1);
+                height: 100%;
+            }
+        }
+    }
 }
 
 .w-select-hover

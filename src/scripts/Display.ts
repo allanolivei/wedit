@@ -51,7 +51,7 @@ export class Display
     public parent: Display;
     public children: Display[] = [];
     public sheetRules:{[media:string]:SheetRules} = {};
-    //public style: { [id: string]: string; } = {};
+    public autoremove:boolean = false;
 
     protected classesName: string[];
     protected rect: Rect;
@@ -293,9 +293,7 @@ export class Display
     public remove(): void
     {
         if (this.parent != null)
-        {
             this.parent.removeChild(this);
-        }
     }
 
     public removeChild(display: Display): void
@@ -307,6 +305,9 @@ export class Display
             this.children.splice(index, 1);
             display.parent = null;
         }
+
+        // auto remove if empty
+        if( this.autoremove && this.children.length === 0 ) this.remove();
     }
 
     public removeChildAt(index:number):void

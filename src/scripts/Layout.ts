@@ -430,15 +430,100 @@ export class AutoLayout extends Layout
 
 export class RowLayout extends Layout
 {
+
+    private readonly offset:number = 15;
+
+    private co:number;
+    private columns:number;
+    private columnSize:number;
+
     constructor(tag:string, ...params:string[])
     {
         super(tag, "w-layout-row", ...params);
+
+        let grid:GridGizmo = new GridGizmo();
+        this.html.appendChild(grid.html);
     }
 
-    public enterDrag(event: DragEvent): void { console.log("enter"); }
-    public exitDrag(event: DragEvent): void { console.log("exit"); }
-    public updateDrag(event: DragEvent): void { console.log("update"); }
-    public dropDrag(event: DragEvent): void { console.log("drop"); }
+    public removeChild(display: Display): void
+    {
+        super.removeChild(display);
+    }
+
+    public addChild(display: Display, index = 99999): void
+    {
+        super.addChild(display, index);
+    }
+
+    public getBounds():Rect
+    {
+        let rect:Rect = super.getBounds();
+        rect.x += this.offset;
+        rect.w -= this.offset * 2;
+        return rect;
+    }
+
+    public enterDrag(event: DragEvent): void
+    {
+        let rowBounds: Rect = super.getBounds();
+        let maxSize:number = 0;
+
+        for( let i:number = 0 ; i < event.startRect.length ; i++ )
+            if( event.startRect[i].w > maxSize ) maxSize = event.startRect[i].w;
+
+        this.columnSize = rowBounds.width/12;
+        this.columns = Math.max(1, Math.round( maxSize/this.columnSize ));
+
+        this.updateDrag(event);
+        // let rowBounds: Rect = this.getBounds();
+
+        // for( var i = 0 ; i < event.elements.length ; i++ )
+        // {
+        //     if (!event.elements[i].allowDrag()) continue
+
+        //     var rect:Rect = event.elements[i].getBounds();
+        //     event.ghost[i].rect.copy(rect);
+        //     event.ghost[i].html.style.height = rowBounds.height+"px";
+        //     event.ghost[i].html.style.position = "absolute";
+        //     event.ghost[i].show();
+        // }
+
+        // this.updateDrag(event);
+    }
+
+    public exitDrag(event: DragEvent): void {/**/}
+
+    public updateDrag(event: DragEvent): void
+    {
+        let rowBounds: Rect = super.getBounds();
+        // calcule current of column
+        let offsetDrag:number = 0;//this.columns * this.columnSize * 0.5;
+        this.co = Math.floor( (event.pointer.x - rowBounds.x - offsetDrag)/this.columnSize );
+        // height of elements
+        let height:number = rowBounds.height/event.elements.length;
+        // draw ghosts
+        for( let i:number = 0 ; i < event.elements.length ; i++ )
+        {
+            event.ghost[i].move( rowBounds.x + this.co * this.columnSize + this.offset, rowBounds.y + i * height );
+            event.ghost[i].size( this.columns * this.columnSize - this.offset * 2, height );
+        }
+    }
+
+    public dropDrag(event: DragEvent): void
+    {
+        let class_offset:string = "offset-"+this.co;
+        let class_columns:string = "col-"+this.columns;
+
+        let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
+            layout.autoremove = true;
+
+        for ( let i:number = 0 ; i < event.elements.length ; i++ )
+        {
+            layout.addChild( event.elements[i] );
+        }
+
+        this.addChild(layout);
+    }
     // private childIndex:number;
 
     // constructor(tag: string = "div", ...params: string[])
@@ -545,11 +630,11 @@ export class RowLayout extends Layout
 
 class GridGizmo extends Display
 {
-    // constructor()
-    // {
-    //     super("div", "grid");
-    //     for (var i = 0; i < 12; i++)
-    //         this.addChild(new Display("div", "col-1"));
-    // }
+    constructor()
+    {
+        super("div", "w-row-grid");
+        for (let i = 0; i < 12; i++)
+            this.addChild( new Display("div", "col-1") );
+    }
 }
 

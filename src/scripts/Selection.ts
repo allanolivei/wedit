@@ -747,8 +747,6 @@ export class SelectionTransform extends RectView
 
         let diff: number = this.event.elements.length - this.event.ghost.length;
 
-        console.log("TESTE", this.event.elements);
-
         // rect
         this.event.startRect = [];
         for( let i:number = 0 ; i < e.length ; i++ )
@@ -787,7 +785,7 @@ export class SelectionTransform extends RectView
         this.nextRect.copy(this.rect);
 
         // layout manager
-        this.updateLayout();
+        // this.updateLayout();
 
         // disable mouse in this
         this.html.style.pointerEvents = "none";

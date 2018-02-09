@@ -10,19 +10,12 @@
 </head>
 <body>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-6" style="background:red;">Ola 1</div>
-            <div class="col-6" style="background:blue;">Ola 2</div>
-        </div>
-    </div>
-
     <script src="js/wedit.js"></script>
     <script>
         //var stage = new W.WEdit(document.body);
         //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
 
-        var stage = new W.WEdit(document.body, "relative-layout");
+        var stage = new W.WEdit(document.body);
         //stage.disable();
 
 
@@ -30,70 +23,79 @@
             "<div id='{{id}}' style='position:absolute; width:100px; height:100px;'></div>"
         );
 
-
-        var relative = stage.addWidget("list",{
+        var main = stage.addWidget("list",{
             "template": "relative-layout",
             "data":{
-                "style":"border: 1px solid red;position:absolute;left:500px;top:50px;",
-                "layout-style":"position:relative;width:500px;height:400px;"
+                "style":"height:1000px;",
+                "layout-style":"height:1000px;"
             }
         });
-        var vertical1 = stage.addWidget("list", {
+        main.setEnable(false);
+
+
+        var relative = main.addWidget("list",{
+            "template": "relative-layout",
+            "data":{
+                "style":"border: 1px solid red;position:absolute;left:400px;top:50px;",
+                "layout-style":"position:relative;width:400px;height:400px;"
+            }
+        });
+        var vertical1 = main.addWidget("list", {
             "template": "vertical-layout",
             "data": {
-                "style": "border: 1px solid blue;position:absolute;left:1000px;top:50px;",
-                "layout-style": "position:relative;width:500px;height:400px;"
+                "style": "border: 1px solid blue;position:absolute;left:900px;top:50px;",
+                "layout-style": "position:relative;width:400px;height:400px;"
             }
         });
-        var vertical2 = stage.addWidget("list", {
+        var vertical2 = main.addWidget("list", {
             "template": "vertical-layout",
             "data": {
-                "style": "border: 1px solid blue;position:absolute;left:2px;top:300px;",
-                "layout-style": "position:relative;width:500px;height:400px;"
+                "style": "border: 1px solid blue;position:absolute;left:0;top:300px;",
+                "layout-style": "position:relative;width:400px;height:400px;"
             }
         });
-        // var row = stage.addWidget("list", {
-        //     "template": "vertical-layout",
-        //     "data": {
-        //         "style": "border: 1px solid blue;position:absolute;left:2px;top:300px;",
-        //         "layout-style": "position:relative;width:500px;height:400px;"
-        //     }
-        // });
-
-        stage.addWidget("list",
-        {
-            "template":"box",
-            "data":{ "style":"left:100px;top:100px;background: red;" }
+        var row = main.addWidget("list", {
+            "template": "row-layout",
+            "data": {
+                "style": "border: 1px solid green;position:absolute;left:500px;top:500px;",
+                "layout-style": "position:relative;width:900px;height:400px;"
+            }
         });
 
-        stage.addWidget("list",
+        main.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:250px;top:70px;background:blue;" }
+            "data":{ "style":"left:50px;top:50px;background: red;" }
         });
 
-        stage.addWidget("list",
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:150px;top:70px;background:blue;" }
+        });
+
+        main.addWidget("list",
         {
             "template":"box",
             "data":{ "style":"left:200px;top:250px;background:purple;" }
         });
 
-        stage.addWidget("list",
+        main.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:350px;top:200px;background:brown;" }
+            "data":{ "style":"left:250px;top:200px;background:brown;" }
         });
 
-        stage.addWidget("list",
+        main.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:480px;top:300px;background:yellow;" }
+            "data":{ "style":"left:10px;top:200px;background:yellow;" }
         });
         
-        stage.addWidget("list",
+        main.addWidget("list",
         {
             "template":"box",
-            "data":{ "style":"left:350px;top:500px;background:green;" }
+            "data":{ "style":"left:250px;top:100px;background:green;" }
         });
         
 
