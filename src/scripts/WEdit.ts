@@ -48,23 +48,19 @@ export class WEdit extends Widget
             super("undefined");
 
             this.html = element;
-            this.addClasses("w-edit w-editing frame " + className.join(" "));
+            this.addClasses("w-edit w-editing main-frame " + className.join(" "));
 
-            // header
-            let header: Display = new VerticalLayout("header", "main-row");
+            // create header - main - footer
+            let header: Display = new VerticalLayout("header", "header-frame-row");
+            let main: Display = new VerticalLayout("div", "content-frame-row", "expand");
+            let footer: Display = new VerticalLayout("footer", "footer-frame-row");
+
             this.addChild(header);
-            this.createContainer("header", "list", header, "list");
-
-            // main
-            let main: Display = new VerticalLayout("div", "main-row", "expand");
-            //let container: Display = new VerticalLayout("div", "hide-scroll-x");
-            //main.addChild(container);
             this.addChild(main);
-            this.createContainer("main", "list", main, "list");
-
-            // footer
-            let footer: Display = new VerticalLayout("footer", "main-row");
             this.addChild(footer);
+
+            this.createContainer("header", "list", header, "list");
+            this.createContainer("list", "list", main, "list");
             this.createContainer("footer", "list", footer, "list");
         }
         else

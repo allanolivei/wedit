@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sticky Test</title>
+    <link rel="stylesheet" href="css/w.main.css">
+    <link rel="stylesheet" href="css/w.edit.css">
+</head>
+<body>
+
+    <script src="js/wedit.js"></script>
+    <script>
+
+        var stage = new W.WEdit(document.body);
+
+        W.WEdit.addTemplate("box", 
+            "<div id='{{id}}' style='position:absolute; width:100px; height:100px;'></div>"
+        );
+
+        let colors = ["red", "blue", "purple", "brown", "yellow", "green"];
+        for( let i = 0 ; i < 20 ; i++ ) 
+        {
+            stage.addWidget("list",
+            {
+                "template":"box",
+                "data":{ "style":"left:100px;top:100px;background: "+colors[i%colors.length]+";" }
+            });
+        }
+
+    </script>
+</body>
+</html>
