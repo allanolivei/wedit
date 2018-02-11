@@ -3,7 +3,7 @@ import { Display } from "./Display";
 import { Describer } from "./Utils";
 //import { VerticalLayout, AbsoluteLayout, AutoLayout, RowLayout } from "./Layout/Layout";
 import { Selectable } from "./Selectable";
-import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout, AbsoluteLayout } from "./Layout";
+import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout, AbsoluteLayout, FlexLayout } from "./Layout";
 
 
 // {{ list container params params params }}
@@ -81,12 +81,14 @@ export class Widget extends Selectable
             "<div><img class='img-fluid' src='{{img}}' alt='' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
+        "flex-layout": { html:
+            "<div><div data-style='{{layout-style}}' data-class='{{class-layout}}' data-type='FlexLayout'>{{list}}</div></div>" },
         "vertical-layout": { html:
-            "<div><div data-style='{{layout-style}}' data-type='VerticalLayout'>{{list}}</div></div>" },
+            "<div><div data-style='{{layout-style}}' data-class='{{class-layout}}' data-type='VerticalLayout'>{{list}}</div></div>" },
         "relative-layout": { html:
-            "<div><div data-style='{{layout-style}}' data-type='RelativeLayout'>{{list}}</div></div>" },
+            "<div><div data-style='{{layout-style}}' data-class='{{class-layout}}' data-type='RelativeLayout'>{{list}}</div></div>" },
         "absolute-layout": { html:
-            "<div><div data-style='{{layout-style}}' data-type='AbsoluteLayout'>{{list}}</div></div>" },
+            "<div><div data-style='{{layout-style}}' data-class='{{class-layout}}' data-type='AbsoluteLayout'>{{list}}</div></div>" },
     };
 
     public static AddTemplate( name:string, value:string|TemplateData ):void
@@ -113,6 +115,7 @@ export class Widget extends Selectable
         "AbsoluteLayout": AbsoluteLayout,
         "AutoLayout": AutoLayout,
         "RowLayout": RowLayout,
+        "FlexLayout": FlexLayout,
     };
 
 

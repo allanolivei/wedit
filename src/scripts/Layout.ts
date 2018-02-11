@@ -646,3 +646,11 @@ class GridGizmo extends Display
     }
 }
 
+export class FlexLayout extends Layout
+{
+    constructor(tag:string, ...params:string[])
+    {
+        super(tag, "w-layout-flex", ...params);
+    }
+}
+

@@ -33,3 +33,9 @@
     @extend .row;
     position: relative;
 }
+
+.w-layout-flex
+{
+    @extend .d-flex;
+    position: relative;
+}
