@@ -10,7 +10,7 @@
     &>* 
     { 
         position:initial !important; 
-        width:auto !important; 
+        //width:auto !important; 
         left: auto !important;
         right: auto !important;
         top: auto !important;
@@ -20,7 +20,12 @@
 
 .w-layout-absolute
 {
-
+    @extend .w-layout-vertical;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
 }
 
 .w-layout-row

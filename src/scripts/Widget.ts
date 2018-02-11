@@ -3,7 +3,7 @@ import { Display } from "./Display";
 import { Describer } from "./Utils";
 //import { VerticalLayout, AbsoluteLayout, AutoLayout, RowLayout } from "./Layout/Layout";
 import { Selectable } from "./Selectable";
-import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout } from "./Layout";
+import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout, AbsoluteLayout } from "./Layout";
 
 
 // {{ list container params params params }}
@@ -77,12 +77,16 @@ export class Widget extends Selectable
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html:
             "<div>{{text}}</div>" },
+        "img": { html:
+            "<div><img class='img-fluid' src='{{img}}' alt='' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "vertical-layout": { html:
             "<div><div data-style='{{layout-style}}' data-type='VerticalLayout'>{{list}}</div></div>" },
         "relative-layout": { html:
             "<div><div data-style='{{layout-style}}' data-type='RelativeLayout'>{{list}}</div></div>" },
+        "absolute-layout": { html:
+            "<div><div data-style='{{layout-style}}' data-type='AbsoluteLayout'>{{list}}</div></div>" },
     };
 
     public static AddTemplate( name:string, value:string|TemplateData ):void
@@ -106,6 +110,7 @@ export class Widget extends Selectable
         "Layout": VerticalLayout,
         "VerticalLayout": VerticalLayout,
         "RelativeLayout": RelativeLayout,
+        "AbsoluteLayout": AbsoluteLayout,
         "AutoLayout": AutoLayout,
         "RowLayout": RowLayout,
     };
@@ -443,9 +448,11 @@ export class Widget extends Selectable
 
         // element of content
         //if (xmlNode.children.length === 0)
-        if ( this.xmlNodeElementLength(xmlNode) === 0 )
+        //console.log(xmlNode, this.onlyElementsOrEmpty(xmlNode));
+        if ( !this.onlyElementsOrEmpty(xmlNode) )
         {
-            let content: string = xmlNode.textContent;
+            //let content: string = xmlNode.textContent;
+            let content: string = xmlNode.innerHTML;
             let containerName: string = this.getContainerName(content);
 
             // elemento editavel
@@ -492,6 +499,14 @@ export class Widget extends Selectable
         //return { name: metadatas[1], type: metadatas[0], params: null };
     }
 
+    private onlyElementsOrEmpty( xmlNode: Node ):boolean
+    {
+        //console.log(xmlNode.childNodes);
+        for (let i: number = 0; i < xmlNode.childNodes.length; i++)
+            if (xmlNode.childNodes[i].nodeType !== 1 && xmlNode.childNodes[i].nodeValue.trim().length !== 0) return false;
+        return true;
+    }
+
     private xmlNodeElementLength(xmlNode: Node): number
     {
         // FIX** xmlNode.children dont exist in IE
@@ -499,6 +514,7 @@ export class Widget extends Selectable
         let count: number = 0;
         for (let i: number = 0; i < xmlNode.childNodes.length; i++)
             if (xmlNode.childNodes[i].nodeType === 1) count++;
+
         return count;
     }
 

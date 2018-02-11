@@ -181,6 +181,14 @@ export class RelativeLayout extends Layout
     }
 }
 
+export class AbsoluteLayout extends Layout
+{
+    constructor(tag: string = "div", ...params: string[])
+    {
+        super(tag, "w-layout-absolute", ...params);
+    }
+}
+
 export class VerticalLayout extends Layout
 {
 

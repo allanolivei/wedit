@@ -492,7 +492,7 @@ export class SelectionDragger extends RectView
 
     private selectableFilter( element:Selectable ):boolean
     {
-        return element.isEnable();
+        return element instanceof Selectable && element.isEnable();
     }
 
     private mousedown(event: MouseEvent): void
