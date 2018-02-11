@@ -20,7 +20,7 @@
 
 .w-layout-absolute
 {
-    @extend .w-layout-vertical;
+    @extend .w-layout-relative;
     position: absolute !important;
     left: 0 !important;
     right: 0 !important;
