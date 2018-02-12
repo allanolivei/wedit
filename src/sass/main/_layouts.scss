@@ -4,17 +4,17 @@
     &>* { position: absolute !important; }
 }
 
-.w-layout-vertical
+body .w-layout-vertical
 {
-    position: relative !important;
+    position: relative;
     &>* 
     { 
-        position:initial !important; 
+        position:initial; 
         //width:auto !important; 
-        left: auto !important;
-        right: auto !important;
-        top: auto !important;
-        bottom: auto !important;
+        left: auto;
+        right: auto;
+        top: auto;
+        bottom: auto;
     }
 }
 
