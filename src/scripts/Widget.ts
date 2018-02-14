@@ -471,7 +471,10 @@ export class Widget extends Selectable
         if ( !this.onlyElementsOrEmpty(xmlNode) )
         {
             //let content: string = xmlNode.textContent;
-            let content: string = xmlNode.innerHTML;
+            //let content: string = xmlNode.innerHTML;
+            //let content: string = (xmlNode as any).responseText;
+            let content: string = xmlNode.textContent;
+            console.log("GET CONTENT: ", xmlNode, content);
             let containerName: string = this.getContainerName(content);
 
             // elemento editavel
@@ -507,6 +510,7 @@ export class Widget extends Selectable
 
     private getContainerName(content: string): string
     {
+        console.log(content);
         let start: number = content.indexOf("{{");
         let end: number = content.indexOf("}}");
 
