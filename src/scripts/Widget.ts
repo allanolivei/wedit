@@ -3,7 +3,7 @@ import { Display } from "./Display";
 import { Describer } from "./Utils";
 //import { VerticalLayout, AbsoluteLayout, AutoLayout, RowLayout } from "./Layout/Layout";
 import { Selectable } from "./Selectable";
-import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout, AbsoluteLayout, FlexLayout } from "./Layout";
+import { AutoLayout, VerticalLayout, RowLayout, RelativeLayout, AbsoluteLayout, FlexLayout, Layout } from "./Layout";
 
 
 // {{ list container params params params }}
@@ -78,7 +78,7 @@ export class Widget extends Selectable
         "text": { html:
             "<div>{{text}}</div>" },
         "img": { html:
-            "<div><img class='img-fluid' src='{{img}}' alt='' /></div>" },
+            "<div><img class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
@@ -365,6 +365,22 @@ export class Widget extends Selectable
     }
 
     //+++++++++++++++++==++++++++ Manipulate type(list) ++++++++++++++++++++++++++++++
+    public getLayout(key:string):Layout
+    {
+        if ( this.getContainerType(key) !== "list" )
+        throw "Widget :: Não foi possível recuperar o layout do container " + key;
+
+        return this.containers[key].display as Layout;
+    }
+
+    public getWidget(key:string, index:number):Widget
+    {
+        if ( this.getContainerType(key) !== "list" )
+            throw "Widget :: Não foi possível recuperar um widget na (lista) do container " + key;
+
+        return this.containers[key].display.children[index] as Widget;
+    }
+
     public addWidget(key: string, value: any): Widget
     {
         return this.insertWidget(key, value, 9999);

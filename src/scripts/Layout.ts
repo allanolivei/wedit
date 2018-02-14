@@ -14,6 +14,7 @@ export abstract class Layout extends Selectable
         super(tagName, "w-layout", ...params);
 
         if( tagName === "ul" ) this.setChildStruct("li");
+        else if( tagName === "ol" ) this.setChildStruct("li");
         else if( tagName === "select" ) this.setChildStruct("option");
 
         this.setEnable(false);
