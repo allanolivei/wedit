@@ -78,7 +78,7 @@ export class Widget extends Selectable
         "text": { html:
             "<div>{{text}}</div>" },
         "img": { html:
-            "<div><img class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+            "<div><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
@@ -474,7 +474,7 @@ export class Widget extends Selectable
             //let content: string = xmlNode.innerHTML;
             //let content: string = (xmlNode as any).responseText;
             let content: string = xmlNode.textContent;
-            console.log("GET CONTENT: ", xmlNode, content);
+            // console.log("GET CONTENT: ", xmlNode, content);
             let containerName: string = this.getContainerName(content);
 
             // elemento editavel
@@ -510,7 +510,7 @@ export class Widget extends Selectable
 
     private getContainerName(content: string): string
     {
-        console.log(content);
+        // console.log(content);
         let start: number = content.indexOf("{{");
         let end: number = content.indexOf("}}");
 
