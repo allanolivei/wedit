@@ -7,7 +7,7 @@ export abstract class Layout extends Selectable
 {
     protected childTag:string = "";
     protected childClassName:string = "";
-    //protected requiredStyles:{ [id: string]: string; } = {};
+    protected requiredStyles:{ [id: string]: string; } = {};
 
     constructor(tagName: string = "div", ...params: string[])
     {
@@ -39,7 +39,7 @@ export abstract class Layout extends Selectable
     public addChild(display: Display, index = 99999):void
     {
         this.applyChildStruct(display);
-        // this.applyRequiredStyle(display);
+        this.applyRequiredStyle(display);
 
         // FIX*** Depois de tudo
         super.addChild(display, index);
@@ -51,7 +51,7 @@ export abstract class Layout extends Selectable
         super.removeChild(display);
 
         this.removeChildStruct(display);
-        // this.removeRequiredStyle(display);
+        this.removeRequiredStyle(display);
     }
 
     private applyChildStruct(display:Display):void
@@ -64,19 +64,12 @@ export abstract class Layout extends Selectable
         }
     }
 
-    // private applyRequiredStyle(display:Display):void
-    // {
-    //     let previous:string = "";
-    //     for( let key in this.requiredStyles )
-    //     {
-    //         let value:string = this.getStyle(key);
-    //         if( value !== "" )
-    //             previous += (previous!==""?";":"")+key+":"+value;
-    //         display.setStyle(key, this.requiredStyles[key]);
-    //     }
-    //     if( previous !== "" )
-    //         display.setData("styles", previous);
-    // }
+    private applyRequiredStyle(display:Display):void
+    {
+        let previous:string = "";
+        for( let key in this.requiredStyles )
+            display.setStyle(key, this.requiredStyles[key]);
+    }
 
     private removeChildStruct(display:Display):void
     {
@@ -87,22 +80,11 @@ export abstract class Layout extends Selectable
         display.removeClasses(this.childClassName);
     }
 
-    // private removeRequiredStyle(display:Display):void
-    // {
-    //     for( let key in this.requiredStyles )
-    //         display.removeStyle(key);
-
-    //     let previousStyle:string[] = display.getData("styles").split(";");
-    //     if( previousStyle.length > 0 )
-    //     {
-    //         for( let i:number = 0 ; i < previousStyle.length ; i++ )
-    //         {
-    //             let values:string[] = previousStyle[i].split(":");
-    //             display.setStyle(values[0], values[1]);
-    //         }
-    //     }
-    //     display.removeData("styles");
-    // }
+    private removeRequiredStyle(display:Display):void
+    {
+        for( let key in this.requiredStyles )
+            display.removeStyle(key);
+    }
 
     // public enterDrag(event: DragEvent): void
     // {
@@ -198,6 +180,8 @@ export class VerticalLayout extends Layout
     constructor(tag: string = "div", ...params: string[])
     {
         super(tag, "w-layout-vertical", ...params);
+
+        this.requiredStyles["position"] = "static";
     }
 
     public enterDrag(event: DragEvent): void
@@ -481,7 +465,8 @@ export class RowLayout extends Layout
             if( event.startRect[i].w > maxSize ) maxSize = event.startRect[i].w;
 
         this.columnSize = rowBounds.width/12;
-        this.columns = Math.max(1, Math.round( maxSize/this.columnSize ));
+        console.log(this.columnSize, maxSize/this.columnSize);
+        this.columns = Math.max(1, Math.ceil( maxSize/this.columnSize ));
 
         this.updateDrag(event);
         // let rowBounds: Rect = this.getBounds();
