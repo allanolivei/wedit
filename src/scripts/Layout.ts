@@ -428,7 +428,11 @@ export class RowLayout extends Layout
 
     private co:number;
     private columns:number;
-    private columnSize:number;
+    private columnSize: number;
+
+    // regexp
+    private reg_col: RegExp = /col-([0-9]{1,2})/;
+    private reg_offset: RegExp = /offset-([0-9]{1,2})/;
 
     constructor(tag:string, ...params:string[])
     {
@@ -440,11 +444,32 @@ export class RowLayout extends Layout
 
     public removeChild(display: Display): void
     {
+        let index:number = this.children.indexOf(display);
+
+        if( index < this.children.length - 1 )
+        {
+            let offset: number =
+                this.getOffsetByDisplay(display) +
+                this.getSizeByDisplay(display) +
+                this.getOffsetByDisplay(this.children[index+1]);
+
+            this.setOffset(this.children[index + 1], offset);
+        }
+
         super.removeChild(display);
     }
 
     public addChild(display: Display, index = 99999): void
     {
+        if ( index < this.children.length )
+        {
+            let offset: number =
+                this.getOffsetByDisplay(this.children[index]) -
+                (this.getOffsetByDisplay(display) + this.getSizeByDisplay(display));
+
+            this.setOffset(this.children[index], offset);
+        }
+
         super.addChild(display, index);
     }
 
@@ -465,7 +490,6 @@ export class RowLayout extends Layout
             if( event.startRect[i].w > maxSize ) maxSize = event.startRect[i].w;
 
         this.columnSize = rowBounds.width/12;
-        console.log(this.columnSize, maxSize/this.columnSize);
         this.columns = Math.max(1, Math.ceil( maxSize/this.columnSize ));
 
         this.updateDrag(event);
@@ -505,18 +529,74 @@ export class RowLayout extends Layout
 
     public dropDrag(event: DragEvent): void
     {
-        let class_offset:string = "offset-"+this.co;
+        for (let i: number = 0; i < event.elements.length; i++)
+            event.elements[i].remove();
+
+        let offset:number = this.co;
+        let index:number = this.getChildIndexByColumn(this.co);
+
+        if (index > 0)
+            offset = this.co - (this.getColumnByDisplay(this.children[index - 1]) + this.getSizeByDisplay(this.children[index - 1]));
+
+        let class_offset:string = "offset-"+offset;
         let class_columns:string = "col-"+this.columns;
 
         let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
             layout.autoremove = true;
 
         for ( let i:number = 0 ; i < event.elements.length ; i++ )
-        {
             layout.addChild( event.elements[i] );
+
+        this.addChild(layout, index);
+    }
+
+    /************************** UTILITIES ******************************/
+    private getChildIndexByColumn( column:number ):number
+    {
+        let amount = 0;
+        let result:number = 0;
+
+        for (; result < this.children.length; result++)
+        {
+            let left: number = this.getOffsetByDisplay(this.children[result]);
+            if (amount + left > this.co) break;
+            amount += left + this.getSizeByDisplay(this.children[result]);
         }
 
-        this.addChild(layout);
+        return result;
+    }
+
+    private getColumnByDisplay(display:Display): number
+    {
+        let amount = 0;
+
+        for (let i: number = 0; i < this.children.length; i++)
+        {
+            amount += this.getOffsetByDisplay(this.children[i]);
+            if (this.children[i] === display) break;
+            amount += this.getSizeByDisplay(this.children[i]);
+        }
+
+        return amount;
+    }
+
+    private getOffsetByDisplay(display:Display):number
+    {
+        let match: RegExpExecArray = this.reg_offset.exec(display.html.className);
+        return parseInt(match[1], 10);
+    }
+
+    private getSizeByDisplay(display: Display): number
+    {
+        let match: RegExpExecArray = this.reg_col.exec(display.html.className);
+        return parseInt(match[1], 10);
+    }
+
+    public setOffset(display:Display, offset:number):void
+    {
+        let match: RegExpExecArray = this.reg_offset.exec(display.html.className);
+        if( match != null ) display.removeClass(match[0]);
+        display.addClass("offset-"+offset);
     }
     // private childIndex:number;
 
