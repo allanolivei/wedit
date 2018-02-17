@@ -1213,6 +1213,14 @@ export class Ghost extends RectView
         super.show();
     }
 
+    public allowed( ok:boolean ):void
+    {
+        if (ok)
+            this.removeClass("unallowed");
+        else
+            this.addClass("unallowed");
+    }
+
     public hide()
     {
         this.html.style.display = "none";

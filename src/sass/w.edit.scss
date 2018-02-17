@@ -103,6 +103,12 @@
     background: rgba(85, 83, 238, 0.11);
     border: 1px dashed rgba(85, 83, 238, 0.4);
     z-index: 500;
+
+    &.unallowed 
+    {  
+        background: rgba(238, 83, 83, 0.11);
+        border: 1px dashed rgba(238, 83, 83, 0.4);
+    }
 }
 
 .w-select-area

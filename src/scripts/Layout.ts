@@ -125,6 +125,7 @@ export class RelativeLayout extends Layout
             let rect:Rect = event.elements[i].getBounds();
             event.ghost[i].rect.copy(rect);
             event.ghost[i].show();
+            event.ghost[i].allowed(true);
         }
 
         this.updateDrag(event);
@@ -174,6 +175,7 @@ export class AbsoluteLayout extends Layout
 
 export class VerticalLayout extends Layout
 {
+    public offsetX:number = 0;
 
     private childIndex:number = 0;
 
@@ -184,6 +186,14 @@ export class VerticalLayout extends Layout
         this.requiredStyles["position"] = "static";
     }
 
+    public getBounds(): Rect
+    {
+        let rect: Rect = super.getBounds();
+        rect.x += this.offsetX;
+        rect.w -= this.offsetX * 2;
+        return rect;
+    }
+
     public enterDrag(event: DragEvent): void
     {
         let rowBounds: Rect = this.getBounds();
@@ -191,7 +201,8 @@ export class VerticalLayout extends Layout
         for( let i:number = 1 ; i < event.ghost.length ; i++ )
             event.ghost[i].hide();
 
-        event.ghost[0].size( rowBounds.w, 4 );
+        event.ghost[0].size(rowBounds.w, 4);
+        event.ghost[0].allowed(true);
         event.ghost[0].show();
 
         this.updateDrag(event);
@@ -487,7 +498,10 @@ export class RowLayout extends Layout
         let maxSize:number = 0;
 
         for( let i:number = 0 ; i < event.startRect.length ; i++ )
+        {
             if( event.startRect[i].w > maxSize ) maxSize = event.startRect[i].w;
+            event.ghost[i].show();
+        }
 
         this.columnSize = rowBounds.width/12;
         this.columns = Math.max(1, Math.ceil( maxSize/this.columnSize ));
@@ -517,6 +531,10 @@ export class RowLayout extends Layout
         // calcule current of column
         let offsetDrag:number = 0;//this.columns * this.columnSize * 0.5;
         this.co = Math.floor( (event.pointer.x - rowBounds.x - offsetDrag)/this.columnSize );
+        this.co = Math.min(this.co, 12 - this.columns);
+        // verifica colisoes
+        let collision:boolean = this.hasCollision(this.co, this.columns, event.elements);
+
         // height of elements
         let height:number = rowBounds.height/event.elements.length;
         // draw ghosts
@@ -524,11 +542,14 @@ export class RowLayout extends Layout
         {
             event.ghost[i].move( rowBounds.x + this.co * this.columnSize + this.offset, rowBounds.y + i * height );
             event.ghost[i].size( this.columns * this.columnSize - this.offset * 2, height );
+            event.ghost[i].allowed( !collision );
         }
     }
 
     public dropDrag(event: DragEvent): void
     {
+        if (this.hasCollision(this.co, this.columns, event.elements) ) return;
+
         for (let i: number = 0; i < event.elements.length; i++)
             event.elements[i].remove();
 
@@ -542,6 +563,7 @@ export class RowLayout extends Layout
         let class_columns:string = "col-"+this.columns;
 
         let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
+            layout.offsetX = this.offset;
             layout.autoremove = true;
 
         for ( let i:number = 0 ; i < event.elements.length ; i++ )
@@ -551,6 +573,33 @@ export class RowLayout extends Layout
     }
 
     /************************** UTILITIES ******************************/
+    private hasCollision( column:number, size:number, ignore:Display[] ):boolean
+    {
+        let amount:number = 0;
+
+        for( let i:number = 0 ; i < this.children.length ; i++ )
+        {
+            let c_co: number = this.getOffsetByDisplay(this.children[i]);
+            let c_size: number = this.getSizeByDisplay(this.children[i]);
+
+            if ( amount + c_co < column + size &&                   // child left < drag right
+                 amount + c_co + c_size > column &&                 // child right > drag left
+                 !this.allChildIsInList(ignore, this.children[i]) ) // all child is not in ignore list
+                return true;
+
+            amount += c_co + c_size;
+        }
+
+        return false;
+    }
+
+    private allChildIsInList( lista: Display[], display:Display ):boolean
+    {
+        for (let j: number = 0; j < display.children.length; j++)
+            if (lista.indexOf(display.children[j]) === -1) return false;
+        return true;
+    }
+
     private getChildIndexByColumn( column:number ):number
     {
         let amount = 0;

@@ -341,6 +341,13 @@ export class Display
         this.addChild(display, this.children.length);
     }
 
+    public isChild( display:Display ):boolean
+    {
+        for (let i: number = 0; i < this.children.length; i++)
+            if ( this.children[i] === display ) return true;
+        return false;
+    }
+
     public isRecursiveChild( display:Display ):boolean
     {
         for( let i:number = 0 ; i < this.children.length ; i++ )
