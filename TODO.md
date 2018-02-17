@@ -1,4 +1,4 @@
-. Desenvolver layout de grid, adicionar, mover e redimensionar.
+. Desenvolver layout de grid, adicionar, remover, mover e redimensionar.
 . janela para selecao de widget.
 . img default para widget de texto.
 . img default para widget de img.

@@ -1,6 +1,6 @@
 import { Selectable } from "./Selectable";
 import { LiteEvent } from "./LiteEvent";
-import { Rect, RectChange } from "./Utils";
+import { Rect, RectChange, Vec2 } from "./Utils";
 import { Display } from "./Display";
 import { Layout } from "./Layout";
 import { DragEvent } from "./Event";
@@ -606,7 +606,7 @@ export class SelectionDragger extends RectView
 
 
 
-// // show selected area with anchors
+// show selected area with anchors
 export class SelectionTransform extends RectView
 {
     private root:Display;
@@ -619,12 +619,15 @@ export class SelectionTransform extends RectView
     private layoutMark:RectView;
     private event:DragEvent;
 
+    // delegate
+    private updateDelegate: any;
+    private dropDelegate:any;
     // event bind
     private selectChangeHandlerBinder:any;
     private keyHandlerBinder:any;
     private mousedownBinder:any;
     private mousemoveBinder:any;
-    private mouseupBinder:any;
+    private mouseupBinder: any;
     private filterBinder:any;
 
     constructor(root:Display, selection:Selection)
@@ -640,6 +643,9 @@ export class SelectionTransform extends RectView
         this.startDragRect = new Rect();
         this.nextRect = new Rect();
         this.nextRect.copy(this.rect);
+
+        // anchors
+        this.createAnchors();
 
         // layout
         this.layoutMark = new RectView("w-layout-hover");
@@ -773,15 +779,12 @@ export class SelectionTransform extends RectView
         event.preventDefault();
         event.stopPropagation();
 
-        let target: HTMLElement = event.target as HTMLElement;
-        let className: string = target.className;
-
         // cache start drag information
         this.startDragRect.copy(this.rect);
         this.event.pointer.x = this.event.startPointer.x = event.pageX;
         this.event.pointer.y = this.event.startPointer.y = event.pageY;
         this.event.offset.x = event.pageX - this.startDragRect.x;
-        this.event.offset.x = event.pageY - this.startDragRect.y;
+        this.event.offset.y = event.pageY - this.startDragRect.y;
         this.nextRect.copy(this.rect);
 
         // layout manager
@@ -792,11 +795,30 @@ export class SelectionTransform extends RectView
         this.html.style.opacity = "0";
 
         // handle events
+        let target: HTMLElement = event.target as HTMLElement;
+        let className: string = target.className;
+
+        if( className.indexOf("anchor") !== -1 )
+        {
+            this.updateDelegate = this.updateAnchor;
+            this.dropDelegate = this.dropAnchor;
+
+            if ( className.indexOf("-l ") !== -1 )
+                this.nextRect.start(this.rect.right, this.rect.top);
+            else if ( className.indexOf("-r ") !== -1  )
+                this.nextRect.start(this.rect.left, this.rect.top);
+        }
+        else
+        {
+            this.updateDelegate = this.updateMove;
+            this.dropDelegate = this.dropMove;
+        }
+
         window.addEventListener("mousemove", this.mousemoveBinder);
         window.addEventListener("mouseup", this.mouseupBinder);
     }
 
-    public mousemove(event: MouseEvent): void
+    private mousemove(event: MouseEvent): void
     {
         event.preventDefault();
 
@@ -804,20 +826,21 @@ export class SelectionTransform extends RectView
         this.event.pointer.x = event.pageX;
         this.event.pointer.y = event.pageY;
 
-        // update layout
-        this.updateLayout();
+        // update manager (move, anchor)
+        this.updateDelegate();
 
         // disable drag
         if (event.which !== 1) this.mouseup(event);
     }
 
-    public mouseup(event: MouseEvent): void
+    private mouseup(event: MouseEvent): void
     {
         event.preventDefault();
 
+        // drop manager (move, anchor)
+        this.dropDelegate();
+
         // layout manager
-        if (this.layout != null) this.layout.dropDrag(this.event);
-        this.layoutMark.hide();
         this.layout = null;
 
         // enable mouse in this
@@ -832,7 +855,7 @@ export class SelectionTransform extends RectView
         window.removeEventListener("mouseup", this.mouseupBinder);
     }
 
-    private updateLayout()
+    private updateMove():void
     {
         if (this.event.elements.length === 0) return;
 
@@ -861,6 +884,33 @@ export class SelectionTransform extends RectView
         }
     }
 
+    private dropMove():void
+    {
+        if (this.layout != null) this.layout.dropDrag(this.event);
+        this.layoutMark.hide();
+    }
+
+    private updateAnchor():void
+    {
+        this.nextRect.end(this.event.pointer.x, this.rect.y + this.rect.h);
+        let change: RectChange = this.rect.getChangeByRect(this.nextRect);
+
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+        {
+            let rect:Rect = this.event.startRect[i];
+            let grect:Rect = this.event.ghost[i].rect;
+
+            grect.copyAndChange(rect, change);
+
+            this.event.ghost[i].draw();
+        }
+    }
+
+    private dropAnchor():void
+    {
+        console.log("DROP ANCHOR");
+    }
+
     private layoutFilter(element: Display): boolean
     {
         if( !(element instanceof Layout) ) return false;
@@ -869,6 +919,12 @@ export class SelectionTransform extends RectView
             if( this.event.elements[i].isRecursiveChild(element) ) return false;
 
         return true;
+    }
+
+    private createAnchors()
+    {
+        this.addChild(new Display("div", "anchor", "a-r"));
+        this.addChild(new Display("div", "anchor", "a-l"));
     }
 
     // public hasMovementHorizontal: boolean;
@@ -1170,6 +1226,8 @@ export class SelectionTransform extends RectView
     //     return change;
     // }
 }
+
+
 
 
 
