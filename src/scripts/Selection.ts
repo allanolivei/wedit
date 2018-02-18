@@ -620,7 +620,7 @@ export class SelectionTransform extends RectView
     private event:DragEvent;
 
     // delegate
-    private updateDelegate: any;
+    private updateDelegate:any;
     private dropDelegate:any;
     // event bind
     private selectChangeHandlerBinder:any;
@@ -719,7 +719,7 @@ export class SelectionTransform extends RectView
 
         for (let i: number = 0; i < this.event.ghost.length; i++)
         {
-            this.event.ghost[i].rect.copyClientRect(this.event.elements[i].getBounds());
+            this.event.ghost[i].rect.copyClientRect(this.event.startRect[i]);
             this.event.ghost[i].draw();
 
             // if( this._event.elements[i].allowDrag() ) isDraggable = true;
@@ -774,9 +774,11 @@ export class SelectionTransform extends RectView
         this.redraw();
     }
 
-    public startDrag(display:Selectable, pageX:number, pageY:number): void
+    public startDrag(display:Selectable, pageX:number, pageY:number, rect:Rect = null): void
     {
         this.selection.select.set(display);
+
+        if( rect ) this.event.startRect[0].copy(rect);
 
         this.prepareDrag(pageX, pageY);
 
@@ -851,7 +853,7 @@ export class SelectionTransform extends RectView
             this.dropDelegate = this.dropMove;
         }
 
-        this.updateDelegate();
+        this.updateDelegate(event);
 
         window.addEventListener("mousemove", this.mousemoveBinder);
         window.addEventListener("mouseup", this.mouseupBinder);
@@ -866,7 +868,7 @@ export class SelectionTransform extends RectView
         this.event.pointer.y = event.pageY;
 
         // update manager (move, anchor)
-        this.updateDelegate();
+        this.updateDelegate(event);
 
         // disable drag
         if (event.which !== 1) this.mouseup(event);
@@ -898,12 +900,15 @@ export class SelectionTransform extends RectView
         window.removeEventListener("mouseup", this.mouseupBinder);
     }
 
-    private updateMove():void
+    private updateMove(event:MouseEvent=null):void
     {
         if (this.event.elements.length === 0) return;
 
         // new layout
-        let newLayout: Layout = this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.filterBinder) as Layout;
+        let newLayout: Layout =
+            !event || this.isEditor(event.target as HTMLElement) ? null :
+            this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.filterBinder) as Layout;
+
         if (newLayout !== this.layout)
         {
             if (this.layout) this.layout.exitDrag(this.event);
@@ -931,9 +936,14 @@ export class SelectionTransform extends RectView
     {
         if (this.layout != null) this.layout.dropDrag(this.event);
         this.layoutMark.hide();
+
+        let amountEmpty:number = 0;
+        for( let i:number = 0 ; i < this.event.elements.length ; i++ )
+            if( this.event.elements[i].parent == null )
+                this.selection.select.remove(this.event.elements[i]);
     }
 
-    private updateAnchor():void
+    private updateAnchor(event:MouseEvent=null):void
     {
         this.nextRect.end(this.event.pointer.x, this.rect.y + this.rect.h);
         let change: RectChange = this.rect.getChangeByRect(this.nextRect);
@@ -955,6 +965,19 @@ export class SelectionTransform extends RectView
             let layout:Layout = Layout.findLayoutByDisplay(this.event.elements[i]);
             layout.resizeChild(this.event, i, change);
         }
+    }
+
+    private isEditor(target:HTMLElement):boolean
+    {
+        let element:HTMLElement = target;
+        let amount:number = 0;
+        while( element != null && amount++ < 5 )
+        {
+            if( element.className.indexOf("w-ui-editor") !== -1 ) return true;
+            element = element.parentElement;
+        }
+
+        return false;
     }
 
     private layoutFilter(element: Display): boolean

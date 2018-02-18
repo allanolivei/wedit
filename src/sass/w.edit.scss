@@ -31,7 +31,7 @@ $z-gizmos-hover: 300;
     {
         @include disable-user-select;
 
-        pointer-events: none;
+        //pointer-events: none;
 
         [data-drag="true"] 
         {
@@ -47,6 +47,9 @@ $z-gizmos-hover: 300;
         @include box-absolute(0);
         display: flex;
         flex-wrap: wrap;
+
+        border-top: 1px dashed rgba(28, 28, 245, 0.05);
+        border-bottom: 1px dashed rgba(28, 28, 245, 0.05);
 
         &>*
         {

@@ -41,6 +41,7 @@ export class WEdit extends Widget
 
             //empty
             this.html = element;
+            this.classesName = this.html.className.split(' ');
             this.addClasses("w-edit w-editing" + className.join(" ") );
         }
         else if (typeof settings === "string" && settings === "default")

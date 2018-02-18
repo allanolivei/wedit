@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/w.main.css">
+    <link rel="stylesheet" href="css/w.edit.css">
+
+    <style>
+        .w-layout-row
+        {
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        #add-row
+        {
+            display: block;
+            margin: 0 10px;
+            width: 100%;
+        }
+
+        .widget-text:empty
+        {
+            min-height: 100px;
+            background: #deecfb url("../img/icons/ic_text.svg") no-repeat center center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id='magazine' class="magazine container">
+
+        <div id="editor"></div>
+
+        <div class="row">
+            <button type='button' id='add-row'>Nova Linha</button>
+        </div>
+
+    </div>
+    
+
+    <script src="js/wedit.js"></script>
+    <script>
+        var stage = new W.WEdit(document.getElementById("editor"), "empty");
+
+        stage.addChild(new W.RowLayout());
+        stage.addChild(new W.RowLayout());
+        stage.addChild(new W.RowLayout());
+
+        document.getElementById("add-row").addEventListener("click", function()
+        {
+            stage.addChild(new W.RowLayout());
+        });
+
+        
+    </script>
+</body>
+</html>

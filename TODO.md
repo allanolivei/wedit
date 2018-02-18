@@ -7,3 +7,8 @@
 . janela para escolha de imagem.
 . icones para edicao do widget.
 . escolha do endereco do video.
+
+
+
+
+. criar sistema de pooling para reaproveitamento de templates criados fora da cena.

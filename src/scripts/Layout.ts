@@ -475,7 +475,7 @@ export class AutoLayout extends Layout
 export class RowLayout extends Layout
 {
 
-    private readonly offset:number = 15;
+    private readonly offset:number = 10;
 
     // grid data
     private co:number;

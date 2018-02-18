@@ -1,7 +1,7 @@
 import { Rect } from "./Utils";
 import { Display } from "./Display";
 import { Selectable } from "./Selectable";
-import { VerticalLayout } from "./Layout";
+import { VerticalLayout, RowLayout } from "./Layout";
 import { Widget } from "./Widget";
 import { WEdit } from "./WEdit";
 import { SelectableGroup } from "./Selection";
@@ -37,6 +37,7 @@ if( window )
     W.Display = Display;
     W.Selectable = Selectable;
     W.VerticalLayout = VerticalLayout;
+    W.RowLayout = RowLayout;
     W.Widget = Widget;
     W.WEdit = WEdit;
 

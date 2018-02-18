@@ -41,7 +41,7 @@ export namespace UI
         "</div>");
 
     Widget.AddTemplate("UI-TEMPLATE-ITEM",
-        "<div class='ui-template-item w-ui-editor'></div>");
+        "<div class='ui-template-item w-ui-editor' data-template='{{template}}'></div>");
 
     export class UIWindow extends Widget
     {
@@ -217,7 +217,8 @@ export namespace UI
 
             this.selectTransform = selectTransform;
 
-            this.createItem("UI-TEMPLATE-ITEM");
+            this.createItem("text");
+            this.createItem("img");
 
             this.html.addEventListener("mousedown", this.mousedown.bind(this));
 
@@ -225,7 +226,10 @@ export namespace UI
 
         private createItem(templateName:string):void
         {
-            this.addItem( new Widget(templateName), 99999 );
+            this.addItem( new Widget({
+                "template":"UI-TEMPLATE-ITEM",
+                "data":{ "template":templateName },
+            }), 99999 );
         }
 
         private addItem(widget:Widget, index:number):void
@@ -241,9 +245,9 @@ export namespace UI
 
             if( widget )
             {
-                this.selectTransform.startDrag(widget, event.pageX, event.pageY);
-                widget.remove();
-                this.addItem(widget.clone(), 0);
+                this.selectTransform.startDrag(new Widget(widget.getWidgetAttrib("template")), event.pageX, event.pageY, widget.getBounds());
+                //widget.remove();
+                //this.addItem(widget.clone(), 0);
             }
         }
     }
