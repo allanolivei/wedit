@@ -814,6 +814,8 @@ export class SelectionTransform extends RectView
             this.dropDelegate = this.dropMove;
         }
 
+        this.updateDelegate();
+
         window.addEventListener("mousemove", this.mousemoveBinder);
         window.addEventListener("mouseup", this.mouseupBinder);
     }
@@ -897,18 +899,21 @@ export class SelectionTransform extends RectView
 
         for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
         {
-            let rect:Rect = this.event.startRect[i];
-            let grect:Rect = this.event.ghost[i].rect;
-
-            grect.copyAndChange(rect, change);
-
-            this.event.ghost[i].draw();
+            let layout:Layout = Layout.findLayoutByDisplay(this.event.elements[i]);
+            layout.simulateResizeChild(this.event, i, change);
         }
     }
 
     private dropAnchor():void
     {
-        console.log("DROP ANCHOR");
+        this.nextRect.end(this.event.pointer.x, this.rect.y + this.rect.h);
+        let change: RectChange = this.rect.getChangeByRect(this.nextRect);
+
+        for( let i:number = 0 ; i < this.event.elements.length ; i++ )
+        {
+            let layout:Layout = Layout.findLayoutByDisplay(this.event.elements[i]);
+            layout.resizeChild(this.event, i, change);
+        }
     }
 
     private layoutFilter(element: Display): boolean

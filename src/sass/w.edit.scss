@@ -223,7 +223,7 @@ $anchor-size: 7px;
     .a-l
     {
         @include box(0, 0, $border-offset, 100% );
-        cursor:e-resize;
+        cursor:w-resize;
     }
 
     .a-r

@@ -1,10 +1,26 @@
 import { Display } from "./Display";
-import { Rect } from "./Utils";
+import { Rect, RectChange } from "./Utils";
 import { Selectable } from "./Selectable";
 import { DragEvent } from "./Event";
 
 export abstract class Layout extends Selectable
 {
+    public static findLayoutByDisplay(display:Display):Layout
+    {
+        let root:Display = display.parent;
+
+        while( root != null )
+        {
+            if( root instanceof Layout ) return root;
+            root = root.parent;
+        }
+
+        return null;
+    }
+
+
+
+
     protected childTag:string = "";
     protected childClassName:string = "";
     protected requiredStyles:{ [id: string]: string; } = {};
@@ -96,6 +112,8 @@ export abstract class Layout extends Selectable
     //     this.removeClass("layout-over");
     // }
 
+    public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void{/**/}
+    public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void{/**/}
     public enterDrag(event: DragEvent): void{/**/}
     public exitDrag(event: DragEvent): void {/**/}
     public updateDrag(event: DragEvent): void {/**/}
@@ -118,6 +136,26 @@ export class RelativeLayout extends Layout
         super(tag, "w-layout-relative", ...params);
     }
 
+    public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        event.ghost[childIndex].rect.copyAndChange(event.startRect[childIndex], change);
+        event.ghost[childIndex].draw();
+    }
+
+    public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        let bound:Rect = this.getBounds();
+
+        let childRect:Rect = event.startRect[childIndex];
+        childRect.copyAndChange(childRect, change);
+
+        event.elements[childIndex].setStyles(
+            "left:"+(childRect.x-bound.x)+"px;"+
+            "top:"+(childRect.y-bound.y)+"px;"+
+            "width:"+(childRect.w)+"px;"+
+            "height:"+(childRect.h)+"px;" );
+    }
+
     public enterDrag(event: DragEvent): void
     {
         for( let i = 0 ; i < event.elements.length ; i++ )
@@ -137,7 +175,7 @@ export class RelativeLayout extends Layout
         let deltaY: number = event.pointer.y - event.startPointer.y;
 
         for (let i = 0; i < event.elements.length; i++)
-            event.ghost[i].move(event.startRect[i].x + deltaX, event.startRect[i].y +deltaY);
+            event.ghost[i].move(event.startRect[i].x + deltaX, event.startRect[i].y + deltaY);
     }
 
     public dropDrag(event: DragEvent): void
@@ -244,6 +282,9 @@ export class VerticalLayout extends Layout
             let target:Selectable = event.elements[i];
 
             if ( !this.allowAddChild(target) ) continue;
+
+            target.setStyle("width", "auto");
+            target.setStyle("position", "static");
 
             if( target.parent === this && this.children.indexOf(target) < this.childIndex )
                 this.addChild( target, this.childIndex-1 );
@@ -437,9 +478,13 @@ export class RowLayout extends Layout
 
     private readonly offset:number = 15;
 
+    // grid data
     private co:number;
     private columns:number;
     private columnSize: number;
+    // delegate
+    private simulateResizeDelegate:any;
+    private resizeDelegate:any;
 
     // regexp
     private reg_col: RegExp = /col-([0-9]{1,2})/;
@@ -451,6 +496,9 @@ export class RowLayout extends Layout
 
         let grid:GridGizmo = new GridGizmo();
         this.html.appendChild(grid.html);
+
+        this.simulateResizeDelegate = this.simulateResizeChild.bind(this);
+        this.resizeDelegate = this.resizeChild.bind(this);
     }
 
     public removeChild(display: Display): void
@@ -492,6 +540,70 @@ export class RowLayout extends Layout
         return rect;
     }
 
+    public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        // position in the window space
+        let rowBounds:Rect = super.getBounds();
+        let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        // position in the grid space
+        let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        let obj_size:number = Math.round( bounds.w/this.columnSize );
+        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
+        // setup init of rect
+        let rect:Rect = event.ghost[childIndex].rect;
+        rect.copy(bounds);
+
+        if( change.right !== 0 )
+        {
+            rect.w = (mouse_co-obj_co+1) * this.columnSize - this.offset*2;
+        }
+        else if( change.left !== 0 )
+        {
+            rect.x = rowBounds.x + mouse_co * this.columnSize + this.offset;
+            rect.w = (obj_size + (obj_co-mouse_co)) * this.columnSize - this.offset*2;
+        }
+
+        event.ghost[childIndex].draw();
+    }
+
+    public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        // position in the window space
+        let rowBounds:Rect = super.getBounds();
+        let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        let bounds:Rect = layout.getBounds();
+        // position in the grid space
+        let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        let obj_size:number = Math.round( bounds.w/this.columnSize );
+        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
+        // layout (children of this)
+        let index:number = this.children.indexOf(layout);
+
+        if( change.right !== 0 )
+        {
+            let new_size:number = mouse_co-obj_co+1;
+            this.setSize(layout, new_size);
+            if( index < this.children.length-1 )
+            {
+                this.setOffset(
+                    this.children[index+1],
+                    this.getOffsetByDisplay(this.children[index+1]) + (obj_size-new_size));
+            }
+        }
+        else if( change.left !== 0 )
+        {
+            if( index > 0 )
+                this.setOffset(
+                    layout,
+                    mouse_co-
+                    (this.getColumnByDisplay(this.children[index-1])+this.getSizeByDisplay(this.children[index-1])));
+            else
+                this.setOffset(layout, mouse_co);
+
+            this.setSize(layout, obj_size + (obj_co-mouse_co));
+        }
+    }
+
     public enterDrag(event: DragEvent): void
     {
         let rowBounds: Rect = super.getBounds();
@@ -529,9 +641,9 @@ export class RowLayout extends Layout
     {
         let rowBounds: Rect = super.getBounds();
         // calcule current of column
-        let offsetDrag:number = 0;//this.columns * this.columnSize * 0.5;
+        let offsetDrag:number = event.offset.x;//this.columns * this.columnSize * 0.5;
         this.co = Math.floor( (event.pointer.x - rowBounds.x - offsetDrag)/this.columnSize );
-        this.co = Math.min(this.co, 12 - this.columns);
+        this.co = Math.max(0, Math.min(this.co, 12 - this.columns));
         // verifica colisoes
         let collision:boolean = this.hasCollision(this.co, this.columns, event.elements);
 
@@ -548,31 +660,47 @@ export class RowLayout extends Layout
 
     public dropDrag(event: DragEvent): void
     {
-        if (this.hasCollision(this.co, this.columns, event.elements) ) return;
+        if ( this.hasCollision(this.co, this.columns, event.elements) ) return;
 
-        for (let i: number = 0; i < event.elements.length; i++)
-            event.elements[i].remove();
+        // remove all dragged elements - this fix drag children
+        for ( let i: number = event.elements.length-1; i >= 0; i-- )
+        {
+            if ( !this.allowAddChild(event.elements[i]) ) event.elements = event.elements.splice(i, 1);
+            else event.elements[i].remove();
+        }
 
+        // calculate index and offset position
         let offset:number = this.co;
         let index:number = this.getChildIndexByColumn(this.co);
-
         if (index > 0)
             offset = this.co - (this.getColumnByDisplay(this.children[index - 1]) + this.getSizeByDisplay(this.children[index - 1]));
 
+        // create column and add drag elements
+        let layout:Layout = this.createColumn(offset, this.columns);
+        for ( let i:number = 0 ; i < event.elements.length ; i++ )
+        {
+            event.elements[i].setStyle("width", "auto");
+            event.elements[i].setStyle("position", "static");
+            layout.addChild( event.elements[i] );
+        }
+        this.addChild(layout, index);
+    }
+
+    /************************** UTILITIES ******************************/
+    private createColumn( offset:number, size:number ):Layout
+    {
         let class_offset:string = "offset-"+offset;
         let class_columns:string = "col-"+this.columns;
 
         let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
             layout.offsetX = this.offset;
             layout.autoremove = true;
+            layout.simulateResizeChild = this.simulateResizeDelegate;
+            layout.resizeChild = this.resizeDelegate;
 
-        for ( let i:number = 0 ; i < event.elements.length ; i++ )
-            layout.addChild( event.elements[i] );
-
-        this.addChild(layout, index);
+        return layout;
     }
 
-    /************************** UTILITIES ******************************/
     private hasCollision( column:number, size:number, ignore:Display[] ):boolean
     {
         let amount:number = 0;
@@ -646,6 +774,13 @@ export class RowLayout extends Layout
         let match: RegExpExecArray = this.reg_offset.exec(display.html.className);
         if( match != null ) display.removeClass(match[0]);
         display.addClass("offset-"+offset);
+    }
+
+    public setSize(display:Display, size:number):void
+    {
+        let match: RegExpExecArray = this.reg_col.exec(display.html.className);
+        if( match != null ) display.removeClass(match[0]);
+        display.addClass("col-"+size);
     }
     // private childIndex:number;
 
