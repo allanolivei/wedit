@@ -120,9 +120,11 @@ export class Widget extends Selectable
 
 
     private static parser: DOMParser = new DOMParser();
-
-    private templateName: string;
     private containers: { [id: string]: WidgetContainerData; } = {}; // container de atributos
+
+
+    public templateName: string;
+
 
     constructor(settings: string|WidgetData, ...className: string[])
     {
@@ -152,6 +154,11 @@ export class Widget extends Selectable
         this.createContainer("className", "class", this);
         // fill containers with data
         this.setContainersData(settings.data);
+    }
+
+    public clone():Widget
+    {
+        return new Widget(this.templateName);
     }
 
     // public serialize(): string

@@ -1,6 +1,11 @@
 @import 'mixins';
 @import 'editor/windows';
 
+
+$z-ui: 1000;
+$z-gizmos-selection: 500;
+$z-gizmos-hover: 300;
+
 .w-edit
 {
     // div:empty 
@@ -59,11 +64,20 @@
     }
 }
 
+body .w-ui-editor 
+{
+    pointer-events: auto;
+
+    .selectable { pointer-events: auto; }
+}
+
+
 .w-row-grid { display: none; }
 
 .w-select-hover
 {
     position: relative;
+    z-index: $z-gizmos-hover;
     border: 1px solid rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.01);
     -webkit-box-shadow: 0px 0px 1px 1px rgba(43, 147, 255, 0.9);
@@ -83,6 +97,7 @@
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.01);
+    z-index: $z-gizmos-hover;
 
     &:after
     {
@@ -102,12 +117,17 @@
     position: absolute;
     background: rgba(85, 83, 238, 0.11);
     border: 1px dashed rgba(85, 83, 238, 0.4);
-    z-index: 500;
+    z-index: $z-gizmos-selection;
 
     &.unallowed 
     {  
         background: rgba(238, 83, 83, 0.11);
         border: 1px dashed rgba(238, 83, 83, 0.4);
+    }
+
+    &.w-ghost-dragging
+    {
+        z-index: $z-ui + 100;
     }
 }
 
@@ -129,7 +149,7 @@ $anchor-size: 7px;
     background: rgba(43, 147, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.4);
     //cursor: move;
-    z-index: 600;
+    z-index: $z-gizmos-selection+10;
 
     &:before
     {

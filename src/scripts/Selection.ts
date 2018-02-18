@@ -774,30 +774,67 @@ export class SelectionTransform extends RectView
         this.redraw();
     }
 
+    public startDrag(display:Selectable, pageX:number, pageY:number): void
+    {
+        this.selection.select.set(display);
+
+        this.prepareDrag(pageX, pageY);
+
+        this.updateDelegate = this.updateMove;
+        this.dropDelegate = this.dropMove;
+        this.updateDelegate();
+
+        window.addEventListener("mousemove", this.mousemoveBinder);
+        window.addEventListener("mouseup", this.mouseupBinder);
+    }
+
+    private prepareDrag(pageX:number, pageY:number):void
+    {
+        this.startDragRect.copy(this.rect);
+        this.event.pointer.x = this.event.startPointer.x = pageX;
+        this.event.pointer.y = this.event.startPointer.y = pageY;
+        this.event.offset.x = pageX - this.startDragRect.x;
+        this.event.offset.y = pageY - this.startDragRect.y;
+        this.nextRect.copy(this.rect);
+
+        // add flag dragging in ghost
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+            this.event.ghost[i].addClass("w-ghost-dragging");
+
+        // disable mouse in this
+        this.html.style.pointerEvents = "none";
+        this.html.style.opacity = "0";
+    }
+
     private mousedown(event:MouseEvent):void
     {
         event.preventDefault();
         event.stopPropagation();
 
         // cache start drag information
-        this.startDragRect.copy(this.rect);
-        this.event.pointer.x = this.event.startPointer.x = event.pageX;
-        this.event.pointer.y = this.event.startPointer.y = event.pageY;
-        this.event.offset.x = event.pageX - this.startDragRect.x;
-        this.event.offset.y = event.pageY - this.startDragRect.y;
-        this.nextRect.copy(this.rect);
+        // this.startDragRect.copy(this.rect);
+        // this.event.pointer.x = this.event.startPointer.x = event.pageX;
+        // this.event.pointer.y = this.event.startPointer.y = event.pageY;
+        // this.event.offset.x = event.pageX - this.startDragRect.x;
+        // this.event.offset.y = event.pageY - this.startDragRect.y;
+        // this.nextRect.copy(this.rect);
 
-        // layout manager
-        // this.updateLayout();
+        // // layout manager
+        // // this.updateLayout();
 
-        // disable mouse in this
-        this.html.style.pointerEvents = "none";
-        this.html.style.opacity = "0";
+        // // add flag dragging in ghost
+        // for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+        //     this.event.ghost[i].addClass("w-ghost-dragging");
+
+        // // disable mouse in this
+        // this.html.style.pointerEvents = "none";
+        // this.html.style.opacity = "0";
+
+        this.prepareDrag(event.pageX, event.pageY);
 
         // handle events
         let target: HTMLElement = event.target as HTMLElement;
         let className: string = target.className;
-
         if( className.indexOf("anchor") !== -1 )
         {
             this.updateDelegate = this.updateAnchor;
@@ -841,6 +878,10 @@ export class SelectionTransform extends RectView
 
         // drop manager (move, anchor)
         this.dropDelegate();
+
+        // remove flag dragging in ghost
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+            this.event.ghost[i].removeClass("w-ghost-dragging");
 
         // layout manager
         this.layout = null;

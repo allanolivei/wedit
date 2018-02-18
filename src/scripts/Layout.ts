@@ -160,8 +160,7 @@ export class RelativeLayout extends Layout
     {
         for( let i = 0 ; i < event.elements.length ; i++ )
         {
-            let rect:Rect = event.elements[i].getBounds();
-            event.ghost[i].rect.copy(rect);
+            event.ghost[i].rect.copy( event.startRect[i] );
             event.ghost[i].show();
             event.ghost[i].allowed(true);
         }
@@ -665,8 +664,10 @@ export class RowLayout extends Layout
         // remove all dragged elements - this fix drag children
         for ( let i: number = event.elements.length-1; i >= 0; i-- )
         {
-            if ( !this.allowAddChild(event.elements[i]) ) event.elements = event.elements.splice(i, 1);
-            else event.elements[i].remove();
+            // TODO: Nao posso modificar a lista do event, ele ainda esta em uso
+            //if ( !this.allowAddChild(event.elements[i]) ) event.elements = event.elements.splice(i, 1);
+            //else event.elements[i].remove();
+            event.elements[i].remove();
         }
 
         // calculate index and offset position

@@ -1,6 +1,7 @@
 import { Widget } from "./Widget";
 import { Display } from "./Display";
 import { Rect } from "./Utils";
+import { SelectionTransform } from "./Selection";
 
 export namespace UI
 {
@@ -34,6 +35,14 @@ export namespace UI
         "   <div class='ui-h-group-container' data-type='AutoLayout'>{{list}}</div>" +
         "</div>");
 
+    Widget.AddTemplate("UI-TEMPLATE",
+        "<div class='ui-template w-ui-editor'>" +
+        "   <div class='ui-template-list' data-type='VerticalLayout'>{{list}}</div>" +
+        "</div>");
+
+    Widget.AddTemplate("UI-TEMPLATE-ITEM",
+        "<div class='ui-template-item w-ui-editor'></div>");
+
     export class UIWindow extends Widget
     {
 
@@ -41,6 +50,7 @@ export namespace UI
         private isDown:boolean;
         private offsetX:number;
         private offsetY:number;
+        private bounds:Rect;
 
         constructor()
         {
@@ -59,11 +69,12 @@ export namespace UI
         private mousedown(event: MouseEvent): void
         {
             event.preventDefault();
+
             this.isDown = true;
 
-            let bounds:Rect = this.getBounds();
-            this.offsetX = bounds.x - window.scrollX - event.clientX;
-            this.offsetY = bounds.y - window.scrollY - event.clientY;
+            this.bounds = this.getBounds();
+            this.offsetX = this.bounds.x - window.scrollX - event.clientX;
+            this.offsetY = this.bounds.y - window.scrollY - event.clientY;
 
             this.header.addClass("ui-cursor-dragging");
         }
@@ -73,8 +84,14 @@ export namespace UI
             if (!this.isDown)  return;
             event.preventDefault();
 
-            this.setStyle("left", (event.clientX + this.offsetX) + "px");
-            this.setStyle("top", (event.clientY + this.offsetY) + "px");
+            this.bounds.x = event.clientX + this.offsetX;
+            this.bounds.y = event.clientY + this.offsetY;
+
+            this.bounds.x = Math.max(0, Math.min( this.bounds.x, window.innerWidth-this.bounds.width ));
+            this.bounds.y = Math.max(0, Math.min( this.bounds.y, window.innerHeight-this.bounds.height ));
+
+            this.setStyle("left", this.bounds.x + "px");
+            this.setStyle("top", this.bounds.y + "px");
 
             if (event.which !== 1) this.onmouseup(event);
         }
@@ -180,6 +197,54 @@ export namespace UI
             super("UI-SELECT");
 
             this.setWidgetText("label", "classes");
+        }
+    }
+
+    interface UITemplateItem
+    {
+        widget:Widget;
+        mouseDownListener?:any;
+    }
+
+    export class UITemplate extends Widget
+    {
+        private selectTransform:SelectionTransform;
+        private items:UITemplateItem[];
+
+        constructor( selectTransform:SelectionTransform )
+        {
+            super("UI-TEMPLATE");
+
+            this.selectTransform = selectTransform;
+
+            this.createItem("UI-TEMPLATE-ITEM");
+
+            this.html.addEventListener("mousedown", this.mousedown.bind(this));
+
+        }
+
+        private createItem(templateName:string):void
+        {
+            this.addItem( new Widget(templateName), 99999 );
+        }
+
+        private addItem(widget:Widget, index:number):void
+        {
+            this.insertWidget("list", widget, index);
+        }
+
+        private mousedown( event:MouseEvent ):void
+        {
+            event.preventDefault();
+
+            let widget:Widget = this.getDisplayByContainerName("list").findByPoint(event.pageX, event.pageY) as Widget;
+
+            if( widget )
+            {
+                this.selectTransform.startDrag(widget, event.pageX, event.pageY);
+                widget.remove();
+                this.addItem(widget.clone(), 0);
+            }
         }
     }
 

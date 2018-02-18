@@ -91,7 +91,7 @@ export class WEdit extends Widget
 
         // window.document.addEventListener("keydown", (e: KeyboardEvent) => self.onKeydownHandler(e));
 
-        // let w = new UI.UIWindow();
+        let w = new UI.UIWindow();
         // let group = new UI.UIHGroup();
         // group.addWidget("list", new UI.UIInput("X", "10", 28, "center"));
         // group.addWidget("list", new UI.UIInput("Y", "10", 28, "center"));
@@ -103,7 +103,8 @@ export class WEdit extends Widget
         // w.addWidget("list", new UI.UISelect());
         // w.addWidget("list", new UI.UIInput("margin-top", "10", 84));
 
-        //document.body.appendChild(w.html);
+        w.addWidget("list", new UI.UITemplate(this.selectionTransform));
+        document.body.appendChild(w.html);
 
         // window.document.addEventListener("keydown",  this.onKeydownHandler.bind(this));
 
