@@ -430,6 +430,12 @@ export class SelectionDragger extends RectView
     private mouseDownBind:any;
     private mouseMoveBind:any;
     private mouseUpBind:any;
+    private hoverChangeBind:any;
+
+    // update hover whe mouseup in document, fix when elements is transformed.
+    private waitHoverFindBinder:any;
+    private validateMouseUpHoverBinder:any;
+    private waitHoverTimeout:number;
 
     constructor(root:Display, selection:Selection)
     {
@@ -451,6 +457,9 @@ export class SelectionDragger extends RectView
         this.mouseDownBind = this.mousedown.bind(this);
         this.mouseMoveBind = this.mousemove.bind(this);
         this.mouseUpBind = this.mouseup.bind(this);
+        this.hoverChangeBind = this.hoverChangeHandler.bind(this);
+        this.waitHoverFindBinder = this.waitHoverFind.bind(this);
+        this.validateMouseUpHoverBinder = this.validateMouseUpHover.bind(this);
 
         // auto enable
         this.enable();
@@ -462,8 +471,11 @@ export class SelectionDragger extends RectView
 
         this.add();
 
+        this.selection.hover.onChange.on(this.hoverChangeBind);
         window.addEventListener("mousedown", this.mouseDownBind);
         window.addEventListener("mousemove", this.mouseMoveBind);
+        // fix***** edition in current hover
+        window.addEventListener("mouseup", this.waitHoverFindBinder);
     }
 
     public disable()
@@ -474,10 +486,12 @@ export class SelectionDragger extends RectView
         this.hide();
         this.remove();
 
+        this.selection.hover.onChange.off(this.hoverChangeBind);
         window.removeEventListener("mouseup", this.mouseUpBind);
-
         window.removeEventListener("mousedown", this.mouseDownBind);
         window.removeEventListener("mousemove", this.mouseMoveBind);
+        // fix***** edition in current hover
+        window.removeEventListener("mouseup", this.waitHoverFindBinder);
     }
 
     public add()
@@ -490,6 +504,37 @@ export class SelectionDragger extends RectView
     {
         document.body.removeChild(this.hoverMark.html);
         document.body.removeChild(this.html);
+    }
+
+    private waitHoverFind(event:MouseEvent):void
+    {
+        clearTimeout(this.waitHoverTimeout);
+        this.waitHoverTimeout = setTimeout(this.validateMouseUpHoverBinder, 100, event);
+    }
+
+    private validateMouseUpHover(event:MouseEvent):void
+    {
+        this.mousemove(event);
+        this.redrawHover();
+    }
+
+    private redrawHover():void
+    {
+        if ( this.selection.hover.count() > 0 )
+        {
+            let rect: Rect = this.selection.hover.getRectArea();
+            this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
+            this.hoverMark.show();
+        }
+        else
+        {
+            this.hoverMark.hide();
+        }
+    }
+
+    private hoverChangeHandler(selectable:Selectable[]):void
+    {
+        this.redrawHover();
     }
 
     private selectableFilter( element:Selectable ):boolean
@@ -520,7 +565,8 @@ export class SelectionDragger extends RectView
             this.mode = DRAGGER_MODE.NONE;
         }
 
-        this.hoverMark.hide();
+        //this.hoverMark.hide();
+        this.selection.hover.clear();
 
         window.addEventListener("mouseup", this.mouseUpBind);
     }
@@ -537,12 +583,16 @@ export class SelectionDragger extends RectView
                 this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
             }
         }
-        else
-        {
-            let elem: HTMLElement = event.target as HTMLElement;
-            if ( !this.IsEditor(elem) ) this.updateHover(event.pageX, event.pageY);
-            else this.hoverMark.hide();
-        }
+        // else
+        // {
+            // let elem: HTMLElement = event.target as HTMLElement;
+            // if ( !this.IsUI(elem) ) this.updateHover(event.pageX, event.pageY);
+            // else this.hoverMark.hide();
+            // console.log(this.IsUI(elem));
+        // }
+        let elem: HTMLElement = event.target as HTMLElement;
+        if ( !this.IsUI(elem) ) this.updateHover(event.pageX, event.pageY);
+        else this.selection.hover.clear();
     }
 
     private mouseup(event: MouseEvent): void
@@ -565,16 +615,16 @@ export class SelectionDragger extends RectView
             // update select list
             this.selection.hover.set(hoverTarget);
             // update view
-            let rect: Rect = this.selection.hover.getRectArea();
-            this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
-            this.hoverMark.show();
+            // let rect: Rect = this.selection.hover.getRectArea();
+            // this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
+            // this.hoverMark.show();
         }
         else
         {
             // update select list
             this.selection.hover.clear();
             // update view
-            this.hoverMark.hide();
+            // this.hoverMark.hide();
         }
     }
 
@@ -599,6 +649,17 @@ export class SelectionDragger extends RectView
         while( root != null )
         {
             if ( root.className.indexOf("w-ui-gizmos") !== -1 || root.className.indexOf("w-ui-editor") !== -1 ) return true;
+            root = root.parentElement;
+        }
+        return false;
+    }
+
+    private IsUI( elem:HTMLElement ):boolean
+    {
+        let root:HTMLElement = elem;
+        while( root != null )
+        {
+            if ( root.className.indexOf("w-ui-editor") !== -1 ) return true;
             root = root.parentElement;
         }
         return false;
@@ -1388,6 +1449,9 @@ export class HoverToolbar extends RectView
     private delete:Display;
     private edit:Display;
 
+    private waitRedrawTimeout:number;
+    private redrawBinder:any;
+
     constructor(selection:Selection)
     {
         super("w-ui-toolbar");
@@ -1420,9 +1484,14 @@ export class HoverToolbar extends RectView
         this.options.addChild(this.edit);
         this.options.addChild(this.delete);
         this.addChild(this.options);
+
         //this.html.addEventListener("mousedown", this.mousedown.bind(this));
         this.edit.html.addEventListener("mousedown", this.mousedown.bind(this));
         this.delete.html.addEventListener("mousedown", this.mousedown.bind(this));
+
+        // FIX**** pode ter ocorrido alguma alteracao no objeto in focus
+        this.redrawBinder = this.redraw.bind(this);
+        window.addEventListener("mouseup", this.waitRedraw.bind(this));
     }
 
     private mousedown(event:MouseEvent):void
@@ -1433,11 +1502,37 @@ export class HoverToolbar extends RectView
 
     private hoverChangeHandler( data:Selectable[] ):void
     {
-        if( data.length > 0 )
+        this.target = data.length > 0 ? data[0] : null;
+
+        // if( data.length > 0 )
+        // {
+        //     this.target = data[0];
+        //     let bounds:Rect = this.target.getBounds();
+        //     //this.move(bounds.x + bounds.w - 26, bounds.y + 3);
+        //     this.move(bounds.x, bounds.y);
+        //     this.size(bounds.w, 22);
+        //     this.show();
+        // }
+        // else
+        // {
+        //     this.hide();
+        // }
+
+        this.redraw();
+    }
+
+    private waitRedraw():void
+    {
+        clearTimeout(this.waitRedrawTimeout);
+        this.waitRedrawTimeout = setTimeout(this.redrawBinder, 100);
+    }
+
+    private redraw():void
+    {
+        console.log("REDRAW?");
+        if( this.target )
         {
-            this.target = data[0];
             let bounds:Rect = this.target.getBounds();
-            //this.move(bounds.x + bounds.w - 26, bounds.y + 3);
             this.move(bounds.x, bounds.y);
             this.size(bounds.w, 22);
             this.show();
