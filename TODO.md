@@ -1,11 +1,17 @@
-. grid fix: redimensionar colidir com irmaos e nao ultrapassar o tamanho do grid.
 . remover linha do grid
 . remover coluna do grid
+. grid fix: redimensionar colidir com irmaos e nao ultrapassar o tamanho do grid.
+. corrigir toolbar para aparecer e sumir na hora certa.
+. deserializar editor no modo simples da revista.
+. habilitar e desabilitar modo view (sem edicao)
+. visualizar resultado da edicao.
+. criar páginas.
 
 
 
 
 
+. redimensionar thumbnail do youtube quando imagem for carregada.
 . criar sistema de pooling para reaproveitamento de templates criados fora da cena.
 
 
