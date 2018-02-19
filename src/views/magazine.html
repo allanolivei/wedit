@@ -20,16 +20,92 @@
             display: block;
             margin: 0 10px;
             width: 100%;
+            cursor: pointer;
         }
 
-        .widget-text:empty
+        .w-empty
         {
             min-height: 100px;
+            border: 1px solid rgba(154, 154, 243, 0.185);
+        }
+
+        .w-empty.w-img
+        {
+            background: #deecfb url("../img/icons/ic_img.svg") no-repeat center center;
+        }
+
+        .w-empty.w-text
+        {
             background: #deecfb url("../img/icons/ic_text.svg") no-repeat center center;
         }
+
+        .w-empty.w-movie
+        {
+            background: #deecfb url("../img/icons/ic_movie.svg") no-repeat center center;
+        }
+
+        .w-movie:before
+        {
+            content:"";
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: 0;
+            top: 0;
+            background: rgba(145, 145, 145, 0.3) url("img/icons/ic_youtube.svg") no-repeat center center;
+        }
+
+        .w-empty.w-movie:before { display: none; }
+
+        .w-text, .w-img, .w-movie
+        {
+            min-height: 100px;
+        }
+
+        .w-img img, .w-movie img { width: 100%; }
+
+        .w-text
+        {
+            word-wrap: break-word;
+        }
+
+        .magazine
+        {
+            margin-top: 20px;
+        }
+
+        p { margin-bottom: 0; }
+
+        /* All in one selector */
+/* 
+overwrite image empty
+img[alt]{ border: 10px solid tomato; }
+.image-replacement {
+  content: url(http://akamaicovers.oreilly.com/images/9780596517748/cat.gif);
+}
+.banner {
+  display: block;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  background: url(http://notrealdomain2.com/newbanner.png) no-repeat;
+  width: 180px;
+  height: 236px;
+  padding-left: 180px;
+} */
     </style>
 </head>
 <body>
+    <!-- 
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/0.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/1.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/2.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/3.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/default.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/hqdefault.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/mddefault.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/sddefault.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/maxresdefault.jpg" alt=""></p>
+    -->
 
     <div id='magazine' class="magazine container">
 
@@ -41,8 +117,10 @@
 
     </div>
     
-
     <script src="js/wedit.js"></script>
+    <!-- <script src="https://cdn.ckeditor.com/4.8.0/standard/ckeditor.js"></script> -->
+    <script src="https://cdn.ckeditor.com/4.8.0/standard-all/ckeditor.js"></script>
+
     <script>
         var stage = new W.WEdit(document.getElementById("editor"), "empty");
 

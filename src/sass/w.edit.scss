@@ -1,10 +1,10 @@
-@import 'mixins';
-@import 'editor/windows';
-
 
 $z-ui: 1000;
 $z-gizmos-selection: 500;
 $z-gizmos-hover: 300;
+
+@import 'mixins';
+@import 'editor/windows';
 
 .w-edit
 {
@@ -130,7 +130,7 @@ body .w-ui-editor
 
     &.w-ghost-dragging
     {
-        z-index: $z-ui + 100;
+        z-index: $z-ui + 9999;
     }
 }
 

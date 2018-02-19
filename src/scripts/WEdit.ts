@@ -8,7 +8,7 @@
 import { Widget } from "./Widget";
 import { VerticalLayout } from "./Layout";
 import { Display } from "./Display";
-import { Selection, SelectionDragger, SelectionTransform } from "./Selection";
+import { Selection, SelectionDragger, SelectionTransform, HoverToolbar } from "./Selection";
 import { UI } from "./UI";
 
 //import * as $ from 'jquery';
@@ -22,16 +22,25 @@ como widget e dispays, devem utilizar data-algumacoisa como identificadores para
 
 -datas especiais (Widget, Display)
 -classes especiais (UI)
-.w-ui-editor
-.w-ui-gizmos
-.widget-text
+.w-ui-inner-editor - usado em interfaces internas do editor ( toolbar )
+.w-ui-editor - usado em janelas e elementos que sobrepoem tudo
+.w-ui-gizmos - usados nas ferramentas de selecao e transformacao
+.widget-text - atualmente sao os conteudos de texto
 */
 
 export class WEdit extends Widget
 {
+    // select - transform
     public selection:Selection;
     public selectionDragger: SelectionDragger;
     public selectionTransform:SelectionTransform;
+    public toolbar:HoverToolbar;
+    // windows
+    public wtemplates:UI.UIWindowTemplates;
+    public wtext:UI.UIWindowEditText;
+    public wimg:UI.UIWindowEditImage;
+    public wmovie:UI.UIWindowEditMove;
+    public wconfirm:UI.UIWindowConfirm;
 
     constructor(element: HTMLElement, settings: any = "default", ...className: string[])
     {
@@ -79,6 +88,7 @@ export class WEdit extends Widget
 
         this.selectionDragger = new SelectionDragger(this, this.selection);
         this.selectionTransform = new SelectionTransform(this, this.selection);
+        this.toolbar = new HoverToolbar(this.selection);
 
         this.setEnable(false);
 
@@ -92,7 +102,8 @@ export class WEdit extends Widget
 
         // window.document.addEventListener("keydown", (e: KeyboardEvent) => self.onKeydownHandler(e));
 
-        let w = new UI.UIWindow();
+        // let w = new UI.UIWindow();
+        // w.setWidgetText("title", "Componentes");
         // let group = new UI.UIHGroup();
         // group.addWidget("list", new UI.UIInput("X", "10", 28, "center"));
         // group.addWidget("list", new UI.UIInput("Y", "10", 28, "center"));
@@ -104,10 +115,44 @@ export class WEdit extends Widget
         // w.addWidget("list", new UI.UISelect());
         // w.addWidget("list", new UI.UIInput("margin-top", "10", 84));
 
-        w.addWidget("list", new UI.UITemplate(this.selectionTransform));
-        document.body.appendChild(w.html);
+
+
+
+
+        // WINDOWS
+
+        this.wtemplates = new UI.UIWindowTemplates(this.selectionTransform);
+        this.wtext = new UI.UIWindowEditText();
+        this.wimg = new UI.UIWindowEditImage();
+        this.wmovie = new UI.UIWindowEditMove();
+        this.wconfirm = new UI.UIWindowConfirm();
+
+
+
+
+        let deactiveWindowHandlerBinder = this.deactiveWindowHandler.bind(this);
+        this.wtext.onDeactive.on(deactiveWindowHandlerBinder);
+        this.wimg.onDeactive.on(deactiveWindowHandlerBinder);
+        this.wmovie.onDeactive.on(deactiveWindowHandlerBinder);
+
+
+        this.wtemplates.active(99999);
+
+        //this.wcomponent = new UI.UIWindow();
+
+        // this.wtext = new UI.UIWindow();
+        // this.wtext.setStyles("width:700px;height:400px;");
+        // this.wtext.setWidgetText("title", "Editor de Texto");
+        // this.wtext.addWidget("list", new UI.UITextarea("Edite o texto do elemento com o campo de texto abaixo."));
+        // this.wtext.addWidget("list", new UI.UIButton("Cancelar"));
+        // this.wtext.addWidget("list", new UI.UIButton("Confirmar"));
+
+
+
 
         // window.document.addEventListener("keydown",  this.onKeydownHandler.bind(this));
+
+        this.toolbar.onSelect.on( this.toolbarSelectHandler.bind(this) );
 
     }
 
@@ -151,10 +196,41 @@ export class WEdit extends Widget
 
     private onKeydownHandler(event:KeyboardEvent):void
     {
-        console.log(event.code);
+        //console.log(event.code);
         //if( event.code === "h" ) {}
     }
 
+    private toolbarSelectHandler(data:any):void
+    {
+        if( data.name === "edit" )
+        {
+            switch(data.target.templateName)
+            {
+                case "text":
+                    this.wtext.setTarget(data.target);
+                    this.wtext.active();
+                break;
+                case "img":
+                    this.wimg.setTarget(data.target);
+                    this.wimg.active();
+                break;
+                case "movie":
+                    this.wmovie.setTarget(data.target);
+                    this.wmovie.active();
+                break;
+            }
+        }
+        else
+        {
+            this.wconfirm.active();
+            this.wconfirm
+        }
+    }
+
+    private deactiveWindowHandler():void
+    {
+        this.selectionTransform.redraw();
+    }
     // private onKeydownHandler(event:KeyboardEvent):void
     // {
     //     if( this.selection.select.count() == 0 ) return;

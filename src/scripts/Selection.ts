@@ -233,6 +233,8 @@ export class SelectableGroup
 
     public clear(): void
     {
+        if( this.selectables.length === 0 ) return;
+
         for (let i: number = 0; i < this.selectables.length; i++)
             this.onRemoveHandler( this.selectables[i] );
         this.selectables = [];
@@ -706,7 +708,7 @@ export class SelectionTransform extends RectView
         document.body.removeChild(this.layoutMark.html);
     }
 
-    private redraw(): void
+    public redraw(): void
     {
         let rect: Rect = this.selection.select.getRectArea();
         this.set(rect.x, rect.y, rect.w, rect.h);
@@ -778,7 +780,12 @@ export class SelectionTransform extends RectView
     {
         this.selection.select.set(display);
 
-        if( rect ) this.event.startRect[0].copy(rect);
+        if( rect )
+        {
+            this.event.startRect[0].copy(rect);
+            this.set(rect.x, rect.y, rect.w, rect.h);
+            this.ghostRedraw();
+        }
 
         this.prepareDrag(pageX, pageY);
 
@@ -1353,6 +1360,73 @@ export class Ghost extends RectView
         this.html.style.display = "none";
         this.rect.size(0, 0);
         super.hide();
+    }
+}
+
+
+
+
+
+// show selected area with anchors
+interface ToolbarEvent
+{
+    name:string;
+    target:Selectable;
+}
+
+export class HoverToolbar extends RectView
+{
+    public readonly onSelect = new LiteEvent<ToolbarEvent>();
+
+    private selection:Selection;
+    private target:Selectable;
+    // private textEditor:Window;
+    // private imgEditor:Window;
+    // private movieEditor:Window;
+
+    constructor(selection:Selection)
+    {
+        super("w-ui-toolbar");
+
+        // cache
+        this.selection = selection;
+
+        this.selection.hover.onChange.on( this.hoverChangeHandler.bind(this) );
+
+        document.body.appendChild(this.html);
+
+        this.size(22, 22);
+        this.hide();
+
+        this.html.style.cursor = "pointer";
+        this.html.style.pointerEvents = "auto";
+
+        // let w = new UI.UIWindow();
+        // w.setWidgetText("title", "Editor de Texto");
+        // w.addWidget("list", new UI.UITemplate(this.selectionTransform));
+        // document.body.appendChild(w.html);
+
+        this.html.addEventListener("mousedown", this.mousedown.bind(this));
+    }
+
+    private mousedown(event:MouseEvent):void
+    {
+        this.onSelect.trigger({name:"edit", target:this.target});
+    }
+
+    private hoverChangeHandler( data:Selectable[] ):void
+    {
+        if( data.length > 0 )
+        {
+            this.target = data[0];
+            let bounds:Rect = this.target.getBounds();
+            this.move(bounds.x + bounds.w - 26, bounds.y + 3);
+            this.show();
+        }
+        else
+        {
+            this.hide();
+        }
     }
 }
 

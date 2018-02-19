@@ -76,9 +76,11 @@ export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html:
-            "<div>{{text}}</div>" },
+            "<div class='w-text w-empty'>{{text}}</div>" },
         "img": { html:
-            "<div><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+            "<div class='w-img w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+        "movie": { html:
+            "<div class='w-movie w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
