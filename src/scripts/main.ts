@@ -6,6 +6,7 @@ import { Widget } from "./Widget";
 import { WEdit } from "./WEdit";
 import { SelectableGroup } from "./Selection";
 import { SheetRules } from "./Sheet";
+import { SerializationGrid } from "./Serialization";
 
 
 
@@ -40,6 +41,9 @@ if( window )
     W.RowLayout = RowLayout;
     W.Widget = Widget;
     W.WEdit = WEdit;
+
+    // serialization
+    W.SerializationGrid = SerializationGrid;
 
     (window as any).W = W;
 }

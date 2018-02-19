@@ -665,7 +665,7 @@ export namespace UI
             }
             else
             {
-                this.target.setWidgetAttrib("img", content);
+                this.target.setWidgetAttrib("movie", content);
                 this.target.removeClass("w-empty");
             }
 

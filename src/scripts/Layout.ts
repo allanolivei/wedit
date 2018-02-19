@@ -532,6 +532,30 @@ export class RowLayout extends Layout
         super.addChild(display, index);
     }
 
+    // used external (serialization)
+    public addLayoutByColumnWorldSpace(column:number, size:number):VerticalLayout
+    {
+        let previousIndex:number = -1;
+        let offset:number = column;
+
+        // find previous sibling
+        for( let i:number = 0 ; i < this.children.length ; i++ )
+        {
+            let c:number = this.getColumnByDisplay(this.children[i]);
+            if( c < column )
+                previousIndex = i;
+        }
+        // calculate offset with the sibling
+        if (previousIndex >= 0)
+            offset = column - this.getRightByDisplay(this.children[previousIndex]);
+
+        // create column
+        let layout: VerticalLayout = this.createColumn(offset, size) as VerticalLayout;
+        this.addChild(layout, previousIndex+1);
+
+        return layout;
+    }
+
     public getBounds():Rect
     {
         let rect:Rect = super.getBounds();
@@ -829,7 +853,8 @@ export class RowLayout extends Layout
     private createColumn( offset:number, size:number ):Layout
     {
         let class_offset:string = "offset-"+offset;
-        let class_columns:string = "col-"+this.columns;
+        let class_columns: string = "col-" +size;
+        //let class_columns:string = "col-"+this.columns;
 
         let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
             layout.offsetX = this.offset;
@@ -882,7 +907,7 @@ export class RowLayout extends Layout
         return result;
     }
 
-    private getColumnByDisplay(display:Display): number
+    public getColumnByDisplay(display:Display): number
     {
         let amount = 0;
 
@@ -896,6 +921,12 @@ export class RowLayout extends Layout
         return amount;
     }
 
+    public getSizeByDisplay(display: Display): number
+    {
+        let match: RegExpExecArray = this.reg_col.exec(display.html.className);
+        return parseInt(match[1], 10);
+    }
+
     private getRightByDisplay(display:Display):number
     {
         return this.getColumnByDisplay(display) + this.getSizeByDisplay(display);
@@ -904,12 +935,6 @@ export class RowLayout extends Layout
     private getOffsetByDisplay(display:Display):number
     {
         let match: RegExpExecArray = this.reg_offset.exec(display.html.className);
-        return parseInt(match[1], 10);
-    }
-
-    private getSizeByDisplay(display: Display): number
-    {
-        let match: RegExpExecArray = this.reg_col.exec(display.html.className);
         return parseInt(match[1], 10);
     }
 

@@ -1529,7 +1529,6 @@ export class HoverToolbar extends RectView
 
     private redraw():void
     {
-        console.log("REDRAW?");
         if( this.target )
         {
             let bounds:Rect = this.target.getBounds();

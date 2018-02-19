@@ -45,6 +45,11 @@ export class WEdit extends Widget
     private removeElementDelegate:any;
 
 
+
+    //temp
+    private confirmTarget:Display;
+
+
     constructor(element: HTMLElement, settings: any = "default", ...className: string[])
     {
         if( typeof settings === "string" && settings === "empty" )
@@ -230,6 +235,7 @@ export class WEdit extends Widget
             this.wconfirm.setLabel("Você tem certeza que deseja deletar a coluna?");
             this.wconfirm.active();
             this.wconfirm.onSelect.on(this.removeElementDelegate);
+            this.confirmTarget = data.target;
         }
     }
 
@@ -241,12 +247,14 @@ export class WEdit extends Widget
     private confirmRemoveElement( confirm:boolean ):void
     {
         this.wconfirm.onSelect.off(this.removeElementDelegate);
-        if( confirm && this.selection.hover.count() > 0 )
+
+        if( confirm && this.confirmTarget)
         {
-            this.selection.hover.get(0).remove();
+            this.confirmTarget.remove();
             this.selection.hover.clear();
             this.selection.select.clear();
         }
+        this.confirmTarget = null;
     }
     // private onKeydownHandler(event:KeyboardEvent):void
     // {

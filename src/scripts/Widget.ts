@@ -80,7 +80,7 @@ export class Widget extends Selectable
         "img": { html:
             "<div class='w-img w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
         "movie": { html:
-            "<div class='w-movie w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+            "<div class='w-movie w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{movie}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
@@ -225,6 +225,31 @@ export class Widget extends Selectable
     {
         if( containerName in this.containers )
             return this.containers[containerName].type;
+        return "";
+    }
+
+    public getContainerData(containerName: string):string
+    {
+        if (!(containerName in this.containers))
+            throw "Tentativa de modificação de um container inexistente. Container Name: " + containerName;
+
+        switch (this.containers[containerName].type)
+        {
+            case "text":
+                return this.getWidgetText(containerName);
+            case "attrib":
+                return this.getWidgetAttrib(containerName);
+            case "class":
+                //this.get(containerName);
+                break;
+            case "style":
+                //this.setWidgetStyles(containerName, value as string);
+                break;
+            case "list":
+                ///this.addWidget(containerName, value);
+                break;
+        }
+
         return "";
     }
 

@@ -9,13 +9,13 @@
     <link rel="stylesheet" href="css/w.edit.css">
 
     <style>
-        .w-editing .w-layout-row
+        .w-editing  .w-layout-row
         {
             margin-bottom: 20px;
             min-height: 100px;  
         }
 
-         .w-editing .w-layout-row:before
+        .w-editing .w-layout-row:before
         {
             content: "";
             position: absolute;
@@ -33,26 +33,23 @@
             cursor: pointer;
         }
 
-        .w-empty
+        .w-editing .w-empty
         {
             min-height: 100px;
             border: 1px solid rgba(154, 154, 243, 0.185);
         }
 
-        .w-editing .w-empty.w-img,
-        .w-ui-editor .w-empty.w-img
+        .w-editing .w-empty.w-img
         {
             background: #deecfb url("../img/icons/ic_img.svg") no-repeat center center;
         }
 
-        .w-editing .w-empty.w-text,
-        .w-ui-editor .w-empty.w-text
+        .w-editing .w-empty.w-text
         {
             background: #deecfb url("../img/icons/ic_text.svg") no-repeat center center;
         }
 
-        .w-editing .w-empty.w-movie,
-        .w-ui-editor .w-empty.w-movie
+        .w-editing .w-empty.w-movie
         {
             background: #deecfb url("../img/icons/ic_movie.svg") no-repeat center center;
         }
@@ -144,124 +141,37 @@ img[alt]{ border: 10px solid tomato; }
 
         <div id="editor"></div>
 
-        <div class="row">
-            <button type='button' id='add-row'>Nova Linha</button>
-        </div>
-
     </div>
-
-    <button id='remove-row' type='button' class="remove-row"></button>
-
-    <p style="position:fixed;bottom:0; right:0"><button id='view-json' type='button' class="view-json">view json</button></p>
-    ;
     
     <script src="js/wedit.js"></script>
     <!-- <script src="https://cdn.ckeditor.com/4.8.0/standard/ckeditor.js"></script> -->
     <script src="https://cdn.ckeditor.com/4.8.0/standard-all/ckeditor.js"></script>
 
     <script>
+        var regex = /\?revista=([^\ \n\&]+)/;
         var stage = new W.WEdit(document.getElementById("editor"), "empty");
-        var rowRemove = document.getElementById("remove-row");
-        var rows = [];
-        var currentRow = -1;
-        var timeoutToremove = null;
-        var rowEnterBind = null;
-        var rowLeaveBind = null;
-        var confirmBind = null;
+        stage.disable();
 
-        function hideRowButton()
+        var result = regex.exec(window.location.search);
+        if( result )
         {
-            rowRemove.style.display = "none";
+            var jsonStr = decodeURIComponent(result[1]);
+
+            console.log(jsonStr);
+
+            var rows = W.SerializationGrid.deserialize(jsonStr);
+            for( let i = 0 ; i < rows.length ; i++ )
+                stage.addChild(rows[i]);
         }
 
-        function showRowButton(target)
-        {
-            let bounds = target.getBoundingClientRect();
-            rowRemove.style.top = (bounds.top + document.documentElement.scrollTop)+"px";
-            rowRemove.style.left = (bounds.left + bounds.width - 10)+"px";
-            rowRemove.style.display = "block";
-
-            currentRow = -1;
-            for ( let i = 0 ; i < rows.length ; i++ )
-                if( rows[i].html === target ) currentRow = i;
-        }
-
-        function stopWaitRemoveRowButton()
-        {
-            clearTimeout(timeoutToremove);
-        }
-
-        function startWaitRemoveRowButton()
-        {
-            timeoutToremove = setTimeout(hideRowButton, 1);
-        }
-
-        function rowEnter(event)
-        {
-            stopWaitRemoveRowButton();
-
-            showRowButton(event.currentTarget);
-        }
-
-        function rowLeave(event)
-        {
-            startWaitRemoveRowButton();
-        }
-
-        function addRow()
-        {
-            let row = new W.RowLayout(); 
-            row.html.addEventListener("mouseenter", rowEnterBind);
-            row.html.addEventListener("mouseleave", rowLeaveBind);
-            stage.addChild(row);
-            rows.push(row);
-        }
-
-        function confirmRemoveRow(confirm)
-        {
-            stage.wconfirm.onSelect.off(confirmBind);
-
-            if( confirm && currentRow != -1 )
-            {
-                stage.removeChild(rows[currentRow]);
-                rows.splice(currentRow, 1);
-                currentRow = -1;
-                hideRowButton();
-            }
-        }
-
-        document.getElementById("add-row").addEventListener("click", addRow);
-        rowRemove.addEventListener("mouseenter", stopWaitRemoveRowButton);
-        rowRemove.addEventListener("mouseleave", startWaitRemoveRowButton);
-        rowRemove.addEventListener("click", function(){
-            stage.wconfirm.setLabel("Você tem certeza que deseja deletar a linha?");
-            stage.wconfirm.active();
-            stage.wconfirm.onSelect.on(confirmBind);
-        });
-
-
-        rowEnterBind = rowEnter.bind(this);
-        rowLeaveBind = rowLeave.bind(this);
-        confirmBind = confirmRemoveRow.bind(this);
-
-        for( let i = 0 ; i < 3 ; i++ ) addRow();
-        hideRowButton();
+        //var rows = W.SerializationGrid.deserialize(result);
         
 
-        document.getElementById("view-json").addEventListener("click", function()
-        {
-            let result = W.SerializationGrid.serialize(rows);
-
-            let test = {
-                "pages":[
-                    {
-                        "widgets": JSON.parse(result)
-                    }
-                ]
-            };
-            console.log(test);
-            //window.open("magazine-view.html?revista="+result);
-        });
+        // document.getElementById("view-json").addEventListener("click", function(){
+        //     let result = W.SerializationGrid.serialize(rows);
+        //     console.log(result);
+        //     console.log( W.SerializationGrid.deserialize(result) );
+        // });
     </script>
 </body>
 </html>

@@ -11,6 +11,7 @@
 . redimensionar thumbnail do youtube quando imagem for carregada.
 . criar sistema de pooling para reaproveitamento de templates criados fora da cena.
 . reaproveitar codigo no redimensionamento de colunas no RowLayout
+. resolver problema no IE quando comeca a carregar o widget de texto da janela de componentes
 
 
 
