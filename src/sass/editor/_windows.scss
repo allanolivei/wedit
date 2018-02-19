@@ -250,21 +250,51 @@ $ui-border-sep: #6c6c6c;
 
 .w-ui-toolbar
 {
-    background: rgb(93, 109, 255) url("../img/icons/ic_pencil_2.svg") no-repeat center center;
-    border: 1px solid rgb(73, 91, 250);
-    border-radius: 100%;
-    width: 30px;
-    height: 30px;
-    @include shadow(2px, 2px);
-    z-index: $z-gizmos-selection+10;
 
-    &:hover
+    &>*
     {
-        background-color: rgb(64, 82, 247);
+        display: flex;
+        -webkit-box-pack: end!important;
+        -ms-flex-pack: end!important;
+        justify-content: flex-end!important;
+    }
+
+    &>div>*
+    {
+        border-radius: 100%;
+        width: 20px;
+        height: 20px;
+        z-index: $z-gizmos-selection+10;
+        margin: -10px 2px 0 0;
+        background-size: 10px;
+
+        @include shadow(2px, 2px);
+    }
+
+    .edit
+    {
+        background: rgb(93, 109, 255) url("../img/icons/ic_pencil_2.svg") no-repeat center center;
+        border: 1px solid rgb(73, 91, 250);
+
+        &:hover { background-color: rgb(64, 82, 247); }
+    }
+
+    .delete
+    {
+        background: rgb(255, 93, 93) url("../img/icons/ic_delete.svg") no-repeat center center;
+        border: 1px solid rgb(250, 73, 73);
+
+        &:hover { background-color: rgb(247, 64, 64); }
     }
 }
 
 
+
+body .ui-grid-group
+{
+    background: #616161;
+    border: 1px solid grey;
+}
 
 body .ui-thumb
 {

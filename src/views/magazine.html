@@ -12,7 +12,17 @@
         .w-layout-row
         {
             margin-bottom: 20px;
-            min-height: 100px;
+            min-height: 100px;  
+        }
+
+        .w-layout-row:before
+        {
+            content: "";
+            position: absolute;
+            left: -50px;
+            right: -50px;
+            top: -10px;
+            bottom: -10px;
         }
 
         #add-row
@@ -38,6 +48,8 @@
         {
             background: #deecfb url("../img/icons/ic_text.svg") no-repeat center center;
         }
+
+        body .w-movie { position: relative !important; }
 
         .w-empty.w-movie
         {
@@ -72,6 +84,24 @@
         .magazine
         {
             margin-top: 20px;
+        }
+
+        #magazine
+        {
+            position: relative !important;
+        }
+
+        .remove-row
+        {
+            position:absolute;
+            /* left: 100%; */
+            /* top: 10px; */
+            background: rgb(250, 55, 55) url("img/icons/ic_delete.svg") no-repeat center center;
+            border: 1px solid red;
+            height: 24px;
+            width: 24px;
+            cursor: pointer;
+            /* margin-left: -10px; */
         }
 
         p { margin-bottom: 0; }
@@ -116,6 +146,8 @@ img[alt]{ border: 10px solid tomato; }
         </div>
 
     </div>
+
+    <button id='remove-row' type='button' class="remove-row"></button>
     
     <script src="js/wedit.js"></script>
     <!-- <script src="https://cdn.ckeditor.com/4.8.0/standard/ckeditor.js"></script> -->
@@ -123,16 +155,91 @@ img[alt]{ border: 10px solid tomato; }
 
     <script>
         var stage = new W.WEdit(document.getElementById("editor"), "empty");
+        var rowRemove = document.getElementById("remove-row");
+        var rows = [];
+        var currentRow = -1;
+        var timeoutToremove = null;
+        var rowEnterBind = null;
+        var rowLeaveBind = null;
+        var confirmBind = null;
 
-        stage.addChild(new W.RowLayout());
-        stage.addChild(new W.RowLayout());
-        stage.addChild(new W.RowLayout());
-
-        document.getElementById("add-row").addEventListener("click", function()
+        function hideRowButton()
         {
-            stage.addChild(new W.RowLayout());
+            rowRemove.style.display = "none";
+        }
+
+        function showRowButton(target)
+        {
+            let bounds = target.getBoundingClientRect();
+            rowRemove.style.top = (bounds.top + document.documentElement.scrollTop)+"px";
+            rowRemove.style.left = (bounds.left + bounds.width - 10)+"px";
+            rowRemove.style.display = "block";
+
+            currentRow = -1;
+            for ( let i = 0 ; i < rows.length ; i++ )
+                if( rows[i].html === target ) currentRow = i;
+        }
+
+        function stopWaitRemoveRowButton()
+        {
+            clearTimeout(timeoutToremove);
+        }
+
+        function startWaitRemoveRowButton()
+        {
+            timeoutToremove = setTimeout(hideRowButton, 1);
+        }
+
+        function rowEnter(event)
+        {
+            stopWaitRemoveRowButton();
+
+            showRowButton(event.currentTarget);
+        }
+
+        function rowLeave(event)
+        {
+            startWaitRemoveRowButton();
+        }
+
+        function addRow()
+        {
+            let row = new W.RowLayout(); 
+            row.html.addEventListener("mouseenter", rowEnterBind);
+            row.html.addEventListener("mouseleave", rowLeaveBind);
+            stage.addChild(row);
+            rows.push(row);
+        }
+
+        function confirmRemoveRow(confirm)
+        {
+            stage.wconfirm.onSelect.off(confirmBind);
+
+            if( confirm && currentRow != -1 )
+            {
+                stage.removeChild(rows[currentRow]);
+                rows.splice(currentRow, 1);
+                currentRow = -1;
+                hideRowButton();
+            }
+        }
+
+        document.getElementById("add-row").addEventListener("click", addRow);
+        rowRemove.addEventListener("mouseenter", stopWaitRemoveRowButton);
+        rowRemove.addEventListener("mouseleave", startWaitRemoveRowButton);
+        rowRemove.addEventListener("click", function(){
+            stage.wconfirm.setLabel("Você tem certeza que deseja deletar a linha?");
+            stage.wconfirm.active();
+            stage.wconfirm.onSelect.on(confirmBind);
         });
 
+
+        rowEnterBind = rowEnter.bind(this);
+        rowLeaveBind = rowLeave.bind(this);
+        confirmBind = confirmRemoveRow.bind(this);
+
+        for( let i = 0 ; i < 3 ; i++ ) addRow();
+        hideRowButton();
         
     </script>
 </body>

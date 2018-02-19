@@ -1,5 +1,3 @@
-. remover linha do grid
-. remover coluna do grid
 . grid fix: redimensionar colidir com irmaos e nao ultrapassar o tamanho do grid.
 . corrigir toolbar para aparecer e sumir na hora certa.
 . deserializar editor no modo simples da revista.
@@ -10,7 +8,7 @@
 
 
 
-
+. interfaces de janela receber eventos de resize e aplicar auto clamp para nao ficar fora da tela.
 . redimensionar thumbnail do youtube quando imagem for carregada.
 . criar sistema de pooling para reaproveitamento de templates criados fora da cena.
 

@@ -41,6 +41,9 @@ export class WEdit extends Widget
     public wimg:UI.UIWindowEditImage;
     public wmovie:UI.UIWindowEditMove;
     public wconfirm:UI.UIWindowConfirm;
+    // events delegate
+    private removeElementDelegate:any;
+
 
     constructor(element: HTMLElement, settings: any = "default", ...className: string[])
     {
@@ -115,6 +118,8 @@ export class WEdit extends Widget
         // w.addWidget("list", new UI.UISelect());
         // w.addWidget("list", new UI.UIInput("margin-top", "10", 84));
 
+        this.removeElementDelegate = this.confirmRemoveElement.bind(this);
+
 
 
 
@@ -136,7 +141,7 @@ export class WEdit extends Widget
         this.wmovie.onDeactive.on(deactiveWindowHandlerBinder);
 
 
-        this.wtemplates.active(99999);
+        this.wtemplates.active(window.innerWidth+0.5 + 470, 20);
 
         //this.wcomponent = new UI.UIWindow();
 
@@ -222,14 +227,26 @@ export class WEdit extends Widget
         }
         else
         {
+            this.wconfirm.setLabel("Você tem certeza que deseja deletar a coluna?");
             this.wconfirm.active();
-            this.wconfirm
+            this.wconfirm.onSelect.on(this.removeElementDelegate);
         }
     }
 
     private deactiveWindowHandler():void
     {
         this.selectionTransform.redraw();
+    }
+
+    private confirmRemoveElement( confirm:boolean ):void
+    {
+        this.wconfirm.onSelect.off(this.removeElementDelegate);
+        if( confirm && this.selection.hover.count() > 0 )
+        {
+            this.selection.hover.get(0).remove();
+            this.selection.hover.clear();
+            this.selection.select.clear();
+        }
     }
     // private onKeydownHandler(event:KeyboardEvent):void
     // {

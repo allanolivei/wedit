@@ -346,6 +346,14 @@ export namespace UI
             });
         }
 
+        public setWidgetText(key:string, value:string):void
+        {
+            if( key === "text" )
+                this.editor.setData(value);
+            else
+                super.setWidgetText(key, value);
+        }
+
         public getWidgetText(key:string):string
         {
             if( key === "text" )
@@ -468,16 +476,46 @@ export namespace UI
 
     export class UIWindowConfirm extends UIWindow
     {
+        private label:UILabel;
+
+        public readonly onSelect:any = new LiteEvent<boolean>();
+
         constructor()
         {
             super();
 
-            this.setStyles("width:400px;height:300px;");
+            this.setStyles("width:400px;height:122px;");
             this.setWidgetText("title", "Alerta!");
-            this.addWidget("list", new UI.UILabel("Confirme a operação."));
-            this.addWidget("list", new UI.UIButton("Cancelar"));
-            this.addWidget("list", new UI.UIButton("Confirmar"));
             this.activeBackground();
+
+            this.label = new UILabel("");
+            let cancel:UI.UIButton = new UIButton("Cancelar");
+            let confirm:UI.UIButton = new UIButton("Confirmar");
+
+            this.addWidget("list", this.label);
+            this.addWidget("list", cancel);
+            this.addWidget("list", confirm);
+
+            cancel.html.addEventListener("click", this.cancelHandler.bind(this));
+            confirm.html.addEventListener("click", this.confirmHandler.bind(this));
+        }
+
+        public setLabel(label:string):void
+        {
+            this.label.setWidgetText("label", label);
+        }
+
+        private cancelHandler():void
+        {
+            this.deactive();
+            this.onSelect.trigger(false);
+        }
+
+        private confirmHandler():void
+        {
+
+            this.deactive();
+            this.onSelect.trigger(true);
         }
     }
 

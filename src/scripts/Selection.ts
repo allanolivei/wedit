@@ -1384,6 +1384,10 @@ export class HoverToolbar extends RectView
     // private imgEditor:Window;
     // private movieEditor:Window;
 
+    private options:Display;
+    private delete:Display;
+    private edit:Display;
+
     constructor(selection:Selection)
     {
         super("w-ui-toolbar");
@@ -1395,7 +1399,7 @@ export class HoverToolbar extends RectView
 
         document.body.appendChild(this.html);
 
-        this.size(22, 22);
+        //this.size(22, 22);
         this.hide();
 
         this.html.style.cursor = "pointer";
@@ -1406,12 +1410,25 @@ export class HoverToolbar extends RectView
         // w.addWidget("list", new UI.UITemplate(this.selectionTransform));
         // document.body.appendChild(w.html);
 
-        this.html.addEventListener("mousedown", this.mousedown.bind(this));
+        this.options = new Display("div", "w-ui-toolbar-wrapper");
+        this.edit = new Display("div", "edit");
+        this.delete = new Display("div", "delete");
+
+        this.edit.setData("toolbar-type", "edit");
+        this.delete.setData("toolbar-type", "delete");
+
+        this.options.addChild(this.edit);
+        this.options.addChild(this.delete);
+        this.addChild(this.options);
+        //this.html.addEventListener("mousedown", this.mousedown.bind(this));
+        this.edit.html.addEventListener("mousedown", this.mousedown.bind(this));
+        this.delete.html.addEventListener("mousedown", this.mousedown.bind(this));
     }
 
     private mousedown(event:MouseEvent):void
     {
-        this.onSelect.trigger({name:"edit", target:this.target});
+        let buttonType:string = (event.currentTarget as HTMLElement).getAttribute("data-toolbar-type");
+        this.onSelect.trigger({name:buttonType, target:this.target});
     }
 
     private hoverChangeHandler( data:Selectable[] ):void
@@ -1420,7 +1437,9 @@ export class HoverToolbar extends RectView
         {
             this.target = data[0];
             let bounds:Rect = this.target.getBounds();
-            this.move(bounds.x + bounds.w - 26, bounds.y + 3);
+            //this.move(bounds.x + bounds.w - 26, bounds.y + 3);
+            this.move(bounds.x, bounds.y);
+            this.size(bounds.w, 22);
             this.show();
         }
         else

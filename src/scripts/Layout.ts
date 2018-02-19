@@ -2,6 +2,7 @@ import { Display } from "./Display";
 import { Rect, RectChange } from "./Utils";
 import { Selectable } from "./Selectable";
 import { DragEvent } from "./Event";
+import { RectView } from "./Selection";
 
 export abstract class Layout extends Selectable
 {
@@ -541,66 +542,193 @@ export class RowLayout extends Layout
 
     public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void
     {
-        // position in the window space
+        // bounds
         let rowBounds:Rect = super.getBounds();
         let bounds:Rect = event.elements[childIndex].parent.getBounds();
-        // position in the grid space
+        // layout (children of this)
+        let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        let index:number = this.children.indexOf(layout);
+        // data by grid (colums)
+        let startmouse_co:number = Math.floor( (event.startPointer.x - rowBounds.x)/this.columnSize );
+        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
         let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
         let obj_size:number = Math.round( bounds.w/this.columnSize );
-        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
-        // setup init of rect
+        let delta:number = mouse_co-startmouse_co;
+        // init setup rect
         let rect:Rect = event.ghost[childIndex].rect;
         rect.copy(bounds);
 
-        if( change.right !== 0 )
+        // right anchor
+        if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
         {
-            rect.w = (mouse_co-obj_co+1) * this.columnSize - this.offset*2;
+            // maximo que pode avancar
+            let max_delta:number = index < this.children.length-1 ?
+                this.getColumnByDisplay(this.children[index+1])-(obj_co+obj_size) :
+                12-(obj_co+obj_size);
+            // minimo que pode voltar
+            let min_delta:number = -obj_size+1;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            rect.w = (obj_size+delta) * this.columnSize - this.offset*2;
         }
-        else if( change.left !== 0 )
+        // left anchor
+        else
         {
-            rect.x = rowBounds.x + mouse_co * this.columnSize + this.offset;
-            rect.w = (obj_size + (obj_co-mouse_co)) * this.columnSize - this.offset*2;
+            // maximo que pode avancar
+            let max_delta:number = obj_size-1;
+            // minimo que pode voltar
+            let min_delta:number = index > 0 ?
+                this.getRightByDisplay(this.children[index-1])-obj_co:
+                -obj_co;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            rect.x = rowBounds.x + (obj_co+delta) * this.columnSize + this.offset;
+            rect.w = (obj_size-delta) * this.columnSize - this.offset * 2;
         }
+
+        // // position in the window space
+        // let rowBounds:Rect = super.getBounds();
+        // let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        // let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        // // layout (children of this)
+        // let index:number = this.children.indexOf(layout);
+        // // position in the grid space
+        // let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        // let obj_size:number = Math.round( bounds.w/this.columnSize );
+        // // calcule mouse in grid
+        // let min_mouse_co:number = index > 0 ? this.getRightByDisplay(this.children[index-1]) : 0;
+        // let max_mouse_co:number = index < this.children.length-1 ? this.getColumnByDisplay(this.children[index+1])-1 : 11;
+        // let mouse_co:number =
+        //     Math.max(min_mouse_co, Math.min(max_mouse_co,
+        //     Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize ) ));
+        // // setup init of rect
+        // let rect:Rect = event.ghost[childIndex].rect;
+        // rect.copy(bounds);
+
+        // // right anchor
+        // if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
+        // {
+        //     if( mouse_co < obj_co ) mouse_co = obj_co;
+
+        //     rect.w = (mouse_co-obj_co+1) * this.columnSize - this.offset*2;
+        // }
+        // // left anchor
+        // else
+        // {
+        //     if( mouse_co >= obj_co+obj_size ) mouse_co = obj_co+obj_size-1;
+
+        //     rect.x = rowBounds.x + mouse_co * this.columnSize + this.offset;
+        //     rect.w = (obj_size + (obj_co-mouse_co)) * this.columnSize - this.offset*2;
+        // }
 
         event.ghost[childIndex].draw();
     }
 
     public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void
     {
-        // position in the window space
+        // bounds
         let rowBounds:Rect = super.getBounds();
+        let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        // layout (children of this)
         let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
-        let bounds:Rect = layout.getBounds();
-        // position in the grid space
+        let index:number = this.children.indexOf(layout);
+        // data by grid (colums)
+        let startmouse_co:number = Math.floor( (event.startPointer.x - rowBounds.x)/this.columnSize );
+        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
         let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
         let obj_size:number = Math.round( bounds.w/this.columnSize );
-        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
-        // layout (children of this)
-        let index:number = this.children.indexOf(layout);
+        let delta:number = mouse_co-startmouse_co;
+        // init setup rect
+        let rect:Rect = event.ghost[childIndex].rect;
+        rect.copy(bounds);
 
-        if( change.right !== 0 )
+        // right anchor
+        if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
         {
-            let new_size:number = mouse_co-obj_co+1;
-            this.setSize(layout, new_size);
+            // maximo que pode avancar
+            let max_delta:number = index < this.children.length-1 ?
+                this.getColumnByDisplay(this.children[index+1])-(obj_co+obj_size) :
+                12-(obj_co+obj_size);
+            // minimo que pode voltar
+            let min_delta:number = -obj_size+1;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            this.setSize(layout, obj_size+delta);
             if( index < this.children.length-1 )
             {
                 this.setOffset(
                     this.children[index+1],
-                    this.getOffsetByDisplay(this.children[index+1]) + (obj_size-new_size));
+                    this.getOffsetByDisplay(this.children[index+1]) - delta);
             }
         }
-        else if( change.left !== 0 )
+        // left anchor
+        else
         {
+            // maximo que pode avancar
+            let max_delta:number = obj_size-1;
+            // minimo que pode voltar
+            let min_delta:number = index > 0 ?
+                this.getRightByDisplay(this.children[index-1])-obj_co:
+                -obj_co;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
             if( index > 0 )
-                this.setOffset(
-                    layout,
-                    mouse_co-
-                    (this.getColumnByDisplay(this.children[index-1])+this.getSizeByDisplay(this.children[index-1])));
+                this.setOffset(layout, (obj_co+delta)-this.getRightByDisplay(this.children[index-1]));
             else
-                this.setOffset(layout, mouse_co);
-
-            this.setSize(layout, obj_size + (obj_co-mouse_co));
+                this.setOffset(layout, obj_co+delta);
+            this.setSize(layout, obj_size-delta);
         }
+        // position in the window space
+        // let rowBounds:Rect = super.getBounds();
+        // let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        // let bounds:Rect = layout.getBounds();
+        // // layout (children of this)
+        // let index:number = this.children.indexOf(layout);
+        // // obj info in grid space
+        // let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        // let obj_size:number = Math.round( bounds.w/this.columnSize );
+        // // calcule mouse in grid
+        // let min_mouse_co:number = index > 0 ? this.getRightByDisplay(this.children[index-1]) : 0;
+        // let max_mouse_co:number = index < this.children.length-1 ? this.getColumnByDisplay(this.children[index+1])-1 : 11;
+        // let mouse_co:number =
+        //     Math.max(min_mouse_co, Math.min(max_mouse_co,
+        //     Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize ) ));
+
+        // // right anchor
+        // if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
+        // {
+        //     if( mouse_co < obj_co ) mouse_co = obj_co;
+
+        //     let new_size:number = mouse_co-obj_co+1;
+        //     this.setSize(layout, new_size);
+        //     if( index < this.children.length-1 )
+        //     {
+        //         this.setOffset(
+        //             this.children[index+1],
+        //             this.getOffsetByDisplay(this.children[index+1]) + (obj_size-new_size));
+        //     }
+        // }
+        // // left anchor
+        // else
+        // {
+        //     if( mouse_co >= obj_co+obj_size ) mouse_co = obj_co+obj_size-1;
+
+        //     //console.log(mouse_co, obj_co, obj_size);
+
+        //     if( index > 0 )
+        //         this.setOffset(
+        //             layout,
+        //             mouse_co-
+        //             (this.getColumnByDisplay(this.children[index-1])+this.getSizeByDisplay(this.children[index-1])));
+        //     else
+        //         this.setOffset(layout, mouse_co);
+
+        //     this.setSize(layout, obj_size + (obj_co-mouse_co));
+        // }
     }
 
     public enterDrag(event: DragEvent): void
@@ -634,7 +762,12 @@ export class RowLayout extends Layout
         // this.updateDrag(event);
     }
 
-    public exitDrag(event: DragEvent): void {/**/}
+    public exitDrag(event: DragEvent): void {/**/
+        //TEMPORARIO////////////////////////////////////////////////////////////////////
+        for( let i:number = 0 ; i < event.ghost.length ; i++ )
+            event.ghost[i].allowed( true );
+        ////////////////////////////////////////////////////////////////////////////////
+    }
 
     public updateDrag(event: DragEvent): void
     {
@@ -659,6 +792,11 @@ export class RowLayout extends Layout
 
     public dropDrag(event: DragEvent): void
     {
+        // CHAMADO PARA MODIFICAR O ESTADO ALLOWED DOS GHOSTS
+        //TEMPORARIO////////////////////////////////////////////////////////////////////
+        this.exitDrag(event);
+        ////////////////////////////////////////////////////////////////////////////////
+
         if ( this.hasCollision(this.co, this.columns, event.elements) ) return;
 
         // remove all dragged elements - this fix drag children
@@ -756,6 +894,11 @@ export class RowLayout extends Layout
         }
 
         return amount;
+    }
+
+    private getRightByDisplay(display:Display):number
+    {
+        return this.getColumnByDisplay(display) + this.getSizeByDisplay(display);
     }
 
     private getOffsetByDisplay(display:Display):number
