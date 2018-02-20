@@ -53,8 +53,14 @@ export class SerializationGrid
             // find column
             let column: VerticalLayout = null;
             for (let c: number = 0 ; c < row.children.length ; c++ )
-                if (row.getColumnByDisplay(row.children[i]) === wdata.column )
-                    column = row.children[i] as VerticalLayout;
+            {
+                if(  i===5 )
+                {
+                    console.log(row.getColumnByDisplay(row.children[c]), wdata.column, c);
+                }
+                if (row.getColumnByDisplay(row.children[c]) === wdata.column )
+                    column = row.children[c] as VerticalLayout;
+            }
 
             if (column)
                 row.setSize(column, wdata.size);

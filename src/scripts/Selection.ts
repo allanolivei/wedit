@@ -591,6 +591,9 @@ export class SelectionDragger extends RectView
             // console.log(this.IsUI(elem));
         // }
         let elem: HTMLElement = event.target as HTMLElement;
+
+        if( this.IsToolbar(elem) ) return;
+
         if ( !this.IsUI(elem) ) this.updateHover(event.pageX, event.pageY);
         else this.selection.hover.clear();
     }
@@ -643,8 +646,10 @@ export class SelectionDragger extends RectView
         }
     }
 
-    private IsEditor( elem:HTMLElement ):boolean
+    // janelas e gizmos
+    private IsToolbar(elem: HTMLElement): boolean
     {
+        /*
         let root:HTMLElement = elem;
         while( root != null )
         {
@@ -652,14 +657,49 @@ export class SelectionDragger extends RectView
             root = root.parentElement;
         }
         return false;
+        */
+        return this.findClassesInParent(elem, "w-ui-toolbar");
     }
 
-    private IsUI( elem:HTMLElement ):boolean
+    // janelas e gizmos
+    private IsEditor( elem:HTMLElement ):boolean
     {
+        /*
         let root:HTMLElement = elem;
         while( root != null )
         {
-            if ( root.className.indexOf("w-ui-editor") !== -1 ) return true;
+            if ( root.className.indexOf("w-ui-gizmos") !== -1 || root.className.indexOf("w-ui-editor") !== -1 ) return true;
+            root = root.parentElement;
+        }
+        return false;
+        */
+        return this.findClassesInParent(elem, "w-ui-editor w-ui-gizmos");
+    }
+
+    // janelas
+    private IsUI( elem:HTMLElement ):boolean
+    {
+        // let root:HTMLElement = elem;
+        // while( root != null )
+        // {
+        //     if ( root.className.indexOf("w-ui-editor") !== -1 ) return true;
+        //     root = root.parentElement;
+        // }
+        // return false;
+        return this.findClassesInParent(elem, "w-ui-editor");
+    }
+
+    private findClassesInParent(elem: HTMLElement, classesName: string): boolean
+    {
+        let root: HTMLElement = elem;
+        let classes: string[] = classesName.split(' ');
+        while (root != null)
+        {
+            let i: number = 0;
+            for (; i < classes.length; i++)
+                if (root.className.indexOf(classes[i]) !== -1) break;
+            if (i < classes.length)
+                return true;
             root = root.parentElement;
         }
         return false;

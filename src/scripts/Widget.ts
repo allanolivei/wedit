@@ -456,6 +456,11 @@ export class Widget extends Selectable
         if ( this.getContainerType(key) !== "text" )
             throw "Widget :: Não foi possível modificar o conteudo de (texto) do container " + key;
 
+        if (value !== "")
+            this.containers[key].display.removeClass("w-empty");
+        else
+            this.containers[key].display.addClass("w-empty");
+
         this.containers[key].display.content = value;
     }
 

@@ -250,6 +250,8 @@ $ui-border-sep: #6c6c6c;
 
 .w-ui-toolbar
 {
+    position: absolute;
+    z-index: 99999;
 
     &>*
     {

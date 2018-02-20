@@ -221,6 +221,8 @@ img[alt]{ border: 10px solid tomato; }
         {
             stage.wconfirm.onSelect.off(confirmBind);
 
+            console.log("REMOVE ROW: ", currentRow, rows);
+
             if( confirm && currentRow != -1 )
             {
                 stage.removeChild(rows[currentRow]);
@@ -244,8 +246,7 @@ img[alt]{ border: 10px solid tomato; }
         rowLeaveBind = rowLeave.bind(this);
         confirmBind = confirmRemoveRow.bind(this);
 
-        for( let i = 0 ; i < 3 ; i++ ) addRow();
-        hideRowButton();
+       
         
 
         document.getElementById("view-json").addEventListener("click", function()
@@ -259,9 +260,35 @@ img[alt]{ border: 10px solid tomato; }
                     }
                 ]
             };
-            console.log(test);
+            alert(JSON.stringify(test));
             //window.open("magazine-view.html?revista="+result);
         });
+
+
+
+        //for (let i = 0; i < 3; i++) 
+        //    addRow();
+        hideRowButton();
+        
+        function Load(data)
+        {
+            rows = W.SerializationGrid.deserialize(data);
+            
+            for ( let i = 0; i < rows.length; i++ )
+                stage.addChild(rows[i]);
+
+            for( let i = 0 ; i < rows.length ; i++ )
+            {
+                rows[i].html.addEventListener("mouseenter", rowEnterBind);
+                rows[i].html.addEventListener("mouseleave", rowLeaveBind);
+            }
+        }
+
+        
+        data = [{ "index": 0, "column": 0, "size": 7, "row": 0, "type": "text", "content": "<div style=\"font-size:30px;font-weight:bold;\">Suspendisse enim magna</div>\n\n<p>&nbsp;</p>\n\n<p>Etiam eu volutpat enim. Suspendisse enim magna, scelerisque vitae faucibus at, pulvinar ut tellus. Nullam ac risus nec ipsum pulvinar sollicitudin. Proin et enim non justo <span style=\"color:#c0392b\">mollis </span>tempus. Aenean eu iaculis dolor. Mauris ac augue justo. Sed nunc turpis, vehicula quis est non, varius accumsan diam.</p>\n\n<p>Pellentesque eu rhoncus purus. In a turpis pellentesque, commodo ipsum et, condimentum sapien. Sed vulputate pharetra leo eget pharetra. Aenean eget nisl sed neque vulputate porta. Phasellus in porta sapien.</p>\n\n<p>&nbsp;</p>\n\n<p><strong>Phasellus </strong>nec nisl eget risus rhoncus dictum sed ac justo. Etiam mollis mauris ut maximus interdum. Nullam pulvinar, nisi non dignissim placerat, mauris <span style=\"color:#c0392b\">lorem laoreet purus, eget suscipit quam magna non sapien</span>. Donec sed tellus augue. Vestibulum in nisl quis arcu pulvinar ultricies a sit amet urna. Curabitur nec tincidunt purus. Maecenas ornare nunc ac urna pellentesque, sed pharetra nisl tristique.</p>\n" }, { "index": 0, "column": 7, "size": 5, "row": 0, "type": "img", "content": "img/examples/example3.jpg" }, { "index": 0, "column": 2, "size": 8, "row": 1, "type": "movie", "content": "https://img.youtube.com/vi/5LooCGIl-Vw/0.jpg" }, { "index": 0, "column": 0, "size": 5, "row": 2, "type": "text", "content": "<div style=\"font-size:20px; font-weight:bold\">Quisque non malesuada ipsum.</div>\n\n<p>ac vehicula ligula. Aenean maximus nunc dolor, a ultricies sapien sagittis quis. Quisque nec justo dictum, lacinia nisl nec, aliquam ante. Curabitur nec libero orci. Vestibulum auctor velit nunc, quis luctus magna commodo at. Cras posuere dapibus erat, sed eleifend ante aliquam at. Sed egestas vehicula tellus, id sagittis augue sagittis eu.<u> Aenean vitae sagittis erat, non accumsan orci</u>. Fusce auctor urna at ullamcorper pulvinar. Fusce sed libero eget massa fermentum porttitor vulputate eget orci. Nunc enim diam, placerat sit amet feugiat sed, consectetur eget enim.</p>\n\n<p>&nbsp;</p>\n\n<p><span style=\"background-color:#dddddd\">Duis quis vulputate leo. In maximus sed arcu id rutrum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam consectetur enim tincidunt sagittis semper.</span></p>\n\n<p>&nbsp;</p>\n\n<div style=\"font-size:20px; font-weight:bold\">Quisque sit amet leo non libero ultricies viverra in in diam.</div>\n\n<p>Aenean in dolor tellus. Phasellus efficitur, orci ac interdum placerat, libero tellus laoreet arcu, eu congue ipsum tortor vitae arcu. Donec dapibus ex et nisi pellentesque auctor id eu ipsum. Pellentesque commodo et augue sit amet gravida. <em>Phasellus malesuada ut nisl vitae sollicitudin</em>. Proin molestie augue vel nisl convallis venenatis. Sed eleifend erat vel massa facilisis, ut tempor felis ultricies. Donec luctus lacinia ante sit amet congue. Praesent molestie bibendum justo eget pharetra. Vestibulum hendrerit congue rutrum.</p>\n\n<p>&nbsp;</p>\n\n<p><span style=\"color:#c0392b\">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed finibus ipsum ac nulla maximus faucibus. Sed finibus odio eu libero sagittis, et blandit sem consequat.</span> Curabitur posuere porttitor commodo. Aliquam eu sagittis leo. Duis ultrices ex a ante tempus posuere. Fusce tristique justo id est varius, ut molestie diam pellentesque. Aliquam convallis quam vel urna iaculis eleifend.</p>\n\n<p>&nbsp;</p>\n\n<p style=\"text-align: center;\">Vestibulum tempor egestas mi sit amet sagittis.</p>\n\n<p style=\"text-align: center;\">Mauris mattis tortor sit amet nunc pellentesque scelerisque.</p>\n\n<p style=\"text-align: center;\">Aenean non neque eu mauris rhoncus bibendum eget at leo.&nbsp;</p>\n" }, { "index": 0, "column": 5, "size": 7, "row": 2, "type": "img", "content": "img/examples/example8.jpg" }, { "index": 1, "column": 5, "size": 7, "row": 2, "type": "img", "content": "img/examples/example9.jpg" }];
+        Load(JSON.stringify(data));
+        
+        
     </script>
 </body>
 </html>
