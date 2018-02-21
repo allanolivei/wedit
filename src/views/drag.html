@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/w.main.css">
+    <link rel="stylesheet" href="css/w.edit.css">
+</head>
+<body>
+
+    <script src="js/wedit.js"></script>
+    <script>
+        //var stage = new W.WEdit(document.body);
+        //stage.addWidget("main", { "template":"text", "data":{"content":"Ola wedit"} });
+
+        var stage = new W.WEdit(document.body);
+        //stage.disable();
+
+
+        W.WEdit.addTemplate("box", 
+            "<div id='{{id}}'></div>"
+        );
+
+        var main = stage.addWidget("list",{
+            "template": "relative-layout",
+            "data":{
+                "style":"height:1000px;",
+                "layout-style":"height:1000px;"
+            }
+        });
+        main.setEnable(false);
+
+
+        var relative = main.addWidget("list",{
+            "template": "relative-layout",
+            "data":{
+                "style":"border: 1px solid red;position:absolute;left:400px;top:50px;",
+                "layout-style":"position:relative;width:400px;height:400px;"
+            }
+        });
+        var vertical1 = main.addWidget("list", {
+            "template": "vertical-layout",
+            "data": {
+                "style": "border: 1px solid blue;position:absolute;left:900px;top:50px;",
+                "layout-style": "position:relative;width:400px;height:400px;"
+            }
+        });
+        var vertical2 = main.addWidget("list", {
+            "template": "vertical-layout",
+            "data": {
+                "style": "border: 1px solid blue;position:absolute;left:0;top:300px;",
+                "layout-style": "position:relative;width:400px;height:400px;"
+            }
+        });
+        var row = main.addWidget("list", {
+            "template": "row-layout",
+            "data": {
+                "style": "border: 1px solid green;position:absolute;left:500px;top:500px;",
+                "layout-style": "position:relative;width:900px;height:400px;"
+            }
+        });
+
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:50px;top:50px;background:red;position:absolute; width:100px; height:100px;" }
+        });
+
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:150px;top:70px;background:blue;position:absolute; width:100px; height:100px;" }
+        });
+
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:200px;top:250px;background:purple;position:absolute; width:100px; height:100px;" }
+        });
+
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:250px;top:200px;background:brown;position:absolute; width:100px; height:100px;" }
+        });
+
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:10px;top:200px;background:yellow;position:absolute; width:100px; height:100px;" }
+        });
+        
+        main.addWidget("list",
+        {
+            "template":"box",
+            "data":{ "style":"left:250px;top:100px;background:green;position:absolute; width:100px; height:100px;" }
+        });
+        
+
+        // widget = stage.addWidget("container", {
+        //     "template": "lista"
+        // });
+
+        // stage.addWidget("container", 
+        // { 
+        //     "template": "text",
+        //     "data": { 
+        //         "content": "Corpo de texto",
+        //         "style": {
+        //             "default":"background:red;border:1px solid blue;margin-top:20px;"
+        //         } 
+        //     }
+        // });
+
+        
+
+
+
+
+        // for( let i = 0 ; i < 20 ; i++ )
+        //     stage.addWidget("main", {"template": "text", "data":{"content": "linha "+(i+1)}});
+        //stage.addChild(new W.Display("header", "test"));
+    </script>
+</body>
+</html>

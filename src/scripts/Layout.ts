@@ -569,6 +569,7 @@ export class RowLayout extends Layout
         // bounds
         let rowBounds:Rect = super.getBounds();
         let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        this.columnSize = rowBounds.width/12;
         // layout (children of this)
         let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
         let index:number = this.children.indexOf(layout);
@@ -655,6 +656,7 @@ export class RowLayout extends Layout
         // bounds
         let rowBounds:Rect = super.getBounds();
         let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        this.columnSize = rowBounds.width/12;
         // layout (children of this)
         let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
         let index:number = this.children.indexOf(layout);

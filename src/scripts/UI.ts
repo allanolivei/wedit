@@ -163,8 +163,10 @@ export namespace UI
             this.bounds.x = Math.max(0, Math.min( this.bounds.x, window.innerWidth-this.bounds.width ));
             this.bounds.y = Math.max(0, Math.min( this.bounds.y, window.innerHeight-this.bounds.height ));
 
-            this.setStyle("left", this.bounds.x + "px");
-            this.setStyle("top", this.bounds.y + "px");
+            //this.setStyle("left", this.bounds.x + "px");
+            //this.setStyle("top", this.bounds.y + "px");
+            this.html.style.left = this.bounds.x + "px";
+            this.html.style.top = this.bounds.y + "px";
         }
 
         private removeBackground():void

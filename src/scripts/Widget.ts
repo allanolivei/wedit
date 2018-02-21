@@ -76,11 +76,11 @@ export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html:
-            "<div class='w-text w-empty'>{{text}}</div>" },
+            "<div class='w-text'>{{text}}</div>" },
         "img": { html:
-            "<div class='w-img w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+            "<div class='w-img'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
         "movie": { html:
-            "<div class='w-movie w-empty'><img data-style='{{img-style}}' class='img-fluid' src='{{movie}}' alt='{{alt}}' /></div>" },
+            "<div class='w-movie'><img data-style='{{img-style}}' class='img-fluid' src='{{movie}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
@@ -456,11 +456,6 @@ export class Widget extends Selectable
         if ( this.getContainerType(key) !== "text" )
             throw "Widget :: Não foi possível modificar o conteudo de (texto) do container " + key;
 
-        if (value !== "")
-            this.containers[key].display.removeClass("w-empty");
-        else
-            this.containers[key].display.addClass("w-empty");
-
         this.containers[key].display.content = value;
     }
 
@@ -485,23 +480,27 @@ export class Widget extends Selectable
         {
             let key: string = xmlNode.attributes[i].nodeName;
 
-            if (key === "class")
-                display.addClasses(xmlNode.attributes[i].nodeValue);
-            else if (key === "style")
-                display.html.setAttribute(key, xmlNode.attributes[i].nodeValue + display.html.getAttribute("style"));
-
 
             let containerName: string = this.getContainerName(xmlNode.attributes[i].nodeValue);
 
             if ( containerName !== "" )
+            {
                 this.createContainer(
                     containerName,
                     key === "data-style" ? "style" : key==="data-class" ? "class" : "attrib",
                     display,
                     key);
-            //this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
+                //this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
+            }
             else
-                display.html.setAttribute(key, xmlNode.attributes[i].nodeValue);
+            {
+                if (key === "class")
+                    display.addClasses(xmlNode.attributes[i].nodeValue);
+                else if (key === "style")
+                    display.html.setAttribute(key, xmlNode.attributes[i].nodeValue + display.html.getAttribute("style"));
+                else
+                    display.html.setAttribute(key, xmlNode.attributes[i].nodeValue);
+            }
         }
 
         // element of content

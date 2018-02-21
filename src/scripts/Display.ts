@@ -46,7 +46,6 @@ export class Display
     public static lastIDCount:number = 0;
 
 
-    public id:string = "";
     public html: HTMLElement;
     public parent: Display;
     public children: Display[] = [];
@@ -55,6 +54,8 @@ export class Display
 
     protected classesName: string[];
     protected rect: Rect;
+
+    private _id?:string;
 
     constructor(tagName: any = "div", ...classesName: string[])
     {
@@ -108,6 +109,19 @@ export class Display
     set content(value: string)
     {
         this.html.innerHTML = value;
+    }
+
+    set id(value:string)
+    {
+        this._id = value;
+        this.html.setAttribute("id", value);
+        for( let key in this.sheetRules )
+            this.sheetRules[key].selector = value;
+    }
+
+    get id():string
+    {
+        return this._id;
     }
 
     public getTagName():string
@@ -193,7 +207,8 @@ export class Display
     {
         this.rect.copyClientRect(this.html.getBoundingClientRect());
         //this.rect.y += window.scrollY;
-        this.rect.y += document.documentElement.scrollTop;
+        //this.rect.y += document.documentElement.scrollTop;
+        this.rect.y += window.scrollY || window.pageYOffset || document.body.scrollTop + (document.documentElement && document.documentElement.scrollTop || 0);
         return this.rect;
     }
 
@@ -374,11 +389,8 @@ export class Display
 
     private getSheetRules(media:string="default"):SheetRules
     {
-        if( this.id === "" )
-        {
+        if( !this.id )
             this.id = "w" + (Display.lastIDCount++);
-            this.setAttrib("id", this.id);
-        }
 
         if ( !(media in this.sheetRules) )
             this.sheetRules[media] = new SheetRules("#" + this.id, media);
