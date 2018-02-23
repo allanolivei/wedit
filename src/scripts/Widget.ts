@@ -299,8 +299,11 @@ export class Widget extends Selectable
                     this.setWidgetAttrib(key, item);
                     break;
                 case "list":
-                    for (let i: number = 0; i < item.length; i++)
-                        this.addWidget(key, item[i]);
+                    if (typeof item === "string")
+                        this.addWidget(key, { "template": "text", "data": { "text": item } });
+                    else
+                        for (let i: number = 0; i < item.length; i++)
+                            this.addWidget(key, item[i]);
                     break;
                 default:
                     this.setWidgetText(key, item);
