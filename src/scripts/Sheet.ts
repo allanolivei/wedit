@@ -16,9 +16,20 @@ default 0 >=
 
 class Sheet
 {
+    private static sizes: { [media: string]: string } =
+    {
+        "xs": "575px", // <
+        "sm": "575px", // >=
+        "md": "767px", // >=
+        "lg": "991px", // >=
+        "xl": "1199px",// >=
+    };
+
     private static sheets: { [media: string]: Sheet } = {};
     public static getSheet(media: string): Sheet
     {
+        if (typeof Sheet.sizes[media] !== 'undefined') media = Sheet.sizes[media];
+
         if ( !(media in Sheet.sheets) )
             Sheet.sheets[media] = new Sheet(media);
         return Sheet.sheets[media];
@@ -30,6 +41,8 @@ class Sheet
 
     constructor( media:string = "default" )
     {
+        if (typeof Sheet.sizes[media] !== 'undefined') media = Sheet.sizes[media];
+
         this.media = media;
         this.priority = media === "default" ? 9999 : parseInt(media.replace("px", ""), 10);
 
