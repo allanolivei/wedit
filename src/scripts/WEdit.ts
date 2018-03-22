@@ -192,6 +192,8 @@ export class WEdit extends Widget
         this.selectionDragger.disable();
         this.selectionTransform.disable();
 
+        this.wtemplates.html.remove();
+
         this.removeClass("w-editing");
     }
 
