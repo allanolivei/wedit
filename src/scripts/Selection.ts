@@ -4,6 +4,7 @@ import { Rect, RectChange, Vec2 } from "./Utils";
 import { Display } from "./Display";
 import { Layout } from "./Layout";
 import { DragEvent } from "./Event";
+import { Widget } from "./Widget";
 
 
 export class SelectableGroup
@@ -673,7 +674,7 @@ export class SelectionDragger extends RectView
         }
         return false;
         */
-        return this.findClassesInParent(elem, "w-ui-editor w-ui-gizmos");
+        return this.findClassesInParent(elem, "w-ui-toolbar w-ui-editor w-ui-gizmos");
     }
 
     // janelas
@@ -1536,13 +1537,28 @@ export class HoverToolbar extends RectView
 
     private mousedown(event:MouseEvent):void
     {
+        if( event.target instanceof HTMLInputElement ) return;
+
         let buttonType:string = (event.currentTarget as HTMLElement).getAttribute("data-toolbar-type");
         this.onSelect.trigger({name:buttonType, target:this.target});
     }
 
+    private tempInputFile:InputImage = new InputImage();
+
     private hoverChangeHandler( data:Selectable[] ):void
     {
         this.target = data.length > 0 ? data[0] : null;
+
+        this.tempInputFile.input.remove();
+
+        if( data.length > 0 && (data[0] as Widget).templateName === "img" )
+        {
+            if( this.tempInputFile.isUsed )
+                this.tempInputFile = new InputImage();
+
+            this.tempInputFile.widget = data[0] as Widget;
+            this.edit.html.appendChild(this.tempInputFile.input);
+        }
 
         // if( data.length > 0 )
         // {
@@ -1580,6 +1596,69 @@ export class HoverToolbar extends RectView
         {
             this.hide();
         }
+    }
+
+
+
+
+    // private createInputFile():void
+    // {
+    //     this.tempInputFile = document.createElement("input");
+    //     this.tempInputFile.setAttribute("type", "file");
+    //     this.tempInputFile.setAttribute("name", "image");
+    //     this.tempInputFile.setAttribute("accept", "image/*");
+    //     this.tempInputFile.setAttribute("data-type-type", "edit");
+    //     this.tempInputFile.addEventListener("mousedown", (event:Event)=>event.preventDefault);
+    //     this.tempInputFile.addEventListener("change", this.inputChangeHandler.bind(this));
+    // }
+
+    // private inputChangeHandler(event:Event):void
+    // {
+    //     event.preventDefault();
+    // }
+
+
+}
+
+
+class InputImage
+{
+    public widget:Widget;
+    public input:HTMLInputElement;
+    public isUsed:boolean = false;
+
+    constructor()
+    {
+        this.input = document.createElement("input");
+        this.input.setAttribute("type", "file");
+        this.input.setAttribute("name", "image");
+        this.input.setAttribute("accept", "image/*");
+        this.input.addEventListener("change", this.inputChangeHandler.bind(this));
+    }
+
+    private inputChangeHandler(event:Event):void
+    {
+        event.preventDefault();
+        
+        if( this.input.files.length > 0 )
+        {
+            let file:FileReader = new FileReader();
+            file.onload = this.fileReaderLoadComplete.bind(this);
+            file.onerror = this.fileReaderLoadError.bind(this);
+            file.readAsDataURL(this.input.files[0]);
+            this.isUsed = true;
+        }
+    }
+
+    private fileReaderLoadComplete(event:ProgressEvent):void
+    {
+        let result = (event.currentTarget as FileReader).result;
+        this.widget.setWidgetAttrib("img", result);
+    }
+
+    private fileReaderLoadError(event:ErrorEvent): void
+    {
+        alert("Não foi possível carregar a imagem. Tente novamente.")
     }
 }
 

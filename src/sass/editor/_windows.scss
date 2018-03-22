@@ -251,7 +251,7 @@ $ui-border-sep: #6c6c6c;
 .w-ui-toolbar
 {
     position: absolute;
-    z-index: 99999;
+    z-index: 999;
 
     &>*
     {
@@ -277,8 +277,20 @@ $ui-border-sep: #6c6c6c;
     {
         background: rgb(93, 109, 255) url("../img/icons/ic_pencil_2.svg") no-repeat center center;
         border: 1px solid rgb(73, 91, 250);
+        position: relative;
 
         &:hover { background-color: rgb(64, 82, 247); }
+
+        &>input
+        {
+            cursor: pointer;
+            position: absolute;
+            top: -2px;
+            bottom: -2px;
+            left: -2px;
+            right: -2px;
+            opacity: 0;
+        }
     }
 
     .delete

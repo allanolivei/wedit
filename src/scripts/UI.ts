@@ -640,7 +640,7 @@ export namespace UI
                     "template": "UI-THUMB",
                     "data": { "img": this.uploader.images[this.amount] },
                 });
-                widget.html.querySelector("img").setAttribute("data-filename", this.uploader.files[this.amount].name );
+                // widget.html.querySelector("img").setAttribute("data-filename", this.uploader.files[this.amount].name );
                 widget.html.addEventListener("click", confirmHandlerBinder);
 
                 this.group.addWidget("list", widget);
@@ -652,7 +652,7 @@ export namespace UI
             let img:HTMLElement = (event.currentTarget as HTMLElement).childNodes[0] as HTMLElement;
             let content:string = img.getAttribute("src");
             this.target.setWidgetAttrib("img", content);
-            this.target.setData("filename", img.getAttribute("data-filename"));
+            // this.target.setData("filename", img.getAttribute("data-filename"));
 
             if( content === "" )
                 this.target.addClass("w-empty");

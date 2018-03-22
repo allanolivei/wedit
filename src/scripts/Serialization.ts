@@ -29,8 +29,8 @@ export class SerializationGrid
                         "row": l,
                         "type": widget.templateName,
                         "content":
-                            widget.templateName === 'img' ?
-                            widget.getData('filename') :
+                            // widget.templateName === 'img' ?
+                            // widget.getData('filename') :
                             widget.getContainerData(widget.templateName) });
                 }
             }
