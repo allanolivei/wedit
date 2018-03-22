@@ -40,9 +40,9 @@ export class SerializationGrid
         return widgets;
     }
 
-    public static deserialize( dataStr:string ):RowLayout[]
+    public static deserialize( dataStr:any ):RowLayout[]
     {
-        let widgetsData:any = JSON.parse(dataStr);
+        let widgetsData:any = typeof(dataStr) === "string" ? JSON.parse(dataStr) : dataStr;
         let rows:RowLayout[] = [];
 
         for (let i:number = 0; i < widgetsData.length ; i++ )
