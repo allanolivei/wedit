@@ -321,7 +321,7 @@ export namespace UI
 
             this.setWidgetText("label", label);
 
-            CKEDITOR.addCss('p{margin:0;}');
+            CKEDITOR.addCss('*{margin:0; font-size:16px; font-family:"Playfair Display", serif}');
 
             this.editor = CKEDITOR.replace(this.findByClass("ui-textarea-editor").html, {
                 toolbarGroups: [
@@ -335,14 +335,42 @@ export namespace UI
                 ],
                 stylesSet: [
                     // Block-level styles
-                    { name: 'Titulo', element: 'div', styles: { 'font-weight': 'bold', 'font-size': '30px' } },
-                    { name: 'Subtitulo', element: 'div', styles: { 'font-weight': 'bold', 'font-size': '20px' } },
+                    { name: 'Titulo', element: 'h1', styles: { 'font-weight': 'bold', 'font-size': '40px', 'font-style': 'italic', 'line-height': '60px' } },
+                    { name: 'Subtitulo', element: 'h2', styles: { 'font-weight': 'bold', 'font-size': '20px', 'color': '#e0af3d', 'font-style': 'italic' } },
+                    {
+                        name: 'Separador', element: 'div',
+                        styles: { 'padding-bottom': '10px', 'padding-top': '10px', 'border-top': '2px solid #f2e6ca', 'text-indent': '-9999px' },
+                        attributes: { 'class': 'hr' },
+                    },
+                    {
+                        name: 'Box', element: 'div',
+                        styles: { 'padding': '18px 24px', 'border': '2px solid #dfc998', 'border-radius': '6px' },
+                        attributes: { 'class': 'box' },
+                    },
+                    {
+                        name: 'RoundBox', element: 'div',
+                        styles: { 'background': '#f4e8ce', 'border-radius': '6px', 'padding': '16px 26px' },
+                        attributes: { 'class': 'box-fill' },
+                    },
+                    {
+                        name: 'Area', element: 'div',
+                        styles: { 'border-top': '1px solid #f2e6ca', 'border-bottom': '1px solid #f2e6ca', 'padding': '6px 50px'},
+                        attributes: { 'class': 'box-fit' },
+                    },
+
+
                     //{ name: 'Light Block', element: 'div', styles: { 'font-weight': '300' } },
                     //{ name: 'Extra Light Block', element: 'div', styles: { 'font-weight': '200' } },
                     // Inline styles
                     //{ name: 'Light', element: 'span', attributes: { 'class': 'light' } },
                     //{ name: 'Extra Light', element: 'span', styles: { 'background-color': 'extra-light' } }
                 ],
+
+                // font_defaultLabel: 'Times New Roman',
+                // fontSize_defaultLabel: '20px',
+                // resize_dir: 'vertical',
+                // font_names: 'Times New Roman',
+
                 removeButtons: 'Format',
                 extraPlugins: 'justify,colorbutton,colordialog',
                 startupFocus: true,
