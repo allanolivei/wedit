@@ -7,6 +7,7 @@ import { WEdit } from "./WEdit";
 import { SelectableGroup } from "./Selection";
 import { SheetRules } from "./Sheet";
 import { SerializationGrid } from "./Serialization";
+import { ImageUpload } from "./ImageUpload";
 
 
 
@@ -46,6 +47,10 @@ if( window )
     W.SerializationGrid = SerializationGrid;
 
     (window as any).W = W;
+
+
+    (window as any).ImageUpload = ImageUpload;
 }
+
 
 

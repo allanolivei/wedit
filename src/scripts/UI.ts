@@ -4,6 +4,7 @@ import { Rect } from "./Utils";
 import { SelectionTransform } from "./Selection";
 import { Selectable } from "./Selectable";
 import { LiteEvent } from "./LiteEvent";
+import { ImageUpload } from "./ImageUpload";
 
 export namespace UI
 {
@@ -35,6 +36,8 @@ export namespace UI
 
     Widget.AddTemplate("UI-BUTTON",
         "<button class='ui-button w-ui-editor'>{{label}}</button>");
+    Widget.AddTemplate("UI-EMPTY",
+        "<span class='ui-empty w-ui-editor'></span>");
 
     Widget.AddTemplate("UI-SELECT",
         "<div class='ui-input ui-select w-ui-editor'>" +
@@ -586,6 +589,11 @@ export namespace UI
 
     export class UIWindowEditImage extends UIWindowWidgetTarget
     {
+        public uploader:ImageUpload;
+
+        private amount:number = 0;
+        private group:UIGridGroup;
+
         constructor()
         {
             super();
@@ -595,23 +603,48 @@ export namespace UI
             this.activeBackground();
 
             let cancel:UI.UIButton = new UIButton("Cancelar");
-            let group:UIGridGroup = new UIGridGroup();
+            let upload:UI.UIButton = new UIButton("Upload");
+            this.group = new UIGridGroup();
 
-            let confirmHandlerBinder:any = this.confirmHandler.bind(this);
-            for( let i:number = 1 ; i < 10 ; i++ )
-            {
-                let widget:Widget = new Widget({
-                    "template":"UI-THUMB",
-                    "data":{ "img":"img/examples/example"+i+".jpg" },
-                });
-                group.addWidget("list", widget);
-                widget.html.addEventListener("click", confirmHandlerBinder);
-            }
+            let groupBody:HTMLElement = this.group.html.querySelector(".ui-grid-group-container");
+            groupBody.style.height = "310px";
+            groupBody.style.overflowY = "scroll";
 
-            this.addWidget("list", group);
+            // let confirmHandlerBinder:any = this.confirmHandler.bind(this);
+            // for( let i:number = 1 ; i < 10 ; i++ )
+            // {
+            //     let widget:Widget = new Widget({
+            //         "template":"UI-THUMB",
+            //         "data":{ "img":"http://www.labtime.ufg.br/modulos/remar/img/examples/example"+i+".jpg" },
+            //     });
+            //     this.group.addWidget("list", widget);
+            //     widget.html.addEventListener("click", confirmHandlerBinder);
+            // }
+
+
+            this.addWidget("list", this.group);
+            let uploaderWrapper = this.addWidget("list", "UI-EMPTY").html;
             this.addWidget("list", cancel);
 
+            this.uploader = new ImageUpload(uploaderWrapper);
+            uploaderWrapper.addEventListener("loadComplete", this.loadCompleteHandler.bind(this));
             cancel.html.addEventListener("click", this.deactive.bind(this));
+        }
+
+        private loadCompleteHandler(event:CustomEvent):void
+        {
+            let confirmHandlerBinder: any = this.confirmHandler.bind(this);
+            for( this.amount ; this.amount < this.uploader.images.length ; this.amount++ )
+            {
+                let widget: Widget = new Widget({
+                    "template": "UI-THUMB",
+                    "data": { "img": this.uploader.images[this.amount] },
+                });
+                widget.html.querySelector("img").setAttribute("data-filename", this.uploader.files[this.amount].name );
+                widget.html.addEventListener("click", confirmHandlerBinder);
+
+                this.group.addWidget("list", widget);
+            }
         }
 
         private confirmHandler(event:MouseEvent):void
@@ -619,6 +652,7 @@ export namespace UI
             let img:HTMLElement = (event.currentTarget as HTMLElement).childNodes[0] as HTMLElement;
             let content:string = img.getAttribute("src");
             this.target.setWidgetAttrib("img", content);
+            this.target.setData("filename", img.getAttribute("data-filename"));
 
             if( content === "" )
                 this.target.addClass("w-empty");

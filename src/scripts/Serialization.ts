@@ -5,7 +5,7 @@ import { Display } from "./Display";
 // serializacao simples usada na revista
 export class SerializationGrid
 {
-    public static serialize( layouts:RowLayout[] ):string
+    public static serialize( layouts:RowLayout[] ):object
     {
         let result:object = {};
         let widgets:any[] = [];
@@ -28,12 +28,16 @@ export class SerializationGrid
                         "size": layout.getSizeByDisplay(column),
                         "row": l,
                         "type": widget.templateName,
-                        "content": widget.getContainerData(widget.templateName) });
+                        "content":
+                            widget.templateName === 'img' ?
+                            widget.getData('filename') :
+                            widget.getContainerData(widget.templateName) });
                 }
             }
         }
 
-        return JSON.stringify(widgets);
+        //return JSON.stringify(widgets);
+        return widgets;
     }
 
     public static deserialize( dataStr:string ):RowLayout[]
