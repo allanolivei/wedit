@@ -344,17 +344,17 @@ export namespace UI
                     },
                     {
                         name: 'Box', element: 'div',
-                        styles: { 'padding': '18px 24px', 'border': '2px solid #dfc998', 'border-radius': '6px' },
+                        styles: { 'margin-bottom': '20px', 'padding': '18px 24px', 'border': '2px solid #dfc998', 'border-radius': '6px' },
                         attributes: { 'class': 'box' },
                     },
                     {
                         name: 'RoundBox', element: 'div',
-                        styles: { 'background': '#f4e8ce', 'border-radius': '6px', 'padding': '16px 26px' },
+                        styles: { 'margin-bottom': '20px', 'background': '#f4e8ce', 'border-radius': '6px', 'padding': '16px 26px' },
                         attributes: { 'class': 'box-fill' },
                     },
                     {
                         name: 'Area', element: 'div',
-                        styles: { 'border-top': '1px solid #f2e6ca', 'border-bottom': '1px solid #f2e6ca', 'padding': '6px 50px'},
+                        styles: { 'margin-bottom': '20px', 'border-top': '1px solid #f2e6ca', 'border-bottom': '1px solid #f2e6ca', 'padding': '6px 50px'},
                         attributes: { 'class': 'box-fit' },
                     },
 
