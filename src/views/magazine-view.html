@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/w.main.css">
+    <link rel="stylesheet" href="css/w.edit.css">
+
+    <style>
+        .w-editing  .w-layout-row
+        {
+            margin-bottom: 20px;
+            min-height: 100px;  
+        }
+
+        .w-editing .w-layout-row:before
+        {
+            content: "";
+            position: absolute;
+            left: -50px;
+            right: -50px;
+            top: -10px;
+            bottom: -10px;
+        }
+
+        #add-row
+        {
+            display: block;
+            margin: 0 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .w-editing .w-empty
+        {
+            min-height: 100px;
+            border: 1px solid rgba(154, 154, 243, 0.185);
+        }
+
+        .w-editing .w-empty.w-img
+        {
+            background: #deecfb url("../img/icons/ic_img.svg") no-repeat center center;
+        }
+
+        .w-editing .w-empty.w-text
+        {
+            background: #deecfb url("../img/icons/ic_text.svg") no-repeat center center;
+        }
+
+        .w-editing .w-empty.w-movie
+        {
+            background: #deecfb url("../img/icons/ic_movie.svg") no-repeat center center;
+        }
+
+        body .w-movie { position: relative !important; }
+
+        .w-movie:before
+        {
+            content:"";
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: 0;
+            top: 0;
+            background: rgba(145, 145, 145, 0.3) url("img/icons/ic_youtube.svg") no-repeat center center;
+        }
+
+        .w-empty.w-movie:before { display: none; }
+
+        .w-text, .w-img, .w-movie
+        {
+            min-height: 100px;
+        }
+
+        .w-img img, .w-movie img { width: 100%; }
+
+        .w-text
+        {
+            word-wrap: break-word;
+        }
+
+        .magazine
+        {
+            margin-top: 20px;
+        }
+
+        #magazine
+        {
+            position: relative !important;
+        }
+
+        .remove-row
+        {
+            position:absolute;
+            /* left: 100%; */
+            /* top: 10px; */
+            background: rgb(250, 55, 55) url("img/icons/ic_delete.svg") no-repeat center center;
+            border: 1px solid red;
+            height: 24px;
+            width: 24px;
+            cursor: pointer;
+            /* margin-left: -10px; */
+        }
+
+        p { margin-bottom: 0; }
+
+        /* All in one selector */
+/* 
+overwrite image empty
+img[alt]{ border: 10px solid tomato; }
+.image-replacement {
+  content: url(http://akamaicovers.oreilly.com/images/9780596517748/cat.gif);
+}
+.banner {
+  display: block;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  background: url(http://notrealdomain2.com/newbanner.png) no-repeat;
+  width: 180px;
+  height: 236px;
+  padding-left: 180px;
+} */
+    </style>
+</head>
+<body>
+    <!-- 
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/0.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/1.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/2.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/3.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/default.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/hqdefault.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/mddefault.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/sddefault.jpg" alt=""></p>
+    <p><img src="https://img.youtube.com/vi/-uFQ25_LOPQ/maxresdefault.jpg" alt=""></p>
+    -->
+
+    <div id='magazine' class="magazine container">
+
+        <div id="editor"></div>
+
+    </div>
+    
+    <script src="js/wedit.js"></script>
+    <!-- <script src="https://cdn.ckeditor.com/4.8.0/standard/ckeditor.js"></script> -->
+    <script src="https://cdn.ckeditor.com/4.8.0/standard-all/ckeditor.js"></script>
+
+    <script>
+        var regex = /\?revista=([^\ \n\&]+)/;
+        var stage = new W.WEdit(document.getElementById("editor"), "empty");
+        stage.disable();
+
+        var result = regex.exec(window.location.search);
+        if( result )
+        {
+            var jsonStr = decodeURIComponent(result[1]);
+
+            console.log(jsonStr);
+
+            var rows = W.SerializationGrid.deserialize(jsonStr);
+            for( let i = 0 ; i < rows.length ; i++ )
+                stage.addChild(rows[i]);
+        }
+
+        //var rows = W.SerializationGrid.deserialize(result);
+        
+
+        // document.getElementById("view-json").addEventListener("click", function(){
+        //     let result = W.SerializationGrid.serialize(rows);
+        //     console.log(result);
+        //     console.log( W.SerializationGrid.deserialize(result) );
+        // });
+    </script>
+</body>
+</html>

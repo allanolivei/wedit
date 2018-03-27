@@ -89,6 +89,14 @@ export class Rect
         this.h = rect.h;
     }
 
+    public copyAndChange(rect: Rect, change:RectChange): void
+    {
+        this.startX = this.x = rect.x + change.left;
+        this.startY = this.y = rect.y;
+        this.w = rect.w + change.right - change.left;
+        this.h = rect.h;
+    }
+
     public getChangeByRect(rect: Rect): RectChange
     {
         return {

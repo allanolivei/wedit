@@ -78,9 +78,11 @@ export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html:
-            "<div>{{text}}</div>" },
+            "<div class='w-text'>{{text}}</div>" },
         "img": { html:
             "<div class='img-wrapper'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+        //"<div class='w-img'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+        //"movie": { html:"<div class='w-movie'><img data-style='{{img-style}}' class='img-fluid' src='{{movie}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
@@ -122,9 +124,11 @@ export class Widget extends Selectable
 
 
     private static parser: DOMParser = new DOMParser();
-
-    private templateName: string;
     private containers: { [id: string]: WidgetContainerData; } = {}; // container de atributos
+
+
+    public templateName: string;
+
 
     constructor(settings: string|WidgetData, ...className: string[])
     {
@@ -154,6 +158,11 @@ export class Widget extends Selectable
         this.createContainer("className", "class", this);
         // fill containers with data
         this.setContainersData(settings.data);
+    }
+
+    public clone():Widget
+    {
+        return new Widget(this.templateName);
     }
 
     // public serialize(): string
@@ -221,6 +230,31 @@ export class Widget extends Selectable
         return "";
     }
 
+    public getContainerData(containerName: string):string
+    {
+        if (!(containerName in this.containers))
+            throw "Tentativa de modificação de um container inexistente. Container Name: " + containerName;
+
+        switch (this.containers[containerName].type)
+        {
+            case "text":
+                return this.getWidgetText(containerName);
+            case "attrib":
+                return this.getWidgetAttrib(containerName);
+            case "class":
+                //this.get(containerName);
+                break;
+            case "style":
+                //this.setWidgetStyles(containerName, value as string);
+                break;
+            case "list":
+                ///this.addWidget(containerName, value);
+                break;
+        }
+
+        return "";
+    }
+
     public setContainerData(containerName:string, value:string|Widget):void
     {
         if ( !(containerName in this.containers) )
@@ -267,8 +301,8 @@ export class Widget extends Selectable
                     this.setWidgetAttrib(key, item);
                     break;
                 case "list":
-                    if( typeof item === "string" )
-                        this.addWidget(key, {"template":"text", "data":{"text":item}});
+                    if (typeof item === "string")
+                        this.addWidget(key, { "template": "text", "data": { "text": item } });
                     else
                         for (let i: number = 0; i < item.length; i++)
                             this.addWidget(key, item[i]);
@@ -451,23 +485,27 @@ export class Widget extends Selectable
         {
             let key: string = xmlNode.attributes[i].nodeName;
 
-            if (key === "class")
-                display.addClasses(xmlNode.attributes[i].nodeValue);
-            else if (key === "style")
-                display.html.setAttribute(key, xmlNode.attributes[i].nodeValue + display.html.getAttribute("style"));
-
 
             let containerName: string = this.getContainerName(xmlNode.attributes[i].nodeValue);
 
             if ( containerName !== "" )
+            {
                 this.createContainer(
                     containerName,
                     key === "data-style" ? "style" : key==="data-class" ? "class" : "attrib",
                     display,
                     key);
-            //this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
+                //this.containers[cattrib.name] = { type: "attrib", display: display, attribName: key };
+            }
             else
-                display.html.setAttribute(key, xmlNode.attributes[i].nodeValue);
+            {
+                if (key === "class")
+                    display.addClasses(xmlNode.attributes[i].nodeValue);
+                else if (key === "style")
+                    display.html.setAttribute(key, xmlNode.attributes[i].nodeValue + display.html.getAttribute("style"));
+                else
+                    display.html.setAttribute(key, xmlNode.attributes[i].nodeValue);
+            }
         }
 
         // element of content

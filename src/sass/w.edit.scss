@@ -1,3 +1,8 @@
+
+$z-ui: 1000;
+$z-gizmos-selection: 500;
+$z-gizmos-hover: 300;
+
 @import 'mixins';
 @import 'editor/windows';
 
@@ -26,7 +31,7 @@
     {
         @include disable-user-select;
 
-        pointer-events: none;
+        //pointer-events: none;
 
         [data-drag="true"] 
         {
@@ -42,6 +47,9 @@
         @include box-absolute(0);
         display: flex;
         flex-wrap: wrap;
+
+        border-top: 1px dashed rgba(28, 28, 245, 0.05);
+        border-bottom: 1px dashed rgba(28, 28, 245, 0.05);
 
         &>*
         {
@@ -59,11 +67,20 @@
     }
 }
 
+body .w-ui-editor 
+{
+    pointer-events: auto;
+
+    .selectable { pointer-events: auto; }
+}
+
+
 .w-row-grid { display: none; }
 
 .w-select-hover
 {
     position: relative;
+    z-index: $z-gizmos-hover;
     border: 1px solid rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.01);
     -webkit-box-shadow: 0px 0px 1px 1px rgba(43, 147, 255, 0.9);
@@ -83,6 +100,7 @@
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.01);
+    z-index: $z-gizmos-hover;
 
     &:after
     {
@@ -102,7 +120,18 @@
     position: absolute;
     background: rgba(85, 83, 238, 0.11);
     border: 1px dashed rgba(85, 83, 238, 0.4);
-    z-index: 500;
+    z-index: $z-gizmos-selection;
+
+    &.unallowed 
+    {  
+        background: rgba(238, 83, 83, 0.11);
+        border: 1px dashed rgba(238, 83, 83, 0.4);
+    }
+
+    &.w-ghost-dragging
+    {
+        z-index: $z-ui + 9999;
+    }
 }
 
 .w-select-area
@@ -110,18 +139,20 @@
     border: 1px dotted rgb(161, 161, 161);
 }
 
+
+
+$anchor-color: rgb(56, 129, 207);
+$border-offset: 16px;
+$corner-offset: 16px;
+$anchor-size: 7px;
+
 .w-select-transform
 {
     position: absolute;
     background: rgba(43, 147, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.4);
     //cursor: move;
-    z-index: 25;
-
-    
-    $border-offset: 16px;
-    $corner-offset: 16px;
-    $anchor-size: 6px;
+    z-index: $z-gizmos-selection+10;
 
     &:before
     {
@@ -141,6 +172,7 @@
     [class^="a-"], [class*=" a-"] 
     {
         //background: #05a8ff;
+
     }
 
     &[data-drag='false'] 
@@ -161,11 +193,12 @@
     { 
         margin-left: -$border-offset*0.5;
         margin-top: -$border-offset/5;
+        z-index: 100;
 
         &:before
         {
             content: "";
-            background: #f123e2;
+            background: $anchor-color;
             @include box($border-offset*0.5-$anchor-size*0.5, 50%, $anchor-size, $anchor-size);
         }
     }
@@ -177,7 +210,7 @@
         &:before
         {
             content: "";
-            background: #f123e2;
+            background: $anchor-color;
             @include box(50%, $border-offset*0.5-$anchor-size*0.5, $anchor-size, $anchor-size);
         }
     }
@@ -213,7 +246,7 @@
     .a-l
     {
         @include box(0, 0, $border-offset, 100% );
-        cursor:e-resize;
+        cursor:w-resize;
     }
 
     .a-r

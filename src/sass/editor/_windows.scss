@@ -47,6 +47,9 @@ $ui-border-sep: #6c6c6c;
     background: $ui-bg-body;
     border: 1px solid $ui-border;
 
+    display: flex;
+    flex-direction: column;
+
     @include shadow();
     @include disable-user-select();
 
@@ -61,8 +64,11 @@ $ui-border-sep: #6c6c6c;
     .ui-window-body
     {
         border-top: 1px solid $ui-border;
-        height: 300px;
+        //height: 325px;
         padding: 10px 8px;
+        overflow-y: auto;
+
+        
     }
 }
 
@@ -90,6 +96,8 @@ $ui-border-sep: #6c6c6c;
         cursor: -moz-e-resize;
         cursor: -webkit-e-resize;
         cursor: e-resize;
+
+        &:empty { display: none; }
     }
 
     .ui-input-body
@@ -158,6 +166,35 @@ $ui-border-sep: #6c6c6c;
     }
 }
 
+.ui-background
+{
+    @include box-absolute;
+    position: fixed;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.ui-textarea 
+{
+    .ui-textarea-label
+    {
+        font-size: 10px;
+        color: rgb(190, 190, 190);
+    }
+
+    textarea
+    {
+        display: block;
+        //resize: vertical;
+        resize: none;
+        width: 100%;
+    }
+}
+
+.ui-button
+{
+    margin: 6px 6px 0 0;
+}
+
 .ui-h-group
 {
     .ui-h-group-container
@@ -174,4 +211,139 @@ $ui-border-sep: #6c6c6c;
             max-width: 100%;
         }
     }
+}
+
+.ui-grid-group
+{
+    .ui-grid-group-container
+    {
+        display: flex;
+        flex-wrap: wrap;
+
+        // &>*
+        // {
+        //     -ms-flex-preferred-size: 0;
+        //     flex-basis: 0;
+        //     -webkit-box-flex: 1;
+        //     -ms-flex-positive: 1;
+        //     flex-grow: 1;
+        //     max-width: 100%;
+        // }
+    }
+}
+
+.ui-template
+{
+    .ui-template-list
+    {
+
+    }
+}
+
+.ui-template-item
+{
+    height: 100px;
+    background: #deecfb url("../img/icons/ic_movie.svg") no-repeat center center;
+    margin-bottom: 2px;
+}
+
+
+.w-ui-toolbar
+{
+    position: absolute;
+    z-index: 999;
+
+    &>*
+    {
+        display: flex;
+        -webkit-box-pack: end!important;
+        -ms-flex-pack: end!important;
+        justify-content: flex-end!important;
+    }
+
+    &>div>*
+    {
+        border-radius: 100%;
+        width: 20px;
+        height: 20px;
+        z-index: $z-gizmos-selection+10;
+        margin: -10px 2px 0 0;
+        background-size: 10px;
+
+        @include shadow(2px, 2px);
+    }
+
+    .edit
+    {
+        background: rgb(93, 109, 255) url("../img/icons/ic_pencil_2.svg") no-repeat center center;
+        border: 1px solid rgb(73, 91, 250);
+        position: relative;
+
+        &:hover { background-color: rgb(64, 82, 247); }
+
+        &>input
+        {
+            cursor: pointer;
+            position: absolute;
+            top: -2px;
+            bottom: -2px;
+            left: -2px;
+            right: -2px;
+            opacity: 0;
+        }
+    }
+
+    .delete
+    {
+        background: rgb(255, 93, 93) url("../img/icons/ic_delete.svg") no-repeat center center;
+        border: 1px solid rgb(250, 73, 73);
+
+        &:hover { background-color: rgb(247, 64, 64); }
+    }
+}
+
+
+
+body .ui-grid-group
+{
+    background: #616161;
+    border: 1px solid grey;
+}
+
+body .ui-thumb
+{
+    max-width: 158px !important;
+    //width: 600px;
+    width: 154px;
+    height: 90px;
+    overflow: hidden;
+    border: 3px solid rgb(155, 155, 155);
+    background: white;
+    text-align: center;
+    position: relative !important;
+    margin: 6px;
+    cursor: pointer;
+
+    img 
+    {
+        //max-width: 140px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    &:hover
+    {
+        border-color: rgb(112, 112, 255);
+    }
+}
+
+
+
+.ui-label
+{
+    font-size: 13px;
+    color: #c7c7c7;
+    font-weight: normal;
 }

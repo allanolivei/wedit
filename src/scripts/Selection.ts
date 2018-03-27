@@ -1,9 +1,10 @@
 import { Selectable } from "./Selectable";
 import { LiteEvent } from "./LiteEvent";
-import { Rect, RectChange } from "./Utils";
+import { Rect, RectChange, Vec2 } from "./Utils";
 import { Display } from "./Display";
 import { Layout } from "./Layout";
 import { DragEvent } from "./Event";
+import { Widget } from "./Widget";
 
 
 export class SelectableGroup
@@ -233,6 +234,8 @@ export class SelectableGroup
 
     public clear(): void
     {
+        if( this.selectables.length === 0 ) return;
+
         for (let i: number = 0; i < this.selectables.length; i++)
             this.onRemoveHandler( this.selectables[i] );
         this.selectables = [];
@@ -428,6 +431,12 @@ export class SelectionDragger extends RectView
     private mouseDownBind:any;
     private mouseMoveBind:any;
     private mouseUpBind:any;
+    private hoverChangeBind:any;
+
+    // update hover whe mouseup in document, fix when elements is transformed.
+    private waitHoverFindBinder:any;
+    private validateMouseUpHoverBinder:any;
+    private waitHoverTimeout:number;
 
     constructor(root:Display, selection:Selection)
     {
@@ -449,6 +458,9 @@ export class SelectionDragger extends RectView
         this.mouseDownBind = this.mousedown.bind(this);
         this.mouseMoveBind = this.mousemove.bind(this);
         this.mouseUpBind = this.mouseup.bind(this);
+        this.hoverChangeBind = this.hoverChangeHandler.bind(this);
+        this.waitHoverFindBinder = this.waitHoverFind.bind(this);
+        this.validateMouseUpHoverBinder = this.validateMouseUpHover.bind(this);
 
         // auto enable
         this.enable();
@@ -460,8 +472,11 @@ export class SelectionDragger extends RectView
 
         this.add();
 
+        this.selection.hover.onChange.on(this.hoverChangeBind);
         window.addEventListener("mousedown", this.mouseDownBind);
         window.addEventListener("mousemove", this.mouseMoveBind);
+        // fix***** edition in current hover
+        window.addEventListener("mouseup", this.waitHoverFindBinder);
     }
 
     public disable()
@@ -472,10 +487,12 @@ export class SelectionDragger extends RectView
         this.hide();
         this.remove();
 
+        this.selection.hover.onChange.off(this.hoverChangeBind);
         window.removeEventListener("mouseup", this.mouseUpBind);
-
         window.removeEventListener("mousedown", this.mouseDownBind);
         window.removeEventListener("mousemove", this.mouseMoveBind);
+        // fix***** edition in current hover
+        window.removeEventListener("mouseup", this.waitHoverFindBinder);
     }
 
     public add()
@@ -488,6 +505,37 @@ export class SelectionDragger extends RectView
     {
         document.body.removeChild(this.hoverMark.html);
         document.body.removeChild(this.html);
+    }
+
+    private waitHoverFind(event:MouseEvent):void
+    {
+        clearTimeout(this.waitHoverTimeout);
+        this.waitHoverTimeout = setTimeout(this.validateMouseUpHoverBinder, 100, event);
+    }
+
+    private validateMouseUpHover(event:MouseEvent):void
+    {
+        this.mousemove(event);
+        this.redrawHover();
+    }
+
+    private redrawHover():void
+    {
+        if ( this.selection.hover.count() > 0 )
+        {
+            let rect: Rect = this.selection.hover.getRectArea();
+            this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
+            this.hoverMark.show();
+        }
+        else
+        {
+            this.hoverMark.hide();
+        }
+    }
+
+    private hoverChangeHandler(selectable:Selectable[]):void
+    {
+        this.redrawHover();
     }
 
     private selectableFilter( element:Selectable ):boolean
@@ -518,7 +566,8 @@ export class SelectionDragger extends RectView
             this.mode = DRAGGER_MODE.NONE;
         }
 
-        this.hoverMark.hide();
+        //this.hoverMark.hide();
+        this.selection.hover.clear();
 
         window.addEventListener("mouseup", this.mouseUpBind);
     }
@@ -535,12 +584,19 @@ export class SelectionDragger extends RectView
                 this.updateSelection(...this.root.findByArea(this.rect, this.selectableFilter) as Selectable[]);
             }
         }
-        else
-        {
-            let elem: HTMLElement = event.target as HTMLElement;
-            if ( !this.IsEditor(elem) ) this.updateHover(event.pageX, event.pageY);
-            else this.hoverMark.hide();
-        }
+        // else
+        // {
+            // let elem: HTMLElement = event.target as HTMLElement;
+            // if ( !this.IsUI(elem) ) this.updateHover(event.pageX, event.pageY);
+            // else this.hoverMark.hide();
+            // console.log(this.IsUI(elem));
+        // }
+        let elem: HTMLElement = event.target as HTMLElement;
+
+        if( this.IsToolbar(elem) ) return;
+
+        if ( !this.IsUI(elem) ) this.updateHover(event.pageX, event.pageY);
+        else this.selection.hover.clear();
     }
 
     private mouseup(event: MouseEvent): void
@@ -563,16 +619,16 @@ export class SelectionDragger extends RectView
             // update select list
             this.selection.hover.set(hoverTarget);
             // update view
-            let rect: Rect = this.selection.hover.getRectArea();
-            this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
-            this.hoverMark.show();
+            // let rect: Rect = this.selection.hover.getRectArea();
+            // this.hoverMark.set(rect.x, rect.y, rect.w, rect.h);
+            // this.hoverMark.show();
         }
         else
         {
             // update select list
             this.selection.hover.clear();
             // update view
-            this.hoverMark.hide();
+            // this.hoverMark.hide();
         }
     }
 
@@ -591,12 +647,60 @@ export class SelectionDragger extends RectView
         }
     }
 
-    private IsEditor( elem:HTMLElement ):boolean
+    // janelas e gizmos
+    private IsToolbar(elem: HTMLElement): boolean
     {
+        /*
         let root:HTMLElement = elem;
         while( root != null )
         {
             if ( root.className.indexOf("w-ui-gizmos") !== -1 || root.className.indexOf("w-ui-editor") !== -1 ) return true;
+            root = root.parentElement;
+        }
+        return false;
+        */
+        return this.findClassesInParent(elem, "w-ui-toolbar");
+    }
+
+    // janelas e gizmos
+    private IsEditor( elem:HTMLElement ):boolean
+    {
+        /*
+        let root:HTMLElement = elem;
+        while( root != null )
+        {
+            if ( root.className.indexOf("w-ui-gizmos") !== -1 || root.className.indexOf("w-ui-editor") !== -1 ) return true;
+            root = root.parentElement;
+        }
+        return false;
+        */
+        return this.findClassesInParent(elem, "w-ui-toolbar w-ui-editor w-ui-gizmos");
+    }
+
+    // janelas
+    private IsUI( elem:HTMLElement ):boolean
+    {
+        // let root:HTMLElement = elem;
+        // while( root != null )
+        // {
+        //     if ( root.className.indexOf("w-ui-editor") !== -1 ) return true;
+        //     root = root.parentElement;
+        // }
+        // return false;
+        return this.findClassesInParent(elem, "w-ui-editor");
+    }
+
+    private findClassesInParent(elem: HTMLElement, classesName: string): boolean
+    {
+        let root: HTMLElement = elem;
+        let classes: string[] = classesName.split(' ');
+        while (root != null)
+        {
+            let i: number = 0;
+            for (; i < classes.length; i++)
+                if (root.className.indexOf(classes[i]) !== -1) break;
+            if (i < classes.length)
+                return true;
             root = root.parentElement;
         }
         return false;
@@ -606,7 +710,7 @@ export class SelectionDragger extends RectView
 
 
 
-// // show selected area with anchors
+// show selected area with anchors
 export class SelectionTransform extends RectView
 {
     private root:Display;
@@ -619,12 +723,15 @@ export class SelectionTransform extends RectView
     private layoutMark:RectView;
     private event:DragEvent;
 
+    // delegate
+    private updateDelegate:any;
+    private dropDelegate:any;
     // event bind
     private selectChangeHandlerBinder:any;
     private keyHandlerBinder:any;
     private mousedownBinder:any;
     private mousemoveBinder:any;
-    private mouseupBinder:any;
+    private mouseupBinder: any;
     private filterBinder:any;
 
     constructor(root:Display, selection:Selection)
@@ -640,6 +747,9 @@ export class SelectionTransform extends RectView
         this.startDragRect = new Rect();
         this.nextRect = new Rect();
         this.nextRect.copy(this.rect);
+
+        // anchors
+        this.createAnchors();
 
         // layout
         this.layoutMark = new RectView("w-layout-hover");
@@ -700,7 +810,7 @@ export class SelectionTransform extends RectView
         document.body.removeChild(this.layoutMark.html);
     }
 
-    private redraw(): void
+    public redraw(): void
     {
         let rect: Rect = this.selection.select.getRectArea();
         this.set(rect.x, rect.y, rect.w, rect.h);
@@ -713,7 +823,7 @@ export class SelectionTransform extends RectView
 
         for (let i: number = 0; i < this.event.ghost.length; i++)
         {
-            this.event.ghost[i].rect.copyClientRect(this.event.elements[i].getBounds());
+            this.event.ghost[i].rect.copyClientRect(this.event.startRect[i]);
             this.event.ghost[i].draw();
 
             // if( this._event.elements[i].allowDrag() ) isDraggable = true;
@@ -768,35 +878,97 @@ export class SelectionTransform extends RectView
         this.redraw();
     }
 
+    public startDrag(display:Selectable, pageX:number, pageY:number, rect:Rect = null): void
+    {
+        this.selection.select.set(display);
+
+        if( rect )
+        {
+            this.event.startRect[0].copy(rect);
+            this.set(rect.x, rect.y, rect.w, rect.h);
+            this.ghostRedraw();
+        }
+
+        this.prepareDrag(pageX, pageY);
+
+        this.updateDelegate = this.updateMove;
+        this.dropDelegate = this.dropMove;
+        this.updateDelegate();
+
+        window.addEventListener("mousemove", this.mousemoveBinder);
+        window.addEventListener("mouseup", this.mouseupBinder);
+    }
+
+    private prepareDrag(pageX:number, pageY:number):void
+    {
+        this.startDragRect.copy(this.rect);
+        this.event.pointer.x = this.event.startPointer.x = pageX;
+        this.event.pointer.y = this.event.startPointer.y = pageY;
+        this.event.offset.x = pageX - this.startDragRect.x;
+        this.event.offset.y = pageY - this.startDragRect.y;
+        this.nextRect.copy(this.rect);
+
+        // add flag dragging in ghost
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+            this.event.ghost[i].addClass("w-ghost-dragging");
+
+        // disable mouse in this
+        this.html.style.pointerEvents = "none";
+        this.html.style.opacity = "0";
+    }
+
     private mousedown(event:MouseEvent):void
     {
         event.preventDefault();
         event.stopPropagation();
 
-        let target: HTMLElement = event.target as HTMLElement;
-        let className: string = target.className;
-
         // cache start drag information
-        this.startDragRect.copy(this.rect);
-        this.event.pointer.x = this.event.startPointer.x = event.pageX;
-        this.event.pointer.y = this.event.startPointer.y = event.pageY;
-        this.event.offset.x = event.pageX - this.startDragRect.x;
-        this.event.offset.x = event.pageY - this.startDragRect.y;
-        this.nextRect.copy(this.rect);
+        // this.startDragRect.copy(this.rect);
+        // this.event.pointer.x = this.event.startPointer.x = event.pageX;
+        // this.event.pointer.y = this.event.startPointer.y = event.pageY;
+        // this.event.offset.x = event.pageX - this.startDragRect.x;
+        // this.event.offset.y = event.pageY - this.startDragRect.y;
+        // this.nextRect.copy(this.rect);
 
-        // layout manager
-        // this.updateLayout();
+        // // layout manager
+        // // this.updateLayout();
 
-        // disable mouse in this
-        this.html.style.pointerEvents = "none";
-        this.html.style.opacity = "0";
+        // // add flag dragging in ghost
+        // for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+        //     this.event.ghost[i].addClass("w-ghost-dragging");
+
+        // // disable mouse in this
+        // this.html.style.pointerEvents = "none";
+        // this.html.style.opacity = "0";
+
+        this.prepareDrag(event.pageX, event.pageY);
 
         // handle events
+        let target: HTMLElement = event.target as HTMLElement;
+        let className: string = target.className;
+        if( className.indexOf("anchor") !== -1 )
+        {
+            this.updateDelegate = this.updateAnchor;
+            this.dropDelegate = this.dropAnchor;
+
+            if ( className.indexOf("-l ") !== -1 )
+                this.nextRect.start(this.rect.right, this.rect.top);
+            else if ( className.indexOf("-r ") !== -1  )
+                this.nextRect.start(this.rect.left, this.rect.top);
+        }
+        else
+        {
+            this.updateDelegate = this.updateMove;
+            this.dropDelegate = this.dropMove;
+        }
+
+        this.updateDelegate(event);
+
         window.addEventListener("mousemove", this.mousemoveBinder);
         window.addEventListener("mouseup", this.mouseupBinder);
     }
 
-    public mousemove(event: MouseEvent): void
+    private mousemove(event: MouseEvent): void
     {
         event.preventDefault();
 
@@ -804,20 +976,25 @@ export class SelectionTransform extends RectView
         this.event.pointer.x = event.pageX;
         this.event.pointer.y = event.pageY;
 
-        // update layout
-        this.updateLayout();
+        // update manager (move, anchor)
+        this.updateDelegate(event);
 
         // disable drag
         if (event.which !== 1) this.mouseup(event);
     }
 
-    public mouseup(event: MouseEvent): void
+    private mouseup(event: MouseEvent): void
     {
         event.preventDefault();
 
+        // drop manager (move, anchor)
+        this.dropDelegate();
+
+        // remove flag dragging in ghost
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+            this.event.ghost[i].removeClass("w-ghost-dragging");
+
         // layout manager
-        if (this.layout != null) this.layout.dropDrag(this.event);
-        this.layoutMark.hide();
         this.layout = null;
 
         // enable mouse in this
@@ -832,12 +1009,15 @@ export class SelectionTransform extends RectView
         window.removeEventListener("mouseup", this.mouseupBinder);
     }
 
-    private updateLayout()
+    private updateMove(event:MouseEvent=null):void
     {
         if (this.event.elements.length === 0) return;
 
         // new layout
-        let newLayout: Layout = this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.filterBinder) as Layout;
+        let newLayout: Layout =
+            !event || this.isEditor(event.target as HTMLElement) ? null :
+            this.root.findByPoint(this.event.pointer.x, this.event.pointer.y, this.filterBinder) as Layout;
+
         if (newLayout !== this.layout)
         {
             if (this.layout) this.layout.exitDrag(this.event);
@@ -861,6 +1041,54 @@ export class SelectionTransform extends RectView
         }
     }
 
+    private dropMove():void
+    {
+        if (this.layout != null) this.layout.dropDrag(this.event);
+        this.layoutMark.hide();
+
+        let amountEmpty:number = 0;
+        for( let i:number = 0 ; i < this.event.elements.length ; i++ )
+            if( this.event.elements[i].parent == null )
+                this.selection.select.remove(this.event.elements[i]);
+    }
+
+    private updateAnchor(event:MouseEvent=null):void
+    {
+        this.nextRect.end(this.event.pointer.x, this.rect.y + this.rect.h);
+        let change: RectChange = this.rect.getChangeByRect(this.nextRect);
+
+        for( let i:number = 0 ; i < this.event.ghost.length ; i++ )
+        {
+            let layout:Layout = Layout.findLayoutByDisplay(this.event.elements[i]);
+            layout.simulateResizeChild(this.event, i, change);
+        }
+    }
+
+    private dropAnchor():void
+    {
+        this.nextRect.end(this.event.pointer.x, this.rect.y + this.rect.h);
+        let change: RectChange = this.rect.getChangeByRect(this.nextRect);
+
+        for( let i:number = 0 ; i < this.event.elements.length ; i++ )
+        {
+            let layout:Layout = Layout.findLayoutByDisplay(this.event.elements[i]);
+            layout.resizeChild(this.event, i, change);
+        }
+    }
+
+    private isEditor(target:HTMLElement):boolean
+    {
+        let element:HTMLElement = target;
+        let amount:number = 0;
+        while( element != null && amount++ < 5 )
+        {
+            if( element.className.indexOf("w-ui-editor") !== -1 ) return true;
+            element = element.parentElement;
+        }
+
+        return false;
+    }
+
     private layoutFilter(element: Display): boolean
     {
         if( !(element instanceof Layout) ) return false;
@@ -869,6 +1097,12 @@ export class SelectionTransform extends RectView
             if( this.event.elements[i].isRecursiveChild(element) ) return false;
 
         return true;
+    }
+
+    private createAnchors()
+    {
+        this.addChild(new Display("div", "anchor", "a-r"));
+        this.addChild(new Display("div", "anchor", "a-l"));
     }
 
     // public hasMovementHorizontal: boolean;
@@ -1173,6 +1407,8 @@ export class SelectionTransform extends RectView
 
 
 
+
+
 export class Ghost extends RectView
 {
     private static pool:Ghost[] = [];
@@ -1213,11 +1449,216 @@ export class Ghost extends RectView
         super.show();
     }
 
+    public allowed( ok:boolean ):void
+    {
+        if (ok)
+            this.removeClass("unallowed");
+        else
+            this.addClass("unallowed");
+    }
+
     public hide()
     {
         this.html.style.display = "none";
         this.rect.size(0, 0);
         super.hide();
+    }
+}
+
+
+
+
+
+// show selected area with anchors
+interface ToolbarEvent
+{
+    name:string;
+    target:Selectable;
+}
+
+export class HoverToolbar extends RectView
+{
+    public readonly onSelect = new LiteEvent<ToolbarEvent>();
+
+    private selection:Selection;
+    private target:Selectable;
+    // private textEditor:Window;
+    // private imgEditor:Window;
+    // private movieEditor:Window;
+
+    private options:Display;
+    private delete:Display;
+    private edit:Display;
+
+    private waitRedrawTimeout:number;
+    private redrawBinder:any;
+
+    constructor(selection:Selection)
+    {
+        super("w-ui-toolbar");
+
+        // cache
+        this.selection = selection;
+
+        this.selection.hover.onChange.on( this.hoverChangeHandler.bind(this) );
+
+        document.body.appendChild(this.html);
+
+        //this.size(22, 22);
+        this.hide();
+
+        this.html.style.cursor = "pointer";
+        this.html.style.pointerEvents = "auto";
+
+        // let w = new UI.UIWindow();
+        // w.setWidgetText("title", "Editor de Texto");
+        // w.addWidget("list", new UI.UITemplate(this.selectionTransform));
+        // document.body.appendChild(w.html);
+
+        this.options = new Display("div", "w-ui-toolbar-wrapper");
+        this.edit = new Display("div", "edit");
+        this.delete = new Display("div", "delete");
+
+        this.edit.setData("toolbar-type", "edit");
+        this.delete.setData("toolbar-type", "delete");
+
+        this.options.addChild(this.edit);
+        this.options.addChild(this.delete);
+        this.addChild(this.options);
+
+        //this.html.addEventListener("mousedown", this.mousedown.bind(this));
+        this.edit.html.addEventListener("mousedown", this.mousedown.bind(this));
+        this.delete.html.addEventListener("mousedown", this.mousedown.bind(this));
+
+        // FIX**** pode ter ocorrido alguma alteracao no objeto in focus
+        this.redrawBinder = this.redraw.bind(this);
+        window.addEventListener("mouseup", this.waitRedraw.bind(this));
+    }
+
+    private mousedown(event:MouseEvent):void
+    {
+        if( event.target instanceof HTMLInputElement ) return;
+
+        let buttonType:string = (event.currentTarget as HTMLElement).getAttribute("data-toolbar-type");
+        this.onSelect.trigger({name:buttonType, target:this.target});
+    }
+
+    private tempInputFile:InputImage = new InputImage();
+
+    private hoverChangeHandler( data:Selectable[] ):void
+    {
+        this.target = data.length > 0 ? data[0] : null;
+
+        this.tempInputFile.input.remove();
+
+        if( data.length > 0 && (data[0] as Widget).templateName === "img" )
+        {
+            if( this.tempInputFile.isUsed )
+                this.tempInputFile = new InputImage();
+
+            this.tempInputFile.widget = data[0] as Widget;
+            this.edit.html.appendChild(this.tempInputFile.input);
+        }
+
+        // if( data.length > 0 )
+        // {
+        //     this.target = data[0];
+        //     let bounds:Rect = this.target.getBounds();
+        //     //this.move(bounds.x + bounds.w - 26, bounds.y + 3);
+        //     this.move(bounds.x, bounds.y);
+        //     this.size(bounds.w, 22);
+        //     this.show();
+        // }
+        // else
+        // {
+        //     this.hide();
+        // }
+
+        this.redraw();
+    }
+
+    private waitRedraw():void
+    {
+        clearTimeout(this.waitRedrawTimeout);
+        this.waitRedrawTimeout = setTimeout(this.redrawBinder, 100);
+    }
+
+    private redraw():void
+    {
+        if( this.target )
+        {
+            let bounds:Rect = this.target.getBounds();
+            this.move(bounds.x, bounds.y);
+            this.size(bounds.w, 22);
+            this.show();
+        }
+        else
+        {
+            this.hide();
+        }
+    }
+
+
+
+
+    // private createInputFile():void
+    // {
+    //     this.tempInputFile = document.createElement("input");
+    //     this.tempInputFile.setAttribute("type", "file");
+    //     this.tempInputFile.setAttribute("name", "image");
+    //     this.tempInputFile.setAttribute("accept", "image/*");
+    //     this.tempInputFile.setAttribute("data-type-type", "edit");
+    //     this.tempInputFile.addEventListener("mousedown", (event:Event)=>event.preventDefault);
+    //     this.tempInputFile.addEventListener("change", this.inputChangeHandler.bind(this));
+    // }
+
+    // private inputChangeHandler(event:Event):void
+    // {
+    //     event.preventDefault();
+    // }
+
+
+}
+
+
+class InputImage
+{
+    public widget:Widget;
+    public input:HTMLInputElement;
+    public isUsed:boolean = false;
+
+    constructor()
+    {
+        this.input = document.createElement("input");
+        this.input.setAttribute("type", "file");
+        this.input.setAttribute("name", "image");
+        this.input.setAttribute("accept", "image/*");
+        this.input.addEventListener("change", this.inputChangeHandler.bind(this));
+    }
+
+    private inputChangeHandler(event:Event):void
+    {
+        event.preventDefault();
+        
+        if( this.input.files.length > 0 )
+        {
+            let file:FileReader = new FileReader();
+            file.onload = this.fileReaderLoadComplete.bind(this);
+            file.onerror = this.fileReaderLoadError.bind(this);
+            file.readAsDataURL(this.input.files[0]);
+            this.isUsed = true;
+        }
+    }
+
+    private fileReaderLoadComplete(event:ProgressEvent):void
+    {
+        let result = (event.currentTarget as FileReader).result;
+        this.widget.setWidgetAttrib("img", result);
+    }
+
+    private fileReaderLoadError(event:ErrorEvent): void
+    {
+        alert("Não foi possível carregar a imagem. Tente novamente.")
     }
 }
 

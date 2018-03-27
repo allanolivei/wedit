@@ -1,11 +1,13 @@
 import { Rect } from "./Utils";
 import { Display } from "./Display";
 import { Selectable } from "./Selectable";
-import { VerticalLayout } from "./Layout";
+import { VerticalLayout, RowLayout } from "./Layout";
 import { Widget } from "./Widget";
 import { WEdit } from "./WEdit";
 import { SelectableGroup } from "./Selection";
 import { SheetRules } from "./Sheet";
+import { SerializationGrid } from "./Serialization";
+import { ImageUpload } from "./ImageUpload";
 
 
 
@@ -37,10 +39,18 @@ if( window )
     W.Display = Display;
     W.Selectable = Selectable;
     W.VerticalLayout = VerticalLayout;
+    W.RowLayout = RowLayout;
     W.Widget = Widget;
     W.WEdit = WEdit;
 
+    // serialization
+    W.SerializationGrid = SerializationGrid;
+
     (window as any).W = W;
+
+
+    (window as any).ImageUpload = ImageUpload;
 }
+
 
 

@@ -1,10 +1,27 @@
 import { Display } from "./Display";
-import { Rect } from "./Utils";
+import { Rect, RectChange } from "./Utils";
 import { Selectable } from "./Selectable";
 import { DragEvent } from "./Event";
+import { RectView } from "./Selection";
 
 export abstract class Layout extends Selectable
 {
+    public static findLayoutByDisplay(display:Display):Layout
+    {
+        let root:Display = display.parent;
+
+        while( root != null )
+        {
+            if( root instanceof Layout ) return root;
+            root = root.parent;
+        }
+
+        return null;
+    }
+
+
+
+
     protected childTag:string = "";
     protected childClassName:string = "";
     protected requiredStyles:{ [id: string]: string; } = {};
@@ -96,6 +113,8 @@ export abstract class Layout extends Selectable
     //     this.removeClass("layout-over");
     // }
 
+    public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void{/**/}
+    public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void{/**/}
     public enterDrag(event: DragEvent): void{/**/}
     public exitDrag(event: DragEvent): void {/**/}
     public updateDrag(event: DragEvent): void {/**/}
@@ -118,13 +137,33 @@ export class RelativeLayout extends Layout
         super(tag, "w-layout-relative", ...params);
     }
 
+    public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        event.ghost[childIndex].rect.copyAndChange(event.startRect[childIndex], change);
+        event.ghost[childIndex].draw();
+    }
+
+    public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        let bound:Rect = this.getBounds();
+
+        let childRect:Rect = event.startRect[childIndex];
+        childRect.copyAndChange(childRect, change);
+
+        event.elements[childIndex].setStyles(
+            "left:"+(childRect.x-bound.x)+"px;"+
+            "top:"+(childRect.y-bound.y)+"px;"+
+            "width:"+(childRect.w)+"px;"+
+            "height:"+(childRect.h)+"px;" );
+    }
+
     public enterDrag(event: DragEvent): void
     {
         for( let i = 0 ; i < event.elements.length ; i++ )
         {
-            let rect:Rect = event.elements[i].getBounds();
-            event.ghost[i].rect.copy(rect);
+            event.ghost[i].rect.copy( event.startRect[i] );
             event.ghost[i].show();
+            event.ghost[i].allowed(true);
         }
 
         this.updateDrag(event);
@@ -136,7 +175,7 @@ export class RelativeLayout extends Layout
         let deltaY: number = event.pointer.y - event.startPointer.y;
 
         for (let i = 0; i < event.elements.length; i++)
-            event.ghost[i].move(event.startRect[i].x + deltaX, event.startRect[i].y +deltaY);
+            event.ghost[i].move(event.startRect[i].x + deltaX, event.startRect[i].y + deltaY);
     }
 
     public dropDrag(event: DragEvent): void
@@ -174,6 +213,7 @@ export class AbsoluteLayout extends Layout
 
 export class VerticalLayout extends Layout
 {
+    public offsetX:number = 0;
 
     private childIndex:number = 0;
 
@@ -184,6 +224,14 @@ export class VerticalLayout extends Layout
         this.requiredStyles["position"] = "static";
     }
 
+    public getBounds(): Rect
+    {
+        let rect: Rect = super.getBounds();
+        rect.x += this.offsetX;
+        rect.w -= this.offsetX * 2;
+        return rect;
+    }
+
     public enterDrag(event: DragEvent): void
     {
         let rowBounds: Rect = this.getBounds();
@@ -191,7 +239,8 @@ export class VerticalLayout extends Layout
         for( let i:number = 1 ; i < event.ghost.length ; i++ )
             event.ghost[i].hide();
 
-        event.ghost[0].size( rowBounds.w, 4 );
+        event.ghost[0].size(rowBounds.w, 4);
+        event.ghost[0].allowed(true);
         event.ghost[0].show();
 
         this.updateDrag(event);
@@ -233,6 +282,9 @@ export class VerticalLayout extends Layout
             let target:Selectable = event.elements[i];
 
             if ( !this.allowAddChild(target) ) continue;
+
+            target.setStyle("width", "auto");
+            target.setStyle("position", "static");
 
             if( target.parent === this && this.children.indexOf(target) < this.childIndex )
                 this.addChild( target, this.childIndex-1 );
@@ -424,11 +476,19 @@ export class AutoLayout extends Layout
 export class RowLayout extends Layout
 {
 
-    private readonly offset:number = 15;
+    private readonly offset:number = 10;
 
+    // grid data
     private co:number;
     private columns:number;
-    private columnSize:number;
+    private columnSize: number;
+    // delegate
+    private simulateResizeDelegate:any;
+    private resizeDelegate:any;
+
+    // regexp
+    private reg_col: RegExp = /col-([0-9]{1,2})/;
+    private reg_offset: RegExp = /offset-([0-9]{1,2})/;
 
     constructor(tag:string, ...params:string[])
     {
@@ -436,16 +496,65 @@ export class RowLayout extends Layout
 
         let grid:GridGizmo = new GridGizmo();
         //this.html.appendChild(grid.html);
+
+        this.simulateResizeDelegate = this.simulateResizeChild.bind(this);
+        this.resizeDelegate = this.resizeChild.bind(this);
+>>>>>>> e017da3511f983544155a71bc800bd43ac7ab687
     }
 
     public removeChild(display: Display): void
     {
+        let index:number = this.children.indexOf(display);
+
+        if( index < this.children.length - 1 )
+        {
+            let offset: number =
+                this.getOffsetByDisplay(display) +
+                this.getSizeByDisplay(display) +
+                this.getOffsetByDisplay(this.children[index+1]);
+
+            this.setOffset(this.children[index + 1], offset);
+        }
+
         super.removeChild(display);
     }
 
     public addChild(display: Display, index = 99999): void
     {
+        if ( index < this.children.length )
+        {
+            let offset: number =
+                this.getOffsetByDisplay(this.children[index]) -
+                (this.getOffsetByDisplay(display) + this.getSizeByDisplay(display));
+
+            this.setOffset(this.children[index], offset);
+        }
+
         super.addChild(display, index);
+    }
+
+    // used external (serialization)
+    public addLayoutByColumnWorldSpace(column:number, size:number):VerticalLayout
+    {
+        let previousIndex:number = -1;
+        let offset:number = column;
+
+        // find previous sibling
+        for( let i:number = 0 ; i < this.children.length ; i++ )
+        {
+            let c:number = this.getColumnByDisplay(this.children[i]);
+            if( c < column )
+                previousIndex = i;
+        }
+        // calculate offset with the sibling
+        if (previousIndex >= 0)
+            offset = column - this.getRightByDisplay(this.children[previousIndex]);
+
+        // create column
+        let layout: VerticalLayout = this.createColumn(offset, size) as VerticalLayout;
+        this.addChild(layout, previousIndex+1);
+
+        return layout;
     }
 
     public getBounds():Rect
@@ -456,16 +565,211 @@ export class RowLayout extends Layout
         return rect;
     }
 
+    public simulateResizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        // bounds
+        let rowBounds:Rect = super.getBounds();
+        let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        this.columnSize = rowBounds.width/12;
+        // layout (children of this)
+        let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        let index:number = this.children.indexOf(layout);
+        // data by grid (colums)
+        let startmouse_co:number = Math.floor( (event.startPointer.x - rowBounds.x)/this.columnSize );
+        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
+        let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        let obj_size:number = Math.round( bounds.w/this.columnSize );
+        let delta:number = mouse_co-startmouse_co;
+        // init setup rect
+        let rect:Rect = event.ghost[childIndex].rect;
+        rect.copy(bounds);
+
+        // right anchor
+        if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
+        {
+            // maximo que pode avancar
+            let max_delta:number = index < this.children.length-1 ?
+                this.getColumnByDisplay(this.children[index+1])-(obj_co+obj_size) :
+                12-(obj_co+obj_size);
+            // minimo que pode voltar
+            let min_delta:number = -obj_size+1;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            rect.w = (obj_size+delta) * this.columnSize - this.offset*2;
+        }
+        // left anchor
+        else
+        {
+            // maximo que pode avancar
+            let max_delta:number = obj_size-1;
+            // minimo que pode voltar
+            let min_delta:number = index > 0 ?
+                this.getRightByDisplay(this.children[index-1])-obj_co:
+                -obj_co;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            rect.x = rowBounds.x + (obj_co+delta) * this.columnSize + this.offset;
+            rect.w = (obj_size-delta) * this.columnSize - this.offset * 2;
+        }
+
+        // // position in the window space
+        // let rowBounds:Rect = super.getBounds();
+        // let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        // let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        // // layout (children of this)
+        // let index:number = this.children.indexOf(layout);
+        // // position in the grid space
+        // let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        // let obj_size:number = Math.round( bounds.w/this.columnSize );
+        // // calcule mouse in grid
+        // let min_mouse_co:number = index > 0 ? this.getRightByDisplay(this.children[index-1]) : 0;
+        // let max_mouse_co:number = index < this.children.length-1 ? this.getColumnByDisplay(this.children[index+1])-1 : 11;
+        // let mouse_co:number =
+        //     Math.max(min_mouse_co, Math.min(max_mouse_co,
+        //     Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize ) ));
+        // // setup init of rect
+        // let rect:Rect = event.ghost[childIndex].rect;
+        // rect.copy(bounds);
+
+        // // right anchor
+        // if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
+        // {
+        //     if( mouse_co < obj_co ) mouse_co = obj_co;
+
+        //     rect.w = (mouse_co-obj_co+1) * this.columnSize - this.offset*2;
+        // }
+        // // left anchor
+        // else
+        // {
+        //     if( mouse_co >= obj_co+obj_size ) mouse_co = obj_co+obj_size-1;
+
+        //     rect.x = rowBounds.x + mouse_co * this.columnSize + this.offset;
+        //     rect.w = (obj_size + (obj_co-mouse_co)) * this.columnSize - this.offset*2;
+        // }
+
+        event.ghost[childIndex].draw();
+    }
+
+    public resizeChild(event:DragEvent, childIndex:number, change:RectChange):void
+    {
+        // bounds
+        let rowBounds:Rect = super.getBounds();
+        let bounds:Rect = event.elements[childIndex].parent.getBounds();
+        this.columnSize = rowBounds.width/12;
+        // layout (children of this)
+        let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        let index:number = this.children.indexOf(layout);
+        // data by grid (colums)
+        let startmouse_co:number = Math.floor( (event.startPointer.x - rowBounds.x)/this.columnSize );
+        let mouse_co:number = Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize );
+        let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        let obj_size:number = Math.round( bounds.w/this.columnSize );
+        let delta:number = mouse_co-startmouse_co;
+        // init setup rect
+        let rect:Rect = event.ghost[childIndex].rect;
+        rect.copy(bounds);
+
+        // right anchor
+        if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
+        {
+            // maximo que pode avancar
+            let max_delta:number = index < this.children.length-1 ?
+                this.getColumnByDisplay(this.children[index+1])-(obj_co+obj_size) :
+                12-(obj_co+obj_size);
+            // minimo que pode voltar
+            let min_delta:number = -obj_size+1;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            this.setSize(layout, obj_size+delta);
+            if( index < this.children.length-1 )
+            {
+                this.setOffset(
+                    this.children[index+1],
+                    this.getOffsetByDisplay(this.children[index+1]) - delta);
+            }
+        }
+        // left anchor
+        else
+        {
+            // maximo que pode avancar
+            let max_delta:number = obj_size-1;
+            // minimo que pode voltar
+            let min_delta:number = index > 0 ?
+                this.getRightByDisplay(this.children[index-1])-obj_co:
+                -obj_co;
+            // clamp
+            delta = Math.max(min_delta, Math.min(max_delta, delta));
+            // resize
+            if( index > 0 )
+                this.setOffset(layout, (obj_co+delta)-this.getRightByDisplay(this.children[index-1]));
+            else
+                this.setOffset(layout, obj_co+delta);
+            this.setSize(layout, obj_size-delta);
+        }
+        // position in the window space
+        // let rowBounds:Rect = super.getBounds();
+        // let layout:Layout = Layout.findLayoutByDisplay(event.elements[childIndex]);
+        // let bounds:Rect = layout.getBounds();
+        // // layout (children of this)
+        // let index:number = this.children.indexOf(layout);
+        // // obj info in grid space
+        // let obj_co:number = Math.floor( (event.startRect[childIndex].x - rowBounds.x)/this.columnSize);
+        // let obj_size:number = Math.round( bounds.w/this.columnSize );
+        // // calcule mouse in grid
+        // let min_mouse_co:number = index > 0 ? this.getRightByDisplay(this.children[index-1]) : 0;
+        // let max_mouse_co:number = index < this.children.length-1 ? this.getColumnByDisplay(this.children[index+1])-1 : 11;
+        // let mouse_co:number =
+        //     Math.max(min_mouse_co, Math.min(max_mouse_co,
+        //     Math.floor( (event.pointer.x - rowBounds.x)/this.columnSize ) ));
+
+        // // right anchor
+        // if( event.startPointer.x > event.startRect[0].x + event.startRect[0].w*0.5 )
+        // {
+        //     if( mouse_co < obj_co ) mouse_co = obj_co;
+
+        //     let new_size:number = mouse_co-obj_co+1;
+        //     this.setSize(layout, new_size);
+        //     if( index < this.children.length-1 )
+        //     {
+        //         this.setOffset(
+        //             this.children[index+1],
+        //             this.getOffsetByDisplay(this.children[index+1]) + (obj_size-new_size));
+        //     }
+        // }
+        // // left anchor
+        // else
+        // {
+        //     if( mouse_co >= obj_co+obj_size ) mouse_co = obj_co+obj_size-1;
+
+        //     //console.log(mouse_co, obj_co, obj_size);
+
+        //     if( index > 0 )
+        //         this.setOffset(
+        //             layout,
+        //             mouse_co-
+        //             (this.getColumnByDisplay(this.children[index-1])+this.getSizeByDisplay(this.children[index-1])));
+        //     else
+        //         this.setOffset(layout, mouse_co);
+
+        //     this.setSize(layout, obj_size + (obj_co-mouse_co));
+        // }
+    }
+
     public enterDrag(event: DragEvent): void
     {
         let rowBounds: Rect = super.getBounds();
         let maxSize:number = 0;
 
         for( let i:number = 0 ; i < event.startRect.length ; i++ )
+        {
             if( event.startRect[i].w > maxSize ) maxSize = event.startRect[i].w;
+            event.ghost[i].show();
+        }
 
         this.columnSize = rowBounds.width/12;
-        console.log(this.columnSize, maxSize/this.columnSize);
         this.columns = Math.max(1, Math.ceil( maxSize/this.columnSize ));
 
         this.updateDrag(event);
@@ -485,14 +789,23 @@ export class RowLayout extends Layout
         // this.updateDrag(event);
     }
 
-    public exitDrag(event: DragEvent): void {/**/}
+    public exitDrag(event: DragEvent): void {/**/
+        //TEMPORARIO////////////////////////////////////////////////////////////////////
+        for( let i:number = 0 ; i < event.ghost.length ; i++ )
+            event.ghost[i].allowed( true );
+        ////////////////////////////////////////////////////////////////////////////////
+    }
 
     public updateDrag(event: DragEvent): void
     {
         let rowBounds: Rect = super.getBounds();
         // calcule current of column
-        let offsetDrag:number = 0;//this.columns * this.columnSize * 0.5;
+        let offsetDrag:number = event.offset.x;//this.columns * this.columnSize * 0.5;
         this.co = Math.floor( (event.pointer.x - rowBounds.x - offsetDrag)/this.columnSize );
+        this.co = Math.max(0, Math.min(this.co, 12 - this.columns));
+        // verifica colisoes
+        let collision:boolean = this.hasCollision(this.co, this.columns, event.elements);
+
         // height of elements
         let height:number = rowBounds.height/event.elements.length;
         // draw ghosts
@@ -500,23 +813,146 @@ export class RowLayout extends Layout
         {
             event.ghost[i].move( rowBounds.x + this.co * this.columnSize + this.offset, rowBounds.y + i * height );
             event.ghost[i].size( this.columns * this.columnSize - this.offset * 2, height );
+            event.ghost[i].allowed( !collision );
         }
     }
 
     public dropDrag(event: DragEvent): void
     {
-        let class_offset:string = "offset-"+this.co;
-        let class_columns:string = "col-"+this.columns;
+        // CHAMADO PARA MODIFICAR O ESTADO ALLOWED DOS GHOSTS
+        //TEMPORARIO////////////////////////////////////////////////////////////////////
+        this.exitDrag(event);
+        ////////////////////////////////////////////////////////////////////////////////
 
-        let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
-            layout.autoremove = true;
+        if ( this.hasCollision(this.co, this.columns, event.elements) ) return;
 
-        for ( let i:number = 0 ; i < event.elements.length ; i++ )
+        // remove all dragged elements - this fix drag children
+        for ( let i: number = event.elements.length-1; i >= 0; i-- )
         {
-            layout.addChild( event.elements[i] );
+            // TODO: Nao posso modificar a lista do event, ele ainda esta em uso
+            //if ( !this.allowAddChild(event.elements[i]) ) event.elements = event.elements.splice(i, 1);
+            //else event.elements[i].remove();
+            event.elements[i].remove();
         }
 
-        this.addChild(layout);
+        // calculate index and offset position
+        let offset:number = this.co;
+        let index:number = this.getChildIndexByColumn(this.co);
+        if (index > 0)
+            offset = this.co - (this.getColumnByDisplay(this.children[index - 1]) + this.getSizeByDisplay(this.children[index - 1]));
+
+        // create column and add drag elements
+        let layout:Layout = this.createColumn(offset, this.columns);
+        for ( let i:number = 0 ; i < event.elements.length ; i++ )
+        {
+            event.elements[i].setStyle("width", "auto");
+            event.elements[i].setStyle("position", "static");
+            layout.addChild( event.elements[i] );
+        }
+        this.addChild(layout, index);
+    }
+
+    /************************** UTILITIES ******************************/
+    private createColumn( offset:number, size:number ):Layout
+    {
+        let class_offset:string = "offset-"+offset;
+        let class_columns: string = "col-" +size;
+        //let class_columns:string = "col-"+this.columns;
+
+        let layout:VerticalLayout = new VerticalLayout("div", class_offset, class_columns);
+            layout.offsetX = this.offset;
+            layout.autoremove = true;
+            layout.simulateResizeChild = this.simulateResizeDelegate;
+            layout.resizeChild = this.resizeDelegate;
+
+        return layout;
+    }
+
+    private hasCollision( column:number, size:number, ignore:Display[] ):boolean
+    {
+        let amount:number = 0;
+
+        for( let i:number = 0 ; i < this.children.length ; i++ )
+        {
+            let c_co: number = this.getOffsetByDisplay(this.children[i]);
+            let c_size: number = this.getSizeByDisplay(this.children[i]);
+
+            if ( amount + c_co < column + size &&                   // child left < drag right
+                 amount + c_co + c_size > column &&                 // child right > drag left
+                 !this.allChildIsInList(ignore, this.children[i]) ) // all child is not in ignore list
+                return true;
+
+            amount += c_co + c_size;
+        }
+
+        return false;
+    }
+
+    private allChildIsInList( lista: Display[], display:Display ):boolean
+    {
+        for (let j: number = 0; j < display.children.length; j++)
+            if (lista.indexOf(display.children[j]) === -1) return false;
+        return true;
+    }
+
+    private getChildIndexByColumn( column:number ):number
+    {
+        let amount = 0;
+        let result:number = 0;
+
+        for (; result < this.children.length; result++)
+        {
+            let left: number = this.getOffsetByDisplay(this.children[result]);
+            if (amount + left > this.co) break;
+            amount += left + this.getSizeByDisplay(this.children[result]);
+        }
+
+        return result;
+    }
+
+    public getColumnByDisplay(display:Display): number
+    {
+        let amount = 0;
+
+        for (let i: number = 0; i < this.children.length; i++)
+        {
+            amount += this.getOffsetByDisplay(this.children[i]);
+            if (this.children[i] === display) break;
+            amount += this.getSizeByDisplay(this.children[i]);
+        }
+
+        return amount;
+    }
+
+    public getSizeByDisplay(display: Display): number
+    {
+        let match: RegExpExecArray = this.reg_col.exec(display.html.className);
+        return parseInt(match[1], 10);
+    }
+
+    private getRightByDisplay(display:Display):number
+    {
+        return this.getColumnByDisplay(display) + this.getSizeByDisplay(display);
+    }
+
+    private getOffsetByDisplay(display:Display):number
+    {
+        let match: RegExpExecArray = this.reg_offset.exec(display.html.className);
+        return parseInt(match[1], 10);
+    }
+
+    public setOffset(display:Display, offset:number):void
+    {
+        let match: RegExpExecArray = this.reg_offset.exec(display.html.className);
+        if( match != null ) display.removeClass(match[0]);
+        display.addClass("offset-"+offset);
+    }
+
+    public setSize(display:Display, size:number):void
+    {
+        let match: RegExpExecArray = this.reg_col.exec(display.html.className);
+        if( match != null ) display.removeClass(match[0]);
+        display.addClass("col-"+size);
     }
     // private childIndex:number;
 

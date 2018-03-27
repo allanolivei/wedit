@@ -134,7 +134,7 @@ gulp.task('sass', function()
 
 gulp.task('img', function ()
 {
-    return gulp.src("src/images/**/*")
+    return gulp.src("src/img/**/*")
         .pipe(gulp.dest("tmp/img/"))
         .pipe(browserSync.stream());
 });
