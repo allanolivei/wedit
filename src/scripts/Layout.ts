@@ -499,7 +499,7 @@ export class RowLayout extends Layout
 
         this.simulateResizeDelegate = this.simulateResizeChild.bind(this);
         this.resizeDelegate = this.resizeChild.bind(this);
->>>>>>> e017da3511f983544155a71bc800bd43ac7ab687
+//>>>>>>> e017da3511f983544155a71bc800bd43ac7ab687
     }
 
     public removeChild(display: Display): void

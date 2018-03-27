@@ -131,38 +131,38 @@ export class WEdit extends Widget
 
         // WINDOWS
 
-        this.wtemplates = new UI.UIWindowTemplates(this.selectionTransform);
-        this.wtext = new UI.UIWindowEditText();
-        this.wimg = new UI.UIWindowEditImage();
-        this.wmovie = new UI.UIWindowEditMove();
-        this.wconfirm = new UI.UIWindowConfirm();
+        // this.wtemplates = new UI.UIWindowTemplates(this.selectionTransform);
+        // this.wtext = new UI.UIWindowEditText();
+        // this.wimg = new UI.UIWindowEditImage();
+        // this.wmovie = new UI.UIWindowEditMove();
+        // this.wconfirm = new UI.UIWindowConfirm();
 
 
 
 
-        let deactiveWindowHandlerBinder = this.deactiveWindowHandler.bind(this);
-        this.wtext.onDeactive.on(deactiveWindowHandlerBinder);
-        this.wimg.onDeactive.on(deactiveWindowHandlerBinder);
-        this.wmovie.onDeactive.on(deactiveWindowHandlerBinder);
+        // let deactiveWindowHandlerBinder = this.deactiveWindowHandler.bind(this);
+        // this.wtext.onDeactive.on(deactiveWindowHandlerBinder);
+        // this.wimg.onDeactive.on(deactiveWindowHandlerBinder);
+        // this.wmovie.onDeactive.on(deactiveWindowHandlerBinder);
 
 
-        this.wtemplates.active(window.innerWidth+0.5 + 470, 20);
+        // this.wtemplates.active(window.innerWidth+0.5 + 470, 20);
 
-        //this.wcomponent = new UI.UIWindow();
+        // //this.wcomponent = new UI.UIWindow();
 
-        // this.wtext = new UI.UIWindow();
-        // this.wtext.setStyles("width:700px;height:400px;");
-        // this.wtext.setWidgetText("title", "Editor de Texto");
-        // this.wtext.addWidget("list", new UI.UITextarea("Edite o texto do elemento com o campo de texto abaixo."));
-        // this.wtext.addWidget("list", new UI.UIButton("Cancelar"));
-        // this.wtext.addWidget("list", new UI.UIButton("Confirmar"));
-
-
+        // // this.wtext = new UI.UIWindow();
+        // // this.wtext.setStyles("width:700px;height:400px;");
+        // // this.wtext.setWidgetText("title", "Editor de Texto");
+        // // this.wtext.addWidget("list", new UI.UITextarea("Edite o texto do elemento com o campo de texto abaixo."));
+        // // this.wtext.addWidget("list", new UI.UIButton("Cancelar"));
+        // // this.wtext.addWidget("list", new UI.UIButton("Confirmar"));
 
 
-        // window.document.addEventListener("keydown",  this.onKeydownHandler.bind(this));
 
-        this.toolbar.onSelect.on( this.toolbarSelectHandler.bind(this) );
+
+        // // window.document.addEventListener("keydown",  this.onKeydownHandler.bind(this));
+
+        // this.toolbar.onSelect.on( this.toolbarSelectHandler.bind(this) );
 
     }
 
@@ -192,7 +192,7 @@ export class WEdit extends Widget
         this.selectionDragger.disable();
         this.selectionTransform.disable();
 
-        this.wtemplates.html.remove();
+        // this.wtemplates.html.remove();
 
         this.removeClass("w-editing");
     }
