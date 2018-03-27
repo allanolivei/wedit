@@ -72,13 +72,15 @@ stage.addWidget("list",{
 
 https://microsoft.github.io/monaco-editor/index.html
 */
+
+
 export class Widget extends Selectable
 {
     private static TEMPLATES: { [id: string]: TemplateData; } = { // templates
         "text": { html:
             "<div>{{text}}</div>" },
         "img": { html:
-            "<div><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
+            "<div class='img-wrapper'><img data-style='{{img-style}}' class='img-fluid' src='{{img}}' alt='{{alt}}' /></div>" },
         "row-layout": { html:
             "<div><div data-style='{{layout-style}}' data-class='{{row-class}}' data-type='RowLayout'>{{list}}</div></div>" },
         "flex-layout": { html:
@@ -265,8 +267,11 @@ export class Widget extends Selectable
                     this.setWidgetAttrib(key, item);
                     break;
                 case "list":
-                    for (let i: number = 0; i < item.length; i++)
-                        this.addWidget(key, item[i]);
+                    if( typeof item === "string" )
+                        this.addWidget(key, {"template":"text", "data":{"text":item}});
+                    else
+                        for (let i: number = 0; i < item.length; i++)
+                            this.addWidget(key, item[i]);
                     break;
                 default:
                     this.setWidgetText(key, item);

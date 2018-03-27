@@ -435,7 +435,7 @@ export class RowLayout extends Layout
         super(tag, "w-layout-row", ...params);
 
         let grid:GridGizmo = new GridGizmo();
-        this.html.appendChild(grid.html);
+        //this.html.appendChild(grid.html);
     }
 
     public removeChild(display: Display): void
