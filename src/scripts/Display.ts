@@ -121,7 +121,8 @@ export class Display
 
     get id():string
     {
-        return this._id;
+        //return this._id;
+        return this.html.getAttribute("id");
     }
 
     public getTagName():string
